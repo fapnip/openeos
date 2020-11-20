@@ -1,0 +1,81 @@
+{
+  "name": "open-eos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "axios": "^0.21.0",
+    "core-js": "^3.6.5",
+    "duration-js": "^4.0.0",
+    "howler": "^2.2.1",
+    "minimatch": "^3.0.4",
+    "node-vibrant": "^3.2.1-alpha.1",
+    "prettysize": "^2.0.0",
+    "string-strip-html": "^6.3.0",
+    "vue": "^2.6.11",
+    "vue-router": "^3.4.9",
+    "vue2-smooth-scroll": "^1.5.0",
+    "vuetify": "^2.2.11",
+    "word-counting": "^1.1.3",
+    "xss": "^1.0.8"
+  },
+  "devDependencies": {
+    "@mdi/font": "^5.8.55",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "^4.5.8",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "babel-eslint": "^10.1.0",
+    "css-loader": "^5.0.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-es5": "^1.5.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-vue": "^6.2.2",
+    "prettier": "^1.19.1",
+    "raw-loader": "^4.0.2",
+    "sass": "^1.19.0",
+    "sass-loader": "^8.0.0",
+    "vue-cli-plugin-vuetify": "~2.0.7",
+    "vue-template-compiler": "^2.6.11",
+    "vuetify-loader": "^1.3.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "plugins": [
+      "es5"
+    ],
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended",
+      "@vue/prettier"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "ignorePatterns": [
+      "/src/interpreter/polyfills/*",
+      "/src/interpreter/interpreter.js",
+      "/src/interpreter/acorn.js"
+    ],
+    "rules": {
+      "no-unused-vars": [
+        "error",
+        {
+          "args": "none"
+        }
+      ]
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

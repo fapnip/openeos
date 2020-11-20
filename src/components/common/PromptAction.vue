@@ -1,0 +1,76 @@
+<template>
+  <v-row :align="align">
+    <v-text-field
+      v-if="active"
+      v-model="inputValue"
+      ref="input"
+      autofocus
+      solo
+      dense
+      append-icon="mdi-arrow-right-drop-circle"
+      @click:append="onInput"
+      @keydown.enter="onInput"
+    ></v-text-field>
+    <v-row v-else-if="enteredValue" align="center">
+      <v-btn small disabled>
+        <span>{{ enteredValue }}</span></v-btn
+      >
+    </v-row>
+    <v-row v-else align="center">
+      <v-btn small disabled> <span> ... </span></v-btn>
+    </v-row>
+  </v-row>
+</template>
+
+<script>
+export default {
+  props: {
+    value: {
+      type: Object,
+      default: () => ({}),
+    },
+    isDebug: {
+      type: Boolean,
+      default: false,
+    },
+    active: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      inputValue: null,
+    }
+  },
+
+  computed: {
+    enteredValue() {
+      return this.value.value
+    },
+    showButton() {
+      return this.active && !this.noPause && this.allowSkip
+    },
+    onInputMethod() {
+      return typeof this.value.onInput === 'function'
+        ? this.value.onInput
+        : () => {
+            console.warn('No onInput method supplied')
+          }
+    },
+    align() {
+      return this.value.align || 'center'
+    },
+  },
+
+  methods: {
+    onInput() {
+      if (!this.active) return
+      console.log('Got input', this.inputValue)
+      this.onInputMethod(this.inputValue)
+    },
+  },
+}
+</script>
+
+<style scoped></style>
