@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
+  publicPath: './',
   transpileDependencies: ['vuetify'],
   configureWebpack: {
     plugins: [
