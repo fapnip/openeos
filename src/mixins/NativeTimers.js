@@ -12,11 +12,7 @@ export default {
   methods: {
     installNativeTimers(interpreter, globalObject) {
       const runFunction = (fn, _this) => {
-        // if (this.hasWaitState()) {
-        //   interpreter.callFunction(fn, _this)
-        // } else {
         interpreter.queueFunction(fn, _this)
-        // }
         interpreter.run()
       }
       interpreter.setProperty(

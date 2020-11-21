@@ -50,14 +50,14 @@ export default {
         notification.id = id
         notification.onTimeout = () => {
           if (optProps.onTimeout) {
-            interpreter.appendFunction(optProps.onTimeout, notification)
             vue.removeNotification(notification.id)
+            interpreter.queueFunction(optProps.onTimeout, notification)
             interpreter.run()
           }
         }
         notification.onClick = () => {
           if (optProps.onClick) {
-            interpreter.appendFunction(optProps.onClick, notification)
+            interpreter.queueFunction(optProps.onClick, notification)
             vue.removeNotification(notification.id)
             interpreter.run()
           }

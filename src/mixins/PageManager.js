@@ -3,21 +3,20 @@ import pagesCode from '!!raw-loader!../interpreter/code/pages.js'
 import minimatch from 'minimatch'
 
 let navCounter = 0
-const disabledPages = {}
+let disabledPages = {}
+let pageScripts = {}
 
 export default {
   data: () => ({
     pagesTarget: null,
     currentPageId: 'start',
-    nextPageId: null,
-    currentPage: [],
-    commandStack: [],
     commandIndex: 0,
-    pageScripts: {},
-    pageComplete: false, // Current page is complete
-    pagePause: false, // Page is paused
-    pageScope: null,
   }),
+  mounted() {
+    navCounter = 0
+    pageScripts = {}
+    disabledPages = {}
+  },
   methods: {
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
@@ -38,9 +37,6 @@ export default {
         disabledPages[page] = true
       }
     },
-    pageIsComplete() {
-      return !!this.nextPageId
-    },
     getCurrentPageId() {
       return this.currentPageId
     },
@@ -59,10 +55,10 @@ export default {
       //   type: 'change',
       //   value: pageId,
       // })
-      let pageScript = this.pageScripts[pageId]
+      let pageScript = pageScripts[pageId]
       if (!pageScript) {
         pageScript = pageCompiler(page, interpreter, interpreter.globalObject)
-        this.pageScripts[pageId] = pageScript
+        pageScripts[pageId] = pageScript
       }
       let pageCode = pageScript.code
       if (!pageCode) {
@@ -146,10 +142,6 @@ export default {
         }
       )
 
-      interpreter.setNativeFunctionPrototype(manager, 'isComplete', () => {
-        return this.pageIsComplete()
-      })
-
       interpreter.setNativeFunctionPrototype(manager, 'getNavId', () => {
         return navCounter
       })
@@ -157,17 +149,6 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
         this.image = this.locatorLookup(locator)
       })
-
-      interpreter.setNativeFunctionPrototype(
-        manager,
-        'loadCurrentScope',
-        fn => {
-          this.pageScope = interpreter.getScope()
-          const pageState =
-            interpreter.stateStack[interpreter.stateStack.length - 1]
-          console.log('pageScope', this.pageScope, pageState, interpreter)
-        }
-      )
 
       interpreter.setNativeFunctionPrototype(
         manager,
