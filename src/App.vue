@@ -156,51 +156,15 @@
 <script>
 import OpenEosPlayer from './components/OpenEosPlayer'
 import { version } from '../package.json'
-import { buildHref } from './util'
+import {
+  downloadObjectAsJson,
+  downloadEosFile,
+  convertToValidFilename,
+  CORS_PROXY,
+} from './util/io'
 import prettysize from 'prettysize'
 
-const CORS_PROXY = 'https://ancient-everglades-64876.herokuapp.com/'
-
 const parser = new DOMParser()
-
-function downloadObjectAsJson(exportObj, exportName) {
-  var dataStr =
-    'data:text/json;charset=utf-8,' +
-    encodeURIComponent(JSON.stringify(exportObj))
-  var downloadAnchorNode = document.createElement('a')
-  downloadAnchorNode.setAttribute('href', dataStr)
-  downloadAnchorNode.setAttribute('download', exportName + '.json')
-  document.body.appendChild(downloadAnchorNode) // required for firefox
-  downloadAnchorNode.click()
-  downloadAnchorNode.remove()
-}
-
-function convertToValidFilename(string) {
-  return string.replace(/[/|\\:*?"<>]/g, ' ')
-}
-
-function readBlob(b) {
-  return new Promise(function(resolve, reject) {
-    const reader = new FileReader()
-
-    reader.onloadend = function() {
-      resolve(reader.result)
-    }
-
-    // TODO: hook up reject to reader.onerror somehow and try it
-
-    reader.readAsDataURL(b)
-  })
-}
-
-async function downloadEosFile(file, smaller) {
-  const url = buildHref(file, smaller)
-  const response = await fetch(CORS_PROXY + url)
-  const blob = await response.blob()
-  const content = await readBlob(blob)
-  file.href = content
-  return (content && content.length) || 0
-}
 
 export default {
   name: 'App',
@@ -401,6 +365,7 @@ export default {
 
             this.loading = false
           } else {
+            console.log('Tease JSON', script)
             this.getRemoteScriptName(uri, script)
           }
         })
@@ -417,7 +382,7 @@ export default {
         .then(response => response.text())
         .then(contents => {
           this.loading = false
-          console.log('HTML response', contents)
+          // console.log('HTML response', contents)
           try {
             const doc = parser
               .parseFromString(contents, 'text/html')

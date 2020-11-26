@@ -1,5 +1,5 @@
 <template>
-  <v-row :align="align" @click="onClick"
+  <v-row :align="align" @click.stop="onClick"
     ><div v-html="filteredLabel"></div>
     <v-btn v-if="showButton" icon
       ><v-icon dark class="blinkButton"

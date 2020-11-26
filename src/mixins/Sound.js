@@ -25,7 +25,10 @@ export default {
         const options = interpreter.pseudoToNative(opt)
         const file = this.lookupFile(options.locator)
         if (!file.item) {
-          throw new Error('Invalid sound locator: ' + options.locator)
+          return interpreter.createThrowable(
+            interpreter.ERROR,
+            'Invalid sound locator: ' + options.locator
+          )
         }
         if (!options.id) {
           options.id = '__sound_' + ++idCounter
@@ -33,7 +36,10 @@ export default {
         options.fromPageScript = fromPageScript
 
         if (typeof options.id !== 'string') {
-          throw new TypeError('Given id must be undefined or a string')
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'Given id must be undefined or a string'
+          )
         }
 
         if (this.sounds[options.id]) {
@@ -95,7 +101,10 @@ export default {
         'get',
         interpreter.createNativeFunction(id => {
           if (typeof id !== 'string') {
-            throw new TypeError('Given id must be undefined or a string')
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'Given id must be undefined or a string'
+            )
           }
           return this.sounds[id]
         }),
@@ -166,13 +175,13 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'seek', function(time) {
         time = Number(time)
         if (isNaN(time)) {
-          return interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
             'time must be a valid number'
           )
         }
         if (time < 0) {
-          return interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.RANGE_ERROR,
             'time must be greater than or equal to 0'
           )
@@ -184,19 +193,19 @@ export default {
       ) {
         volume = Number(volume)
         if (isNaN(volume)) {
-          return interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
             'volume must be a valid number'
           )
         }
         if (volume < 0) {
-          return interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.RANGE_ERROR,
             'volume must be greater than or equal to 0'
           )
         }
         if (volume > 1) {
-          return interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.RANGE_ERROR,
             'volume must be less than or equal to 1'
           )

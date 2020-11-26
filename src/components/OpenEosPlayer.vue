@@ -1,5 +1,5 @@
 <template>
-  <div class="oeos-main">
+  <div class="oeos-main" @click="onBodyClick">
     <div
       :class="{
         'oeos-bottom': true,
@@ -18,25 +18,26 @@
           <v-col class="text-center pa-0 ma-0">
             <vue-switch :value="interaction.type">
               <template #say>
-                <say-action
+                <say-bubble
+                  :ref="'say_' + interaction.id"
                   :value="interaction.item"
                   :active="interaction.item.active"
                   :is-debug="isDebug"
-                ></say-action>
+                ></say-bubble>
               </template>
               <template #choice>
-                <choice-action
+                <choice-bubble
                   :value="interaction.item"
                   :active="interaction.item.active"
                   :is-debug="isDebug"
-                ></choice-action>
+                ></choice-bubble>
               </template>
               <template #prompt>
-                <prompt-action
+                <prompt-bubble
                   :value="interaction.item"
                   :active="interaction.item.active"
                   :is-debug="isDebug"
-                ></prompt-action>
+                ></prompt-bubble>
               </template>
             </vue-switch>
           </v-col>
@@ -106,17 +107,17 @@ import Storage from '../mixins/Storage'
 
 // Components
 import VueSwitch from './common/VueSwitch'
-import CountdownTimer from './common/CountdownTimer'
-import SayAction from './common/SayAction'
-import ChoiceAction from './common/ChoiceAction'
-import PromptAction from './common/PromptAction'
-import NotificationItem from './common/NotificationItem'
+import CountdownTimer from './sidebar/CountdownTimer'
+import NotificationItem from './sidebar/NotificationItem'
+import SayBubble from './bubbles/SayBubble'
+import ChoiceBubble from './bubbles/ChoiceBubble'
+import PromptBubble from './bubbles/PromptBubble'
 
 // Interpreter Polyfills
 import PromisePoly from '!!raw-loader!../interpreter/polyfills/promise.js'
 
 // Raw code
-// import TestCode from '!!raw-loader!../interpreter/code/test.js'
+import TestCode from '!!raw-loader!../interpreter/code/test.js'
 
 // import testJson from '../assets/test.json'
 
@@ -127,10 +128,10 @@ export default {
   components: {
     VueSwitch,
     CountdownTimer,
-    SayAction,
-    ChoiceAction,
-    PromptAction,
     NotificationItem,
+    SayBubble,
+    ChoiceBubble,
+    PromptBubble,
   },
   props: {
     isFullscreen: Boolean,
@@ -176,6 +177,16 @@ export default {
     debug() {
       if (this.isDebug) {
         console.log(...arguments)
+      }
+    },
+    onBodyClick() {
+      const li = this.interactions[this.interactions.length - 1]
+      if (li && li.type === 'say' && li.item.active) {
+        const ref = this.$refs['say_' + li.id]
+        if (ref) {
+          console.log('clicking say', ref)
+          ref[0].$el.click()
+        }
       }
     },
     purgePageInteractions() {
@@ -251,6 +262,7 @@ export default {
 
       this.interpreter = interpreter
       this.installInterpreterModules(interpreter, interpreter.globalObject)
+      interpreter.run()
       this.debug(
         'Loaded Interpreter',
         Interpreter,
@@ -258,10 +270,11 @@ export default {
         interpreter.globalObject
       )
       this.setScript(this.script)
+      interpreter.appendCode(TestCode)
+      interpreter.run()
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script')
-      // interpreter.appendCode(TestCode)
       this.showPage('start')
       interpreter.run()
     },

@@ -5,12 +5,15 @@ import minimatch from 'minimatch'
 let navCounter = 0
 let disabledPages = {}
 let pageScripts = {}
+const preloaded = {}
 
 export default {
   data: () => ({
-    pagesTarget: null,
+    pagesInstance: null,
     currentPageId: 'start',
+    lastPageId: '',
     commandIndex: 0,
+    preloadImages: [],
   }),
   mounted() {
     navCounter = 0
@@ -18,6 +21,20 @@ export default {
     disabledPages = {}
   },
   methods: {
+    addPreload(file, asType) {
+      if (file && !file.error && !preloaded[file.href]) {
+        preloaded[file.href] = true
+        this.preloadImages.push(file)
+        var preload = document.createElement('link')
+        preload.rel = 'preload'
+        preload.href = file.href
+        preload.as = asType
+        preload.onload = function() {
+          this.remove() // Remove preload element now that it's loaded
+        }
+        document.head.appendChild(preload)
+      }
+    },
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
     },
@@ -37,6 +54,15 @@ export default {
         disabledPages[page] = true
       }
     },
+    getPageScript(pageId) {
+      const page = this.getPage(pageId)
+      let pageScript = pageScripts[pageId]
+      if (!pageScript) {
+        pageScript = pageCompiler(page)
+        pageScripts[pageId] = pageScript
+      }
+      return pageScript
+    },
     getCurrentPageId() {
       return this.currentPageId
     },
@@ -45,48 +71,50 @@ export default {
       this.purgePageInteractions()
       this.purgePageSounds()
     },
+    preloadPage(pageId, parentPageId) {
+      if (!this.pages()[pageId]) {
+        console.warn(`Linked pageId "${pageId}" in ${parentPageId} not found.`)
+        return
+      }
+      const pageScript = this.getPageScript(pageId)
+      for (const image of Object.keys(pageScript.images)) {
+        const file = this.locatorLookup(image, true)
+        this.addPreload(file, 'image')
+      }
+      for (const sound of Object.keys(pageScript.sounds)) {
+        const file = this.locatorLookup(sound, true)
+        this.addPreload(file, 'audio')
+      }
+    },
     showPage(pageId) {
       // TODO
       console.warn('Showing Page:', pageId)
-      const page = this.getPage(pageId)
       const interpreter = this.interpreter
-      // this.dispatchEvent({
-      //   target: this.pagesTarget,
-      //   type: 'change',
-      //   value: pageId,
-      // })
-      let pageScript = pageScripts[pageId]
-      if (!pageScript) {
-        pageScript = pageCompiler(page, interpreter, interpreter.globalObject)
-        pageScripts[pageId] = pageScript
-      }
+      const pageScript = this.getPageScript(pageId)
       let pageCode = pageScript.code
       if (!pageCode) {
-        console.log('Building "' + pageId + '" page script', pageScript.script)
+        // console.log('Building "' + pageId + '" page script', pageScript.script)
         pageCode = this.interpreter.parseCode(pageScript.script)
         pageScript.code = pageCode
       }
+      this.preloadPage(pageId, this.lastPageId)
+      for (const target in Object.keys(pageScript.targets)) {
+        this.preloadPage(target, pageId)
+      }
+      this.lastPageId = this.currentPageId
       this.currentPageId = pageId
       navCounter++
       this.beforePageChange()
+      this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
       interpreter.appendCode(pageCode)
     },
     getPage(pageId) {
       const result = this.pages()[pageId]
-      if (!result) throw new Error(`Invalid page: ${pageId}`)
-      return result
-    },
-    buildIfCommand(command) {},
-    buildCommand(command) {
-      const commandName = Object.keys(command)[0]
-      switch (commandName) {
-        case 'if':
-          return this.buildIfCommand()
-        case 'noop':
-          break
-        default:
-          console.error('Unknown command:', commandName)
+      if (!result) {
+        console.warn('Script pages', this.pages())
+        throw new Error(`Invalid page: ${pageId}`)
       }
+      return result
     },
     startPage(pageId) {
       const page = this.getPage(pageId)
@@ -114,21 +142,30 @@ export default {
 
       interpreter.setNativeFunctionPrototype(manager, 'isEnabled', pageId => {
         if (typeof pageId !== 'string') {
-          throw new TypeError('pageId must be a string')
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'pageId must be a string'
+          )
         }
 
         return this.isPageEnabled(pageId)
       })
       interpreter.setNativeFunctionPrototype(manager, 'enable', pattern => {
         if (typeof pattern !== 'string') {
-          throw new TypeError('pattern must be a string')
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'pattern must be a string'
+          )
         }
 
         this.enablePage(pattern)
       })
       interpreter.setNativeFunctionPrototype(manager, 'disable', pattern => {
         if (typeof pattern !== 'string') {
-          throw new TypeError('pattern must be a string')
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'pattern must be a string'
+          )
         }
 
         this.disablePage(pattern)
@@ -164,17 +201,16 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'goto', pageId => {
         const page = this.pages()[pageId]
         if (!page) {
-          interpreter.throwException(
-            interpreter.RANGE_ERROR,
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
             'Invalid page: ' + pageId
           )
-          return false
         }
         return this.showPage(pageId)
       })
 
-      this.pagesTarget = interpreter.createObjectProto(proto)
-      interpreter.setProperty(globalObject, 'pages', this.pagesTarget)
+      this.pagesInstance = interpreter.createObjectProto(proto)
+      interpreter.setProperty(globalObject, 'pages', this.pagesInstance)
 
       // Add interpreted code
       interpreter.appendCode(pagesCode)

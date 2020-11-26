@@ -1,26 +1,15 @@
-import { getRandomInt, buildHref } from '../util'
+import { getRandomInt } from '../util'
+import { buildHref, extToType } from '../util/io'
+import minimatch from 'minimatch'
 let galleryLookup = {}
 let SCRIPT = {}
-
-// export const extensionMap = {
-//   'audio/mpeg': 'mp3',
-//   'image/jpeg': 'jpg',
-// }
-
-// function buildHref(item) {
-//   if (!item.type || item.type.match(/^image/)) {
-//     return `https://media.milovana.com/timg/tb_xl/${item.hash}.jpg`
-//   } else {
-//     return `https://media.milovana.com/timg/${item.hash}.${
-//       extensionMap[item.type]
-//     }`
-//   }
-// }
+const randomPreload = {}
 
 export default {
   data: () => ({
     missingFile: {
       href: 'missing-file',
+      error: true,
     },
   }),
   computed: {},
@@ -37,29 +26,49 @@ export default {
     pages() {
       return (SCRIPT && SCRIPT.pages) || {}
     },
-    locatorLookup(locator) {
+    locatorLookup(locator, preload) {
+      const preloaded = !preload && randomPreload[locator]
+      if (preloaded) {
+        // A random locator was pre-loaded, but not yet used
+        // use it
+        delete randomPreload[locator]
+        return preloaded
+      }
       if (typeof locator !== 'string') return null
       const galleryFile = this.lookupGalleryImage(locator)
       if (galleryFile) return galleryFile
       const file = this.lookupFile(locator)
       if (file) return file
       console.error('Invalid locator', locator)
-      return { href: 'invalid-locator' }
+      return { href: 'invalid-locator', error: true }
     },
-    lookupFile(locator) {
+    lookupFile(locator, preload) {
       const fileMatch = locator.match(/^file:(.*)$/)
       if (!fileMatch) return
-      const file = this.files()[fileMatch[1]]
+      const extMatch = locator.match(/\.([^.]+)$/)
+      const isRandom = locator.match(/\*/)
+      const ext = extMatch && extMatch[1]
+      const type = extToType[ext]
+      const files = this.files()
+      const filter = minimatch.filter(locator.slice('file:'.length))
+      const candidates = Object.keys(files)
+        .filter(filter)
+        .map(f => Object.assign(f, files[f.name]))
+        .filter(f => !type || f.type === type)
+      const file = candidates[Math.floor(Math.random() * candidates.length)]
+      // const file = this.files()[fileMatch[1]]
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile
+      } else if (preload && isRandom) {
+        randomPreload[locator] = file
       }
       return {
         item: file,
         href: buildHref(file),
       }
     },
-    lookupGalleryImage(locator) {
+    lookupGalleryImage(locator, preload) {
       const galleryMatch = locator.match(/^gallery:([^/]+)\/(.*)$/)
       if (!galleryMatch) return
       const gallery = galleryLookup[galleryMatch[1]]
@@ -78,6 +87,7 @@ export default {
           )
           return this.missingFile
         }
+        if (preload) randomPreload[locator] = image
       } else {
         image = gallery[galleryMatch[2]]
         if (!image) {

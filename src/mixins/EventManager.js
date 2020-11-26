@@ -23,14 +23,5 @@ export default {
       interpreter.run()
       return interpreter.value
     },
-    // throwVmException(message) {
-    //   const interpreter = this.interpreter
-    //   console.log('interpreter.stateStack', interpreter.stateStack)
-    //   if (interpreter) throw new TypeError('Die here')
-    //   const error = interpreter.createObject(interpreter.ERROR)
-    //   interpreter.unwind(this.Interpreter.Completion.THROW, error, undefined)
-    //   interpreter.paused_ = false
-    //   interpreter.run()
-    // },
   },
 }

@@ -3,7 +3,10 @@ function EventTarget() {}
 Object.defineProperties(EventTarget.prototype, {
   listeners: {
     get: function() {
-      return this._listeners || []
+      if (this._listeners === undefined) {
+        this._listeners = {}
+      }
+      return this._listeners
     },
   },
 })

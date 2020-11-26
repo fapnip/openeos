@@ -4,7 +4,7 @@
       {{ filteredTitle }}
     </div>
     <div v-if="buttonLabel" class="oeos-nt-button">
-      <v-btn class="custom-transform-class text-none" @click="onClick">{{
+      <v-btn class="custom-transform-class text-none" @click.stop="onClick">{{
         filteredButtonLabel
       }}</v-btn>
     </div>

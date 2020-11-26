@@ -67,11 +67,10 @@ export default {
 
       function getOptionByIndex(i) {
         if (!this.options[i]) {
-          interpreter.throwException(
+          return interpreter.createThrowable(
             interpreter.RANGE_ERROR,
             'Invalid option index: ' + i
           )
-          return
         }
         return this.options[i]
       }

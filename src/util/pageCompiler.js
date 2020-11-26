@@ -9,7 +9,7 @@ let images = {}
 let sounds = {}
 let targets = {}
 
-export default function pageCompiler(page, interpreter, globalObject) {
+export default function pageCompiler(page) {
   images = {}
   sounds = {}
   targets = {}
@@ -53,15 +53,15 @@ const commandList = {
   noop: () => 'return false;',
   if: (c, i, cl) => {
     return `
-    var myCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     if (${wrap(c.condition)}) {
       _doCommandFns(${compileCommandsToArray(
         c.commands
-      )}, myCmdFns, continueFns);
+      )}, nextCmdFns, continueFns);
     } else {
       _doCommandFns(${compileCommandsToArray(
         c.elseCommands
-      )}, myCmdFns, continueFns);
+      )}, nextCmdFns, continueFns);
     }
     return true;
     `
@@ -79,7 +79,7 @@ const commandList = {
       type: ${JSON.stringify(nextCommandType)},
       isAsync: ${JSON.stringify(nextCommandObj.isAsync)},
     };
-    var myCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     new Say({
       label: ${parseHtmlToJS(c.label)},
       mode: ${JSON.stringify(c.mode)},
@@ -88,7 +88,7 @@ const commandList = {
       allowSkip: ${JSON.stringify(c.allowSkip)},
       align: ${JSON.stringify(c.align)},
       onContinue: function() {
-        _doCommandFns(myCmdFns, continueFns, []);
+        _doCommandFns(nextCmdFns, continueFns, []);
       }
     })
     return true;
@@ -100,7 +100,7 @@ const commandList = {
       isAsync
         ? ``
         : `
-    var myCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     `
     }
     new Timer({
@@ -121,7 +121,7 @@ const commandList = {
         isAsync
           ? `null`
           : `function() {
-        _doCommandFns(myCmdFns, continueFns, []);
+        _doCommandFns(nextCmdFns, continueFns, []);
       }`
       }
     })
@@ -137,11 +137,11 @@ const commandList = {
   },
   choice: (c, i, cl) => {
     return `
-    var myCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     new Choice({
       options: [${buildChoiceOptions(c.options)}],
       onContinue: function() {
-        _doCommandFns(myCmdFns, continueFns, []);
+        _doCommandFns(nextCmdFns, continueFns, []);
       }
     })
     return true;
@@ -150,12 +150,12 @@ const commandList = {
   prompt: (c, i, cl) => {
     let v = c.variable || '__lastPromptVal'
     return `
-    var myCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     new Prompt({
       onInput: function (v) {
         if (!_isComplete()) {
           window[${JSON.stringify(v)}] = v
-          _doCommandFns(myCmdFns, continueFns, []);
+          _doCommandFns(nextCmdFns, continueFns, []);
         }
       }
     })
@@ -248,7 +248,7 @@ function buildChoiceOption(o) {
     onSelect: function () {
       _doCommandFns(${compileCommandsToArray(
         o.commands
-      )}, myCmdFns, continueFns)
+      )}, nextCmdFns, continueFns)
     }
   }`
 }

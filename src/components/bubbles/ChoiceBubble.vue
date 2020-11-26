@@ -7,7 +7,7 @@
         small
         :color="option.color"
         class="custom-transform-class text-none"
-        @click="optionSelect(option)"
+        @click.stop="optionSelect(option)"
       >
         <span v-html="markupFilter(option.label)"></span
       ></v-btn>
