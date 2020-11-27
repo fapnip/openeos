@@ -1,13 +1,13 @@
 <template>
-  <div
-    class="oeos-main"
-    :style="{
-      backgroundImage:
-        selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
-      backgroundColor: backgroundColor,
-    }"
-    @click="onBodyClick"
-  >
+  <div class="oeos-main" @click="onBodyClick">
+    <div
+      class="oeos-background"
+      :style="{
+        backgroundImage:
+          selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
+        backgroundColor: backgroundColor,
+      }"
+    ></div>
     <div
       :class="{
         'oeos-bottom': true,
@@ -143,6 +143,7 @@ Vibrant.use(Pipeline)
 
 let interactCounter = 0
 let scrolling = false
+let isScrolled = null
 
 export default {
   name: 'OpenEosPlayer',
@@ -273,10 +274,24 @@ export default {
         this.setScrollToBottom(oeosBottom)
       }
     },
-    setScrollToBottom({ scrollTop, clientHeight, scrollHeight }) {
+    setScrollToBottom(oeosBottom) {
       // console.log(scrollTop, clientHeight, scrollHeight)
-      this.bubbleHeight = clientHeight
-      this.scrolledToBottom = scrollTop + clientHeight >= scrollHeight
+
+      this.bubbleHeight = oeosBottom.clientHeight
+      let isAtBottom =
+        oeosBottom.scrollTop + oeosBottom.clientHeight >=
+        oeosBottom.scrollHeight
+      if (isScrolled) clearTimeout(isScrolled)
+      isScrolled = false
+      if (!isAtBottom && this.scrolledToBottom) {
+        isScrolled = setTimeout(() => {
+          this.scrolledToBottom =
+            oeosBottom.scrollTop + oeosBottom.clientHeight >=
+            oeosBottom.scrollHeight
+        }, 250)
+      } else if (isAtBottom) {
+        this.scrolledToBottom = isAtBottom
+      }
     },
     scrollToBottom() {
       if (scrolling) return
@@ -353,12 +368,23 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
+}
+.oeos-background {
+  /* height: 100%;
+  width: 100%;
+  position: relative; */
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 0;
   /* background-image: url(/static/media/navy.70005832.png); */
   transition: background-color 0.3s ease;
   background-repeat: repeat;
+  background-size: 450px;
 }
-.oeos-main:before {
+.oeos-background:before {
   content: '';
   position: absolute;
   top: 0;
