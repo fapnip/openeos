@@ -22,6 +22,9 @@ export default {
   },
   methods: {
     addPreload(file, asType) {
+      if (asType === 'audio') {
+        return // audio preloading not supported yet
+      }
       if (file && !file.error && !preloaded[file.href]) {
         preloaded[file.href] = true
         this.preloadImages.push(file)

@@ -23,7 +23,7 @@ export default {
       const vue = this
       const constructor = (opt, fromPageScript) => {
         const options = interpreter.pseudoToNative(opt)
-        const file = this.lookupFile(options.locator)
+        const file = this.locatorLookup(options.locator)
         if (!file.item) {
           return interpreter.createThrowable(
             interpreter.ERROR,

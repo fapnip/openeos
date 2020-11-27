@@ -38,7 +38,9 @@ export default {
       const galleryFile = this.lookupGalleryImage(locator)
       if (galleryFile) return galleryFile
       const file = this.lookupFile(locator)
-      if (file) return file
+      if (file) {
+        return file
+      }
       console.error('Invalid locator', locator)
       return { href: 'invalid-locator', error: true }
     },
@@ -51,12 +53,11 @@ export default {
       const type = extToType[ext]
       const files = this.files()
       const filter = minimatch.filter(locator.slice('file:'.length))
-      const candidates = Object.keys(files)
+      const matches = Object.keys(files)
         .filter(filter)
-        .map(f => Object.assign(f, files[f.name]))
+        .map(f => files[f])
         .filter(f => !type || f.type === type)
-      const file = candidates[Math.floor(Math.random() * candidates.length)]
-      // const file = this.files()[fileMatch[1]]
+      const file = matches[Math.floor(Math.random() * matches.length)]
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile

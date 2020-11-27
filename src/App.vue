@@ -365,14 +365,33 @@ export default {
 
             this.loading = false
           } else {
-            console.log('Tease JSON', script)
             this.getRemoteScriptName(uri, script)
           }
         })
         .catch(e => {
-          this.error = 'Does not appear to be a valid EOS tease (Invalid JSON)'
-          console.error('JSON response error', e)
-          this.loading = false
+          fetch(
+            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}`
+          )
+            .then(response => response.text())
+            .then(contents => {
+              console.log('Looking for old-school tease', contents)
+              this.loading = false
+              if (
+                parser
+                  .parseFromString(contents, 'text/html')
+                  .getElementById('tease_title')
+              ) {
+                this.error = 'Sorry, old-school teases are not supported.'
+              } else {
+                throw e
+              }
+            })
+            .catch(() => {
+              this.error =
+                'Does not appear to be a valid EOS tease (Invalid JSON)'
+              console.error('JSON response error', e)
+              this.loading = false
+            })
         })
     },
     getRemoteScriptName(uri, script) {
