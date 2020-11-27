@@ -347,7 +347,7 @@ export default {
     getRemoteScript(uri) {
       this.loading = true
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php?id=${uri}`
+        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php?id=${uri}&__oeos`
       )
         .then(response => response.json())
         .then(script => {
@@ -370,7 +370,7 @@ export default {
         })
         .catch(e => {
           fetch(
-            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}`
+            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&__oeos`
           )
             .then(response => response.text())
             .then(contents => {
@@ -381,7 +381,7 @@ export default {
                   .parseFromString(contents, 'text/html')
                   .getElementById('tease_title')
               ) {
-                this.error = 'Sorry, old-school teases are not supported.'
+                this.error = 'Sorry, classic teases are not supported.'
               } else {
                 throw e
               }
@@ -396,7 +396,7 @@ export default {
     },
     getRemoteScriptName(uri, script) {
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}`
+        `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&__oeos`
       )
         .then(response => response.text())
         .then(contents => {

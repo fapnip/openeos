@@ -1,5 +1,5 @@
 <template>
-  <v-row :align="align" @click.stop="onClick"
+  <v-row :align="align" @click.once="onClick"
     ><div v-html="filteredLabel"></div>
     <v-btn v-if="showButton" icon
       ><v-icon dark class="blinkButton"
@@ -114,8 +114,9 @@ export default {
       clearTimeout(timeout)
       this.onContinue()
     },
-    onClick(option) {
+    onClick(event) {
       if (this.allowSkip || this.isPause) {
+        if (event && event.stopPropagation) event.stopPropagation()
         this.onContinue()
       }
     },

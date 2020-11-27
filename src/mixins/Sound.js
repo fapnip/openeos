@@ -1,6 +1,6 @@
 import { Howl, Howler } from 'howler'
 
-let idCounter = 0
+// let idCounter = 0
 
 export default {
   data: () => ({
@@ -31,7 +31,7 @@ export default {
           )
         }
         if (!options.id) {
-          options.id = '__sound_' + ++idCounter
+          options.id = '__sound_' + file.href
         }
         options.fromPageScript = fromPageScript
 
@@ -42,26 +42,34 @@ export default {
           )
         }
 
+        const volume = Number(options.volume)
+
         if (this.sounds[options.id]) {
           const result = this.sounds[options.id]
           result.loopCount = result.loops
+          if (!isNaN(volume)) this.sound.volume(volume)
           result.sound.play()
           return result
         }
 
         const item = interpreter.createObjectProto(proto)
         item.options = options
-        item.sound = sound
         item.loops = options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
         item.loopCount = item.loops
 
-        const sound = new Howl({
-          src: [file.href],
-          loop: item.loop,
-          autoPlay: true,
-          volume: options.volume === undefined ? 1 : options.volume,
-        })
+        let sound
+
+        try {
+          sound = new Howl({
+            src: [file.href],
+            loop: item.loop,
+            autoPlay: true,
+            volume: isNaN(volume) ? 1 : volume,
+          })
+        } catch (e) {
+          return interpreter.createThrowable(interpreter.ERROR, e.toString())
+        }
 
         item.sound = sound
 

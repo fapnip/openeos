@@ -4,9 +4,12 @@
       {{ filteredTitle }}
     </div>
     <div v-if="buttonLabel" class="oeos-nt-button">
-      <v-btn class="custom-transform-class text-none" @click.stop="onClick">{{
-        filteredButtonLabel
-      }}</v-btn>
+      <v-btn
+        small
+        class="custom-transform-class text-none"
+        @click.stop="onClick"
+        >{{ filteredButtonLabel }}</v-btn
+      >
     </div>
     <div v-if="duration" class="oeos-nt-countdown" :style="cssVars">
       <!-- <div class="countdown-number">{{ formattedTimeLeft }}</div> -->

@@ -2,14 +2,11 @@ import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import '@mdi/font/css/materialdesignicons.css'
-import VueSmoothScroll from 'vue2-smooth-scroll'
+import VueScrollTo from 'vue-scrollto'
 
 Vue.config.productionTip = false
 
-Vue.use(VueSmoothScroll, {
-  duration: 400,
-  updateHistory: false,
-})
+Vue.use(VueScrollTo)
 
 new Vue({
   vuetify,

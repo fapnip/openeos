@@ -18,11 +18,11 @@ export const buildHref = (item, smaller) => {
   if (!item.type || item.type.match(/^image/)) {
     return `https://media.milovana.com/timg/tb_${smaller ? 'l' : 'xl'}/${
       item.hash
-    }.jpg`
+    }.jpg?__oeos`
   } else {
     return `https://media.milovana.com/timg/${item.hash}.${
       extensionMap[item.type]
-    }`
+    }?__oeos`
   }
 }
 

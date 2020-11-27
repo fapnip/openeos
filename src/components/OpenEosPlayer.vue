@@ -1,5 +1,13 @@
 <template>
-  <div class="oeos-main" @click="onBodyClick">
+  <div
+    class="oeos-main"
+    :style="{
+      backgroundImage:
+        selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
+      backgroundColor: backgroundColor,
+    }"
+    @click="onBodyClick"
+  >
     <div
       :class="{
         'oeos-bottom': true,
@@ -10,6 +18,11 @@
       ref="oeosBottom"
     >
       <v-container fill-height class="pa-0">
+        <v-row
+          :style="{ height: bubbleHeight + 'px' }"
+          class="text-center pa-0 ma-0"
+        >
+        </v-row>
         <v-row
           v-for="interaction in interactions"
           :key="interaction.id"
@@ -121,7 +134,15 @@ import TestCode from '!!raw-loader!../interpreter/code/test.js'
 
 // import testJson from '../assets/test.json'
 
+import backgroundImage from '../assets/bg-texture.png'
+
+import Vibrant from 'node-vibrant/lib/browser.js'
+import Pipeline from 'node-vibrant/lib/pipeline/index.js'
+
+Vibrant.use(Pipeline)
+
 let interactCounter = 0
+let scrolling = false
 
 export default {
   name: 'OpenEosPlayer',
@@ -161,8 +182,15 @@ export default {
     interactions: [],
     scrolledToBottom: true,
     image: null,
+    backgroundTexture: null,
+    backgroundColor: null,
+    forcedBackgroundColor: null,
+    bubbleHeight: 0,
   }),
   computed: {
+    selectedBackgroundTexture() {
+      return this.backgroundColor && (this.backgroundTexture || backgroundImage)
+    },
     initScript() {
       return this.script.init || ''
     },
@@ -172,8 +200,20 @@ export default {
   // },
   mounted() {
     this.initInterpreter()
+    this.checkActionContainer()
+  },
+  watch: {
+    image(image) {
+      if (this.forcedBackgroundColor) return
+      if (!image || !image.href) return
+      this.setBackgroundFromImage(image.href)
+    },
   },
   methods: {
+    async setBackgroundFromImage(imageHref) {
+      const { DarkMuted } = await Vibrant.from(imageHref).getPalette()
+      this.backgroundColor = DarkMuted.getHex()
+    },
     debug() {
       if (this.isDebug) {
         console.log(...arguments)
@@ -227,19 +267,41 @@ export default {
       })
       return interactCounter
     },
-    checkActionContainer(e) {
-      if (e && e.target) {
-        this.scrollActionContainer(e.target)
+    checkActionContainer() {
+      const oeosBottom = this.$refs.oeosBottom
+      if (oeosBottom) {
+        this.setScrollToBottom(oeosBottom)
       }
     },
-    scrollActionContainer({ scrollTop, clientHeight, scrollHeight }) {
+    setScrollToBottom({ scrollTop, clientHeight, scrollHeight }) {
       // console.log(scrollTop, clientHeight, scrollHeight)
+      this.bubbleHeight = clientHeight
       this.scrolledToBottom = scrollTop + clientHeight >= scrollHeight
     },
     scrollToBottom() {
+      if (scrolling) return
       const oeosBottom = this.$refs.oeosBottom
-      if (oeosBottom) {
-        oeosBottom.scrollTop = oeosBottom.scrollHeight - oeosBottom.clientHeight
+      const lastItem = this.$refs.lastItem
+      const srollpx =
+        oeosBottom.scrollHeight -
+        (oeosBottom.scrollTop + oeosBottom.clientHeight)
+      if (oeosBottom && lastItem) {
+        if (srollpx > 0) {
+          this.$scrollTo(lastItem, {
+            container: oeosBottom,
+            onStart: () => {
+              console.log('Doing Scroll')
+              scrolling = true
+            },
+            onDone: () => {
+              scrolling = false
+              this.scrollToBottom()
+            },
+            onCancel: () => {
+              scrolling = false
+            },
+          })
+        }
       }
     },
     installInterpreterModules(interpreter, globalObject) {
@@ -283,8 +345,28 @@ export default {
 </script>
 <style scoped>
 .oeos-main {
-  height: 100%;
+  /* height: 100%;
   width: 100%;
+  position: relative; */
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  /* background-image: url(/static/media/navy.70005832.png); */
+  transition: background-color 0.3s ease;
+  background-repeat: repeat;
+}
+.oeos-main:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: linear-gradient(90deg, #000, transparent, #000);
+  opacity: 0.6;
 }
 .oeos-top {
   position: absolute;
@@ -293,7 +375,6 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  background: black;
 }
 .oeos-right {
   position: absolute;
@@ -326,6 +407,7 @@ export default {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
   scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 .oeos-bottom.has-image {
   top: 70%;
@@ -344,7 +426,9 @@ export default {
   text-align: center;
 }
 .oeos-image img {
+  object-fit: contain;
   height: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 .oeos-scroll-button {

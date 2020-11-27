@@ -6,6 +6,8 @@ let navCounter = 0
 let disabledPages = {}
 let pageScripts = {}
 const preloaded = {}
+const preloadedPage = {}
+let lastGetPageId = null
 
 export default {
   data: () => ({
@@ -23,7 +25,7 @@ export default {
   methods: {
     addPreload(file, asType) {
       if (asType === 'audio') {
-        return // audio preloading not supported yet
+        return // audio preloading not supported... yet?
       }
       if (file && !file.error && !preloaded[file.href]) {
         preloaded[file.href] = true
@@ -32,6 +34,7 @@ export default {
         preload.rel = 'preload'
         preload.href = file.href
         preload.as = asType
+        preload.crossOrigin = 'anonymous'
         preload.onload = function() {
           this.remove() // Remove preload element now that it's loaded
         }
@@ -74,9 +77,14 @@ export default {
       this.purgePageInteractions()
       this.purgePageSounds()
     },
-    preloadPage(pageId, parentPageId) {
-      if (!this.pages()[pageId]) {
-        console.warn(`Linked pageId "${pageId}" in ${parentPageId} not found.`)
+    preloadPage(patten, parentPageId) {
+      let pageId
+      try {
+        if (this.getPage(patten, true)) {
+          pageId = lastGetPageId
+        }
+      } catch (e) {
+        console.warn(`Linked pageId "${patten}" in ${parentPageId} not found.`)
         return
       }
       const pageScript = this.getPageScript(pageId)
@@ -89,11 +97,14 @@ export default {
         this.addPreload(file, 'audio')
       }
     },
-    showPage(pageId) {
+    showPage(patten) {
       // TODO
-      console.warn('Showing Page:', pageId)
+      console.warn('Showing Page:', patten)
       const interpreter = this.interpreter
-      const pageScript = this.getPageScript(pageId)
+      const pageScript = this.getPageScript(patten)
+      const pageId = lastGetPageId
+      const pageKeys = Object.keys(this.pages())
+      const pageIndex = pageKeys.indexOf(pageId)
       let pageCode = pageScript.code
       if (!pageCode) {
         // console.log('Building "' + pageId + '" page script', pageScript.script)
@@ -101,8 +112,17 @@ export default {
         pageScript.code = pageCode
       }
       this.preloadPage(pageId, this.lastPageId)
+      const preloadedPages = {}
+      preloadedPages[pageId] = true
       for (const target in Object.keys(pageScript.targets)) {
         this.preloadPage(target, pageId)
+        preloadedPages[lastGetPageId] = true
+      }
+      if (pageIndex > -1) {
+        const nextPagePreload = pageKeys[pageIndex + 1]
+        if (nextPagePreload && !preloadedPages[nextPagePreload]) {
+          this.preloadPage(nextPagePreload)
+        }
       }
       this.lastPageId = this.currentPageId
       this.currentPageId = pageId
@@ -111,12 +131,29 @@ export default {
       this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
       interpreter.appendCode(pageCode)
     },
-    getPage(pageId) {
-      const result = this.pages()[pageId]
+    getPage(pattern, preload) {
+      if (!preload && preloadedPage[pattern]) {
+        const result = preloadedPage[pattern]
+        delete preloadedPage[pattern]
+        pattern = result
+      }
+      if (pattern && pattern.match(/\*/)) {
+        const filter = minimatch.filter(pattern)
+        const pages = Object.keys(this.pages()).filter(filter)
+        const selectedPage = pages[Math.floor(Math.random() * pages.length)]
+        if (selectedPage) {
+          if (preload) preloadedPage[pattern] = selectedPage
+          pattern = selectedPage
+        } else {
+          throw new Error(`No page found with pattern: ${pattern}`)
+        }
+      }
+      const result = this.pages()[pattern]
       if (!result) {
         console.warn('Script pages', this.pages())
-        throw new Error(`Invalid page: ${pageId}`)
+        throw new Error(`Invalid page: ${pattern}`)
       }
+      lastGetPageId = pattern
       return result
     },
     startPage(pageId) {
@@ -202,14 +239,14 @@ export default {
         // TODO: display end modal
       })
       interpreter.setNativeFunctionPrototype(manager, 'goto', pageId => {
-        const page = this.pages()[pageId]
-        if (!page) {
+        try {
+          return this.showPage(pageId)
+        } catch (e) {
           return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
-            'Invalid page: ' + pageId
+            `Error loading page: ${pageId};  ${e.toString()}`
           )
         }
-        return this.showPage(pageId)
       })
 
       this.pagesInstance = interpreter.createObjectProto(proto)

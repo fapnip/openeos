@@ -16,6 +16,13 @@ module.exports = {
           test: /interpreter\/polyfills\/.*\.js$/,
           use: 'raw-loader',
         },
+        {
+          test: /\.worker\.js$/,
+          loader: 'worker-loader',
+          options: {
+            /* ... */
+          },
+        },
       ],
     },
   },
