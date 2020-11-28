@@ -1,23 +1,27 @@
 <template>
-  <div class="oeos-nt">
-    <div v-if="title" class="oeos-nt-title">
-      {{ filteredTitle }}
-    </div>
-    <div v-if="buttonLabel" class="oeos-nt-button">
-      <v-btn
-        small
-        class="custom-transform-class text-none"
-        @click.stop="onClick"
-        >{{ filteredButtonLabel }}</v-btn
-      >
-    </div>
-    <div v-if="duration" class="oeos-nt-countdown" :style="cssVars">
-      <!-- <div class="countdown-number">{{ formattedTimeLeft }}</div> -->
-      <div class="oeos-nt-countdown-line">
-        <div></div>
+  <v-card
+    style="background-color: rgba(30,30,30,0.50); min-width: 100px;  text-align: center; margin-bottom: 5px"
+  >
+    <v-card-text class="oeos-nt pa-1 ma-0">
+      <div v-if="title" class="oeos-nt-title">
+        {{ filteredTitle }}
       </div>
-    </div>
-  </div>
+      <div v-if="buttonLabel" class="oeos-nt-button">
+        <v-btn
+          small
+          class="custom-transform-class text-none"
+          @click.stop="onClick"
+          >{{ filteredButtonLabel }}</v-btn
+        >
+      </div>
+      <div v-if="duration" class="oeos-nt-countdown" :style="cssVars">
+        <!-- <div class="countdown-number">{{ formattedTimeLeft }}</div> -->
+        <div class="oeos-nt-countdown-line">
+          <div></div>
+        </div>
+      </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -197,6 +201,12 @@ export default {
   background: red;
   transform-origin: left;
   animation: oeos-nt-countdown var(--cd-stroke-time) linear 1 forwards;
+}
+
+.oeos-nt-title,
+.oeos-nt-button {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @keyframes oeos-nt-countdown {

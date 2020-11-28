@@ -1,12 +1,14 @@
 <template>
-  <v-row :align="align" @click.once="onClick"
-    ><div v-html="filteredLabel"></div>
-    <v-btn v-if="showButton" icon
-      ><v-icon dark class="blinkButton"
-        >mdi-arrow-right-drop-circle</v-icon
-      ></v-btn
-    >
-  </v-row>
+  <v-card @click.once="onClick" class="oeos-say-bubble">
+    <v-card-text class="px-7 py-1">
+      <div v-html="filteredLabel"></div>
+    </v-card-text>
+    <div class="blinkButton">
+      <v-btn v-if="showButton" icon x-small
+        ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
+      >
+    </div>
+  </v-card>
 </template>
 
 <script>
@@ -124,9 +126,12 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 /* Basic button styling */
 .blinkButton {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
   animation: fadeinout 1.5s linear forwards;
   animation-iteration-count: infinite;
 }

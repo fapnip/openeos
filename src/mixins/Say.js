@@ -40,6 +40,7 @@ export default {
         interaction.options = []
         for (const k of Object.keys(optProps)) {
           const val = optProps[k]
+          if (val === undefined) continue
           if (typeof val !== 'object') {
             vue.$set(interaction, k, val) // make reactive
           } else {

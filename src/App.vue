@@ -33,7 +33,7 @@
       </div>
 
       <v-spacer></v-spacer>
-
+      <span>{{ pageId }}</span>
       <v-btn v-if="script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
       </v-btn>
@@ -47,6 +47,7 @@
         v-if="script"
         :script="script"
         :is-fullscreen="this.isFullscreen"
+        @page-change="pageChange"
       />
       <v-container v-else>
         <v-text-field
@@ -203,6 +204,7 @@ export default {
     downloadDialog: false,
     downloading: false,
     fileUpload: null,
+    pageId: null,
     downloaded: 0,
     message: {
       title: null,
@@ -233,6 +235,9 @@ export default {
     // this.getRemoteScript('id=45184')
   },
   methods: {
+    pageChange(pageId) {
+      this.pageId = pageId
+    },
     closeMessage() {
       this.message.show = false
       this.message.onContinue = () => {}

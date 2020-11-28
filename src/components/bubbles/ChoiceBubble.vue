@@ -6,7 +6,7 @@
         :key="option.label + ':' + i"
         small
         :color="option.color"
-        class="custom-transform-class text-none"
+        class="custom-transform-class text-none mx-1"
         @click.stop="optionSelect(option)"
       >
         <span v-html="markupFilter(option.label)"></span

@@ -3,16 +3,18 @@ import pagesCode from '!!raw-loader!../interpreter/code/pages.js'
 import minimatch from 'minimatch'
 
 let navCounter = 0
+let navIndex = 0
 let disabledPages = {}
 let pageScripts = {}
 const preloaded = {}
 const preloadedPage = {}
 let lastGetPageId = null
+import { validateHTMLColorHex } from 'validate-color'
 
 export default {
   data: () => ({
     pagesInstance: null,
-    currentPageId: 'start',
+    currentPageId: null,
     lastPageId: '',
     commandIndex: 0,
     preloadImages: [],
@@ -21,6 +23,11 @@ export default {
     navCounter = 0
     pageScripts = {}
     disabledPages = {}
+  },
+  watch: {
+    currentPageId(val) {
+      this.$emit('page-change', val)
+    },
   },
   methods: {
     addPreload(file, asType) {
@@ -127,6 +134,7 @@ export default {
       this.lastPageId = this.currentPageId
       this.currentPageId = pageId
       navCounter++
+      navIndex++
       this.beforePageChange()
       this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
       interpreter.appendCode(pageCode)
@@ -223,8 +231,56 @@ export default {
         return navCounter
       })
 
+      interpreter.setNativeFunctionPrototype(manager, 'getNavQueued', () => {
+        navIndex--
+        if (navIndex < 0) {
+          navIndex = 0
+        }
+        return navIndex
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
         this.image = this.locatorLookup(locator)
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'setBarColor', color => {
+        if (!validateHTMLColorHex(color)) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            `Invalid HEX color: ${color}`
+          )
+        }
+        this.$vuetify.theme.themes.dark.primary = color
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'lockBgColor', color => {
+        if (!color) {
+          this.forcedBackgroundColor = null
+        }
+        if (!validateHTMLColorHex(color)) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            `Invalid HEX color: ${color}`
+          )
+        }
+        this.forcedBackgroundColor = color
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'setBgColor', color => {
+        if (!color) {
+          this.backgroundColor = null
+        }
+        if (!validateHTMLColorHex(color)) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            `Invalid HEX color: ${color}`
+          )
+        }
+        this.backgroundColor = color
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'getBgColor', () => {
+        return this.currentBackgroundColor
       })
 
       interpreter.setNativeFunctionPrototype(

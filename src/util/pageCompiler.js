@@ -3,6 +3,8 @@
  * (Runs in JS-Interpreter, not native JS)
  */
 import pageCompilerUtil from '!!raw-loader!../interpreter/code/pageCompilerUtil.js'
+import { decodeHTML } from 'entities'
+
 const parser = new DOMParser()
 
 let images = {}
@@ -15,7 +17,7 @@ export default function pageCompiler(page) {
   targets = {}
   return {
     script: `
-    (function(continueFns){
+    if (!pages.getNavQueued()) (function(continueFns){
       ${pageCompilerUtil}
       _doCommandFns(${compileCommandsToArray(page)}, continueFns, []);
     })([])
@@ -302,7 +304,7 @@ function parseHtmlToJS(string) {
     if (beforeEv.length) {
       result.push(JSON.stringify(beforeEv))
     }
-    const evExpression = ev.innerHTML.trim()
+    const evExpression = decodeHTML(ev.innerHTML).trim()
     if (evExpression.length) {
       result.push(wrap(evExpression, 'e.toString()'))
     }

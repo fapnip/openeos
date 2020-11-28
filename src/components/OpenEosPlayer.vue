@@ -1,11 +1,12 @@
 <template>
   <div class="oeos-main" @click="onBodyClick">
     <div
+      v-if="currentBackgroundColor"
       class="oeos-background"
       :style="{
         backgroundImage:
           selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
-        backgroundColor: backgroundColor,
+        backgroundColor: currentBackgroundColor,
       }"
     ></div>
     <div
@@ -28,7 +29,7 @@
           :key="interaction.id"
           class="text-center pa-0 ma-0"
         >
-          <v-col class="text-center pa-0 ma-0">
+          <div :class="bubbleClass(interaction)">
             <vue-switch :value="interaction.type">
               <template #say>
                 <say-bubble
@@ -53,7 +54,7 @@
                 ></prompt-bubble>
               </template>
             </vue-switch>
-          </v-col>
+          </div>
         </v-row>
         <div ref="lastItem"></div>
       </v-container>
@@ -73,17 +74,20 @@
       </countdown-timer>
     </div>
     <div class="oeos-notifications">
-      <notification-item
-        v-for="(notification, i) in notifications"
-        :key="notification.id + ':' + i"
-        :duration="notification.timerDuration"
-        :title="notification.title"
-        :buttonLabel="notification.buttonLabel"
-        :is-debug="isDebug"
-        @timeout="notification.onTimeout"
-        @button-click="notification.onClick"
-      >
-      </notification-item>
+      <div class="oeos-notification-list">
+        <notification-item
+          v-for="(notification, i) in notifications"
+          :key="notification.id + ':' + i"
+          :duration="notification.timerDuration"
+          :title="notification.title"
+          :buttonLabel="notification.buttonLabel"
+          :is-debug="isDebug"
+          style="margin-bottom: 5px;"
+          @timeout="notification.onTimeout"
+          @button-click="notification.onClick"
+        >
+        </notification-item>
+      </div>
     </div>
     <v-fab-transition>
       <v-btn
@@ -91,7 +95,7 @@
         class="oeos-scroll-button"
         fab
         dark
-        small
+        x-small
         @click="scrollToBottom"
       >
         <v-icon>mdi-arrow-down-bold</v-icon>
@@ -103,6 +107,7 @@
 <script>
 import Interpreter from '../interpreter'
 const interpreter = new Interpreter('')
+interpreter.REGEXP_MODE = 1
 
 // Module Mixins
 import Script from '../mixins/Script'
@@ -189,8 +194,14 @@ export default {
     bubbleHeight: 0,
   }),
   computed: {
+    currentBackgroundColor() {
+      return this.forcedBackgroundColor || this.backgroundColor
+    },
     selectedBackgroundTexture() {
-      return this.backgroundColor && (this.backgroundTexture || backgroundImage)
+      return (
+        this.currentBackgroundColor &&
+        (this.backgroundTexture || backgroundImage)
+      )
     },
     initScript() {
       return this.script.init || ''
@@ -211,6 +222,15 @@ export default {
     },
   },
   methods: {
+    bubbleClass(interaction) {
+      const item = interaction.item || {}
+      const result = {
+        'oeos-bubble': true,
+      }
+      result[`oeos-${interaction.type}-item`] = true
+      result['oeos-align-' + (item.align || 'center')] = true
+      return result
+    },
     async setBackgroundFromImage(imageHref) {
       const { DarkMuted } = await Vibrant.from(imageHref).getPalette()
       this.backgroundColor = DarkMuted.getHex()
@@ -358,7 +378,7 @@ export default {
   },
 }
 </script>
-<style scoped>
+<style>
 .oeos-main {
   /* height: 100%;
   width: 100%;
@@ -382,7 +402,7 @@ export default {
   /* background-image: url(/static/media/navy.70005832.png); */
   transition: background-color 0.3s ease;
   background-repeat: repeat;
-  background-size: 450px;
+  background-size: 520px;
 }
 .oeos-background:before {
   content: '';
@@ -397,7 +417,6 @@ export default {
 .oeos-top {
   position: absolute;
   height: 70%;
-  max-height: 70%;
   top: 0;
   left: 0;
   right: 0;
@@ -405,23 +424,14 @@ export default {
 .oeos-right {
   position: absolute;
   top: 0;
+  bottom: 0;
   right: 10px;
 }
 .oeos-notifications {
   position: absolute;
-  top: 50%;
+  overflow: visible;
+  bottom: 30%;
   right: 10px;
-}
-.oeos-bottom {
-  position: absolute;
-  overflow-y: scroll;
-  top: 70%;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scroll-behavior: smooth;
 }
 .oeos-bottom {
   position: absolute;
@@ -433,33 +443,61 @@ export default {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
   scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   overflow-anchor: none;
-}
-.oeos-bottom.has-image {
-  top: 70%;
 }
 .oeos-bottom::-webkit-scrollbar {
   /* WebKit */
   width: 0;
   height: 0;
 }
+.oeos-bottom.has-image {
+  top: 70%;
+}
 .oeos-image {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   height: 100%;
-  padding: 5px;
-  margin-left: auto;
-  margin-right: auto;
-  width: auto;
-  text-align: center;
+  box-sizing: border-box;
+  /* padding: 5px; */
 }
 .oeos-image img {
+  display: block;
   object-fit: contain;
+  object-position: 50% 50%;
   height: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
 }
 .oeos-scroll-button {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 5px;
+  right: 5px;
+  opacity: 0.8;
+}
+.oeos-bubble {
+  margin-bottom: 6px;
+}
+
+.oeos-bubble p {
+  margin-bottom: 0px;
+}
+.oeos-bubble.oeos-align-center {
+  margin-right: auto;
+  margin-left: auto;
+}
+.oeos-bubble.oeos-align-left {
+  margin-right: auto;
+}
+.oeos-bubble.oeos-align-right {
+  margin-left: auto;
+}
+.oeos-say-item {
+  max-width: 90%;
 }
 </style>
