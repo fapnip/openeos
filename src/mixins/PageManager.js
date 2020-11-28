@@ -133,8 +133,8 @@ export default {
       }
       this.lastPageId = this.currentPageId
       this.currentPageId = pageId
-      navCounter++
-      navIndex++
+      navCounter++ // Increment nav counter so we know when to stop executing page commands
+      navIndex++ // Increment nav depth, so we know to skip consecutive gotos.
       this.beforePageChange()
       this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
       interpreter.appendCode(pageCode)
@@ -232,6 +232,9 @@ export default {
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'getNavQueued', () => {
+        // If more than one pages.goto(...) were executed in a row before the
+        // interpreted script returns control to us, this will make sure only the last
+        // goto is executed, just like the original EOS player
         navIndex--
         if (navIndex < 0) {
           navIndex = 0
