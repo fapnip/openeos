@@ -25,7 +25,7 @@ export default {
     },
     strokeWidth: {
       type: Number,
-      default: 6,
+      default: 7,
     },
     isDebug: {
       type: Boolean,
@@ -163,7 +163,7 @@ export default {
 }
 
 .oeos-countdown-line.spin {
-  animation: oeos-spin 3s linear infinite forwards;
+  animation: oeos-spin 5s linear infinite forwards;
 }
 
 .oeos-countdown-line circle {

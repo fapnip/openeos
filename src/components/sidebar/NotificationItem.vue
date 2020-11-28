@@ -14,7 +14,13 @@
           >{{ filteredButtonLabel }}</v-btn
         >
       </div>
-      <div v-if="duration" class="oeos-nt-countdown" :style="cssVars">
+      <div
+        v-if="duration"
+        ref="countdown"
+        class="oeos-nt-countdown"
+        :style="cssVars"
+        v-resize="countdownResize"
+      >
         <!-- <div class="countdown-number">{{ formattedTimeLeft }}</div> -->
         <div class="oeos-nt-countdown-line">
           <div></div>
@@ -65,6 +71,7 @@ export default {
       startTime: 0,
       timerInterval: null,
       timeout: null,
+      countdownSize: 100,
     }
   },
 
@@ -72,10 +79,12 @@ export default {
     cssVars() {
       return {
         '--cd-dasharray': this.dasharray + 'px',
-        '--cd-width': this.size + 'px',
+        '--cd-width': this.countdownSize + 'px',
         '--cd-stroke-width': this.strokeWidth + 'px',
         '--cd-stroke-time': this.duration + 'ms',
-        '--cd-line-length': this.size + 'px',
+        '--cd-line-length': this.countdownSize + 'px',
+        width: '100%',
+        'min-width': this.size + 'px',
       }
     },
     lineRadius() {
@@ -111,6 +120,7 @@ export default {
   },
 
   mounted() {
+    this.countdownResize()
     this.startTimer()
   },
 
@@ -119,6 +129,11 @@ export default {
   },
 
   methods: {
+    countdownResize() {
+      if (this.$refs.countdown) {
+        this.countdownSize = this.$refs.countdown.clientWidth
+      }
+    },
     clearTimers() {
       clearInterval(this.timerInterval)
       clearTimeout(this.timeout)
