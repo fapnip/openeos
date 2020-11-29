@@ -74,11 +74,21 @@ export default {
         .filter(filter)
         .map(f => files[f])
         .filter(f => !type || f.type === type)
-      const file = matches[Math.floor(Math.random() * matches.length)]
+      let file = matches[Math.floor(Math.random() * matches.length)]
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile
       } else if (preload && isRandom) {
+        const pool = getPreloadPool(locator)
+        const lastInPool = pool[pool.length - 1]
+        for (
+          let i = 5, l = matches.length;
+          l > 2 && i > 0 && file !== lastInPool;
+          i--
+        ) {
+          // Try not to repeat the last file
+          file = matches[Math.floor(Math.random() * matches.length)]
+        }
         addToPreloadPool(locator, file)
       }
       return {
@@ -96,16 +106,6 @@ export default {
       }
       let image = null
       if (galleryMatch[2] === '*') {
-        const preloaded = !preload && getPreloadPool(locator).pop()
-        if (preloaded) {
-          if (!getPreloadPool(locator).length) {
-            // Pre-load pool is empty
-            // Add add one for next time
-            this.addPreload(locator)
-          }
-          // Return this one
-          return preloaded
-        }
         const images = this.galleries()[galleryMatch[1]].images
         image = images[getRandomInt(0, images.length - 1)]
         if (!image) {
@@ -115,7 +115,19 @@ export default {
           )
           return this.missingFile
         }
-        if (preload) addToPreloadPool(locator, image)
+        if (preload) {
+          const pool = getPreloadPool(locator)
+          const lastInPool = pool[pool.length - 1]
+          for (
+            let i = 5, l = images.length;
+            l > 2 && i > 0 && image !== lastInPool;
+            i--
+          ) {
+            // Try not to repeat the last image
+            image = images[getRandomInt(0, images.length - 1)]
+          }
+          addToPreloadPool(locator, image)
+        }
       } else {
         image = gallery[galleryMatch[2]]
         if (!image) {
