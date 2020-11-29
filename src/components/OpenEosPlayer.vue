@@ -363,18 +363,20 @@ export default {
           if (srollpx > 0) {
             this.$scrollTo(lastItem, {
               container: oeosBottom,
-              duration: 250,
+              duration: 500,
               onStart: () => {
                 console.log('Doing Scroll')
                 scrolling = true
               },
               onDone: () => {
                 scrolling = false
-                this.scrollToBottom()
+                // this.scrollToBottom()
               },
               onCancel: () => {
                 scrolling = false
               },
+              // easing: 'ease-in',
+              lazy: false,
             })
           }
         }
@@ -514,7 +516,7 @@ export default {
   right: 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth; */
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   overflow-anchor: none;
