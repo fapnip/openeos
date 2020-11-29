@@ -363,6 +363,7 @@ export default {
           if (srollpx > 0) {
             this.$scrollTo(lastItem, {
               container: oeosBottom,
+              duration: 250,
               onStart: () => {
                 console.log('Doing Scroll')
                 scrolling = true
