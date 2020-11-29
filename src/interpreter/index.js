@@ -34,7 +34,7 @@ Interpreter.prototype.parseCode = function(code) {
  */
 Interpreter.prototype.run = function() {
   if (this.running_) {
-    console.log('Already running')
+    // console.log('Already running')
     return this.paused_
   }
   this.running_ = true

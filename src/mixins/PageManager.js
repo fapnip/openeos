@@ -14,6 +14,7 @@ let lastGetPageId = null
 let waitingPreloads = 0
 const afterPreload = []
 let startupSounds = []
+const preloadedImages = {}
 
 import { validateHTMLColorHex } from 'validate-color'
 
@@ -23,7 +24,7 @@ export default {
     currentPageId: null,
     lastPageId: '',
     commandIndex: 0,
-    preloadImages: [],
+    // preloadImages: [],
   }),
   mounted() {
     navCounter = 0
@@ -45,7 +46,10 @@ export default {
       waitingPreloads++
     },
     doAfterPreload(wait) {
-      if (!wait) return
+      if (!wait) {
+        console.log('Waitng for preload...')
+        return
+      }
       waitingPreloads--
       if (waitingPreloads) return
       let fn = afterPreload.shift()
@@ -61,25 +65,22 @@ export default {
       }
       if (file && !file.error && !preloaded[file.href]) {
         preloaded[file.href] = true
-        this.preloadImages.push(file)
-        var preload = document.createElement('link')
-        preload.rel = 'preload'
-        preload.href = file.href
-        if (asType) preload.as = asType
+        var preload = new Image()
+        preloadedImages[file.href] = preload
         preload.crossOrigin = 'anonymous'
         preload.onload = function() {
           // console.log('Preloaded', preload, waitingPreloads)
-          this.remove() // Remove preload element now that it's loaded
+          delete preloadedImages[file.href]
           _this.doAfterPreload(wait)
         }
         preload.onerror = function() {
           // console.log('Preload Error', preload, waitingPreloads)
-          this.remove() // Remove preload element now that it's loaded
+          delete preloadedImages[file.href]
           _this.doAfterPreload(wait)
         }
+        preload.src = file.href
         if (wait) this.incrementPreload()
         // console.log('Preloading', preload, waitingPreloads)
-        document.head.appendChild(preload)
       }
     },
     isPageEnabled(pageId) {
