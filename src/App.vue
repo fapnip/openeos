@@ -33,8 +33,8 @@
       </div>
 
       <v-spacer></v-spacer>
-      <span>{{ pageId }}</span>
-      <v-btn v-if="script" icon @click.stop="downloadDialog = true">
+      <span v-if="!formUri">{{ pageId }}</span>
+      <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
       </v-btn>
       <v-btn icon @click="toggleFullscreen">
@@ -46,37 +46,47 @@
       <open-eos-player
         v-if="script"
         :script="script"
+        :title="title"
+        :author="author"
         :is-fullscreen="this.isFullscreen"
         @page-change="pageChange"
       />
       <v-container v-else>
-        <v-text-field
-          label="Milovana Tease URL"
-          v-model="teaseUrl"
-          prepend-icon="mdi-link-variant"
-          :error-messages="errors"
-          :loading="loading"
-          @keydown.enter="loadMilovanaUrl"
-          @input="
-            () => {
-              this.error = null
-            }
-          "
-        />
-        <v-btn @click="loadMilovanaUrl" :loading="loading"
-          >Load Tease From URL</v-btn
-        >
-        <v-file-input
-          v-model="fileUpload"
-          prepend-icon="mdi-cloud-upload"
-          accept="application/json, text/json"
-          label="Upload Json"
-          :error-messages="fileErrors"
-          @change="fileError = null"
-        ></v-file-input>
-        <v-btn @click="uploadFile" :loading="loading"
-          >Load Tease From JSON</v-btn
-        >
+        <template v-if="this.formUri && !this.error">
+          <loading>Importing...</loading>
+        </template>
+        <template v-else>
+          <v-text-field
+            label="Milovana Tease URL"
+            v-model="teaseUrl"
+            prepend-icon="mdi-link-variant"
+            :error-messages="errors"
+            :loading="loading"
+            @keydown.enter="loadMilovanaUrl"
+            @input="
+              () => {
+                this.error = null
+                this.formUri = false
+              }
+            "
+          />
+          <v-btn @click="loadMilovanaUrl" :loading="loading"
+            >Load Tease From URL</v-btn
+          >
+          <template v-if="!formUri">
+            <v-file-input
+              v-model="fileUpload"
+              prepend-icon="mdi-cloud-upload"
+              accept="application/json, text/json"
+              label="Upload Json"
+              :error-messages="fileErrors"
+              @change="fileError = null"
+            ></v-file-input>
+            <v-btn @click="uploadFile" :loading="loading"
+              >Load Tease From JSON</v-btn
+            >
+          </template>
+        </template>
       </v-container>
     </v-main>
     <v-dialog v-model="downloadDialog" max-width="290">
@@ -156,6 +166,7 @@
 
 <script>
 import OpenEosPlayer from './components/OpenEosPlayer'
+import Loading from './components/common/Loading'
 import { version } from '../package.json'
 import {
   downloadObjectAsJson,
@@ -169,9 +180,9 @@ const parser = new DOMParser()
 
 export default {
   name: 'App',
-
   components: {
     OpenEosPlayer,
+    Loading,
   },
   computed: {
     downloadedDisplay() {
@@ -199,6 +210,7 @@ export default {
     teaseId: null,
     teaseKey: null,
     teaseUrl: null,
+    formUri: false,
     loading: false,
     version: version,
     downloadDialog: false,
@@ -231,6 +243,21 @@ export default {
       document.addEventListener('MSFullscreenChange', exitHandler, false)
       document.addEventListener('webkitfullscreenchange', exitHandler, false)
     }
+
+    let uri = window.location.search.substring(1)
+    let params = new URLSearchParams(uri)
+    const teaseId = params.get('id')
+    if (teaseId) {
+      this.formUri = true
+      let teaseUrl = `https://milovana.com/webteases/showtease.php?id=${teaseId}`
+      const key = params.get('key')
+      if (key) {
+        teaseUrl += `&key=${key}`
+      }
+      this.teaseUrl = teaseUrl
+      this.loadMilovanaUrl()
+    }
+
     // this.getRemoteScriptName('id=45184')
     // this.getRemoteScript('id=45184')
   },

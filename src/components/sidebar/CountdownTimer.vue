@@ -3,7 +3,7 @@
     <div class="oeos-countdown-number">{{ formattedTimeLeft }}</div>
     <svg
       :class="{
-        'oeos-countdown-line': true,
+        'oeos-countdown-line': showLine,
         spin: isSecret,
       }"
     >
@@ -27,6 +27,10 @@ export default {
       type: Number,
       default: 7,
     },
+    loops: {
+      type: Number,
+      default: 1,
+    },
     isDebug: {
       type: Boolean,
       default: false,
@@ -43,6 +47,8 @@ export default {
       startTime: 0,
       timerInterval: null,
       timeout: null,
+      loopCount: 0,
+      showLine: true,
     }
   },
 
@@ -105,8 +111,18 @@ export default {
     onTimesUp() {
       this.clearTimers()
       if (this.running) {
-        this.$emit('timeout')
         this.running = false
+        this.loopCount++
+        if (this.loops === 0 || this.loopCount < this.loops) {
+          this.startTimer()
+          this.showLine = false
+          setTimeout(() => {
+            this.showLine = true
+          }, 1)
+          this.$emit('loop')
+        } else {
+          this.$emit('timeout')
+        }
       }
     },
 
@@ -122,6 +138,7 @@ export default {
     },
 
     startTimer() {
+      this.timePassed = 0
       this.startTime = Date.now()
       this.timeout = setTimeout(() => {
         this.onTimesUp()

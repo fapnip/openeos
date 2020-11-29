@@ -1,5 +1,16 @@
 <template>
-  <div class="oeos-main" @click="onBodyClick">
+  <loading v-if="loading">{{ loadingText }}</loading>
+  <div v-else-if="!started" class="oeos-main" @click="runTease">
+    <global-events @keydown.space="runTease" @keydown.enter="runTease" />
+    <div class="oeos-start-title">{{ title }}</div>
+    <div v-if="author" class="oeos-start-author">by {{ author }}</div>
+    <div class="oeos-start-button">
+      <v-btn icon small
+        ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
+      >
+    </div>
+  </div>
+  <div v-else class="oeos-main" @click="onBodyClick">
     <div
       v-if="currentBackgroundColor"
       class="oeos-background"
@@ -60,16 +71,20 @@
       </v-container>
     </div>
     <div v-if="image" class="oeos-top">
-      <div class="oeos-image"><img :src="image.href" /></div>
+      <div class="oeos-image">
+        <img ref="mainImage" :src="image.href" crossOrigin="anonymous" />
+      </div>
     </div>
     <div class="oeos-right">
       <countdown-timer
         v-for="(timer, i) in timers"
         :key="timer.id + ':' + i"
         :duration="timer.duration"
+        :loops="timer.loops"
         :type="timer.style"
         :is-debug="isDebug"
         @timeout="timer.onTimeout"
+        @loop="timer.onLoop"
       >
       </countdown-timer>
     </div>
@@ -124,6 +139,7 @@ import Sound from '../mixins/Sound'
 import Storage from '../mixins/Storage'
 
 // Components
+import Loading from './common/Loading'
 import VueSwitch from './common/VueSwitch'
 import CountdownTimer from './sidebar/CountdownTimer'
 import NotificationItem from './sidebar/NotificationItem'
@@ -153,6 +169,7 @@ let isScrolled = null
 export default {
   name: 'OpenEosPlayer',
   components: {
+    Loading,
     VueSwitch,
     CountdownTimer,
     NotificationItem,
@@ -164,6 +181,14 @@ export default {
     isFullscreen: Boolean,
     script: {
       type: Object,
+    },
+    title: {
+      type: String,
+      default: 'Unknown',
+    },
+    author: {
+      type: String,
+      default: '',
     },
   },
   mixins: [
@@ -181,6 +206,8 @@ export default {
     Storage,
   ],
   data: () => ({
+    loading: true,
+    started: false,
     isDebug: true,
     stack: [],
     commands: [],
@@ -192,6 +219,7 @@ export default {
     backgroundColor: null,
     forcedBackgroundColor: null,
     bubbleHeight: 0,
+    loadingText: 'Preloading images...',
   }),
   computed: {
     currentBackgroundColor() {
@@ -212,13 +240,21 @@ export default {
   // },
   mounted() {
     this.initInterpreter()
-    this.checkActionContainer()
   },
   watch: {
     image(image) {
       if (this.forcedBackgroundColor) return
       if (!image || !image.href) return
-      this.setBackgroundFromImage(image.href)
+      this.$nextTick(() => {
+        this.setBackgroundFromImage()
+      })
+    },
+    started(val) {
+      if (val) {
+        this.$nextTick(() => {
+          this.checkActionContainer()
+        })
+      }
     },
   },
   methods: {
@@ -231,8 +267,10 @@ export default {
       result['oeos-align-' + (item.align || 'center')] = true
       return result
     },
-    async setBackgroundFromImage(imageHref) {
-      const { DarkMuted } = await Vibrant.from(imageHref).getPalette()
+    async setBackgroundFromImage() {
+      const img = this.$refs.mainImage
+      if (!img) return
+      const { DarkMuted } = await Vibrant.from(img).getPalette()
       this.backgroundColor = DarkMuted.getHex()
     },
     debug() {
@@ -317,25 +355,27 @@ export default {
       if (scrolling) return
       const oeosBottom = this.$refs.oeosBottom
       const lastItem = this.$refs.lastItem
-      const srollpx =
-        oeosBottom.scrollHeight -
-        (oeosBottom.scrollTop + oeosBottom.clientHeight)
       if (oeosBottom && lastItem) {
-        if (srollpx > 0) {
-          this.$scrollTo(lastItem, {
-            container: oeosBottom,
-            onStart: () => {
-              console.log('Doing Scroll')
-              scrolling = true
-            },
-            onDone: () => {
-              scrolling = false
-              this.scrollToBottom()
-            },
-            onCancel: () => {
-              scrolling = false
-            },
-          })
+        const srollpx =
+          oeosBottom.scrollHeight -
+          (oeosBottom.scrollTop + oeosBottom.clientHeight)
+        if (oeosBottom && lastItem) {
+          if (srollpx > 0) {
+            this.$scrollTo(lastItem, {
+              container: oeosBottom,
+              onStart: () => {
+                console.log('Doing Scroll')
+                scrolling = true
+              },
+              onDone: () => {
+                scrolling = false
+                this.scrollToBottom()
+              },
+              onCancel: () => {
+                scrolling = false
+              },
+            })
+          }
         }
       }
     },
@@ -372,8 +412,28 @@ export default {
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script')
-      this.showPage('start')
-      interpreter.run()
+      this.showPage('start', true)
+      this.loading = false
+    },
+    runTease() {
+      const sounds = this.popStartupSounds()
+
+      if (sounds.length) {
+        // We have sounds to pre-load
+        this.loading = true
+        this.loadingText = 'Preloading audio...'
+        this.shiftAfterPreload(() => {
+          this.loading = false
+          this.started = true
+          this.interpreter.run()
+        })
+        for (const soundOption of sounds) {
+          this.preloadSound(soundOption, true)
+        }
+      } else {
+        this.started = true
+        this.interpreter.run()
+      }
     },
   },
 }
@@ -388,6 +448,17 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
+}
+.oeos-start-title {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 200%;
+  margin-bottom: 10px;
+}
+.oeos-start-author {
+  text-align: center;
+  margin-bottom: 10px;
+  opacity: 0.6;
 }
 .oeos-background {
   /* height: 100%;
@@ -499,5 +570,61 @@ export default {
 }
 .oeos-say-item {
   max-width: 90%;
+}
+.oeos-blink-button,
+.oeos-start-button {
+  animation: fadeinout 1.5s linear forwards;
+  animation-iteration-count: infinite;
+}
+.oeos-blink-button {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+}
+.oeos-start-button {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes fadeinout {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.Button_root__28K_E {
+  background: #111
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.15), hsla(0, 0%, 100%, 0))
+    repeat-x;
+  display: inline-block;
+  padding: 5px 10px 6px;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  font-size: 100%;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.5);
+}
+.Button_root__28K_E:hover {
+  background: #111
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.2), hsla(0, 0%, 100%, 0.1))
+    repeat-x;
+}
+.Button_root__28K_E:active {
+  top: 1px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 </style>

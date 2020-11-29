@@ -62,12 +62,15 @@ export default {
             interpreter.run()
           }
         }
-        timer.onThreshold = t => {
-          if (timer.properties.onThreshold) {
-            interpreter.queueFunction(timer.properties.onThreshold, timer, t)
+        timer.onLoop = () => {
+          if (timer.properties.onTimeout) {
+            // onTimeout callback provided by interperted code
+            // (interpreter has been doing other things while our timer was running)
+            interpreter.queueFunction(timer.properties.onTimeout, opt)
             interpreter.run()
           }
         }
+        console.log('Adding timer', timer)
         this.timers.push(timer)
         return timer
       }

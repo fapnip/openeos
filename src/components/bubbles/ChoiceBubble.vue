@@ -1,5 +1,9 @@
 <template>
-  <v-row v-if="options[0] && selectedOption === null" align="center">
+  <v-row
+    v-if="options[0] && selectedOption === null"
+    align="center"
+    class="oeos-choices"
+  >
     <template v-for="(option, i) in options">
       <v-btn
         v-if="optionVisible(option)"
@@ -72,4 +76,8 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.oeos-choices .v-btn {
+  min-width: 30px;
+}
+</style>

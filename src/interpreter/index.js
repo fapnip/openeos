@@ -33,7 +33,10 @@ Interpreter.prototype.parseCode = function(code) {
  *     false if no more instructions.
  */
 Interpreter.prototype.run = function() {
-  if (this.running_) return this.paused_
+  if (this.running_) {
+    console.log('Already running')
+    return this.paused_
+  }
   this.running_ = true
   try {
     while (!this.paused_ && this.step()) {

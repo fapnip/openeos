@@ -1,6 +1,6 @@
 {
   "name": "open-eos",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "author": {
     "name": "Fapnip"
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.21.0",
+    "compare-versions": "^3.6.0",
     "core-js": "^3.6.5",
     "duration-js": "^4.0.0",
     "entities": "^2.1.0",
@@ -22,6 +23,7 @@
     "string-strip-html": "^6.3.0",
     "validate-color": "^2.1.0",
     "vue": "^2.6.11",
+    "vue-global-events": "^1.2.1",
     "vue-router": "^3.4.9",
     "vue-scrollto": "^2.20.0",
     "vue-shortkey": "^3.1.7",

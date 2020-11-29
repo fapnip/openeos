@@ -8,12 +8,12 @@ import { decodeHTML } from 'entities'
 const parser = new DOMParser()
 
 let images = {}
-let sounds = {}
+let sounds = []
 let targets = {}
 
 export default function pageCompiler(page) {
   images = {}
-  sounds = {}
+  sounds = []
   targets = {}
   return {
     script: `
@@ -73,9 +73,9 @@ const commandList = {
   return false;
   `,
   say: (c, i, cl) => {
-    var nextCommand = cl[i + 1] || { none: {} }
-    var nextCommandType = Object.keys(nextCommand)[0]
-    var nextCommandObj = nextCommand[nextCommandType]
+    const nextCommand = cl[i + 1] || { none: {} }
+    const nextCommandType = Object.keys(nextCommand)[0]
+    const nextCommandObj = nextCommand[nextCommandType]
     return `
     var peekNext = {
       type: ${JSON.stringify(nextCommandType)},
@@ -98,6 +98,27 @@ const commandList = {
   },
   timer: (c, i, cl) => {
     const isAsync = !!c.isAsync || (c.commands && c.commands.length)
+    let loops = 1
+    if (isAsync && c.commands && c.commands.length) {
+      const nextCommand = c.commands[0] || { none: {} }
+      const nextCommandType = Object.keys(nextCommand)[0]
+      const nextCommandObj = nextCommand[nextCommandType]
+      if (nextCommandType === 'eval') {
+        const loopMatch = (nextCommandObj.script || '').match(
+          /(\/\/|\/\*)[^\r\n]*oeos-timer-loops-([0-9]+)/
+        )
+        if (loopMatch) {
+          loops = parseInt(loopMatch[2], 10)
+        } else {
+          const loopMatchExp = (nextCommandObj.script || '').match(
+            /(\/\/|\/\*)[^\r\n]*oeos-timer-loops-<eval>(.*)<\/eval>/
+          )
+          if (loopMatchExp) {
+            loops = '$' + loopMatchExp[2]
+          }
+        }
+      }
+    }
     return `${
       isAsync
         ? ``
@@ -107,6 +128,7 @@ const commandList = {
     }
     new Timer({
       duration: ${buildExpression(c.duration)},
+      loops: ${buildExpression(loops)},
       style: ${JSON.stringify(c.style)},
       isAsync: ${JSON.stringify(isAsync)},
       keepState: ${JSON.stringify(c.keepState)},
@@ -165,14 +187,14 @@ const commandList = {
     `
   },
   'audio.play': c => {
-    sounds[c.locator] = false
+    sounds.push(c)
     return `
     new Sound({
-      locator: ${buildExpression(c.locator)},
+      locator: ${JSON.stringify(c.locator)},
       id: ${JSON.stringify(c.id)},
-      loops: ${buildExpression(c.loops)},
-      volume: ${buildExpression(c.volume)},
-      background: ${buildExpression(c.background)}
+      loops: ${JSON.stringify(c.loops)},
+      volume: ${JSON.stringify(c.volume)},
+      background: ${JSON.stringify(c.background)}
     }, true)
     return false;
     `

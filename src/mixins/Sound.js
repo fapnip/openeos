@@ -1,5 +1,9 @@
 import { Howl, Howler } from 'howler'
 
+const soundPools = {}
+
+let PROTO
+
 // let idCounter = 0
 
 export default {
@@ -7,13 +11,141 @@ export default {
     sounds: {},
   }),
   methods: {
+    preloadSound(options, fromPageScript) {
+      return this.createSoundItem(options, fromPageScript, true)
+    },
+    getSoundPool(preloadKey) {
+      let pool = soundPools[preloadKey]
+      if (!pool) {
+        pool = []
+        soundPools[preloadKey] = pool
+      }
+      return pool
+    },
+    createSoundItem(options, fromPageScript, preload) {
+      const interpreter = this.interpreter
+      const file = this.locatorLookup(options.locator)
+      if (!file.item) {
+        throw new Error('Invalid sound locator: ' + options.locator)
+      }
+      let preloadKey = options.locator
+      if (!options.id) {
+        options.id = '__sound_' + file.href
+      } else {
+        preloadKey += ':' + options.id
+      }
+      options.fromPageScript = fromPageScript
+
+      if (typeof options.id !== 'string') {
+        throw new Error('Given id must be undefined or a string')
+      }
+
+      const volume = Number(options.volume)
+
+      let item
+
+      function _setItem(item) {
+        item.options = options
+        item.loops = options.loops || 0
+        item.loop = item.loops > 1 || item.loops === 0
+        item.loopCount = item.loops
+        item.id = options.id
+      }
+
+      function _startItem(item) {
+        if (!isNaN(volume)) item.sound.volume(volume)
+        item.sound.play()
+      }
+
+      item = this.sounds[options.id]
+
+      // See if we were already loaded, and use that
+      if (item) {
+        _setItem(item)
+        if (!preload) _startItem(item)
+        return item
+      }
+
+      const pool = this.getSoundPool(preloadKey)
+
+      if (!preload) {
+        // If we're not pre-loading,
+        // see if we have a preloaded sound in the pool, and use that
+        item = pool.pop()
+        if (item) {
+          _setItem(item)
+          _startItem(item)
+          this.sounds[options.id] = item
+          return item
+        }
+      }
+
+      item = interpreter.createObjectProto(PROTO)
+      item.preloadKey = preloadKey
+      item.id = options.id
+      _setItem(item)
+
+      let sound
+
+      const doPreload = e => {
+        if (!item.preloaded) {
+          item.preloaded = true
+          if (preload) {
+            sound.stop()
+            this.doAfterPreload(true)
+          }
+        }
+      }
+
+      try {
+        if (preload) {
+          this.incrementPreload()
+        }
+        sound = new Howl({
+          src: [file.href],
+          loop: item.loop,
+          autoPlay: true,
+          volume: isNaN(volume) ? 1 : volume,
+          onload: doPreload,
+          onloaderror: doPreload,
+        })
+      } catch (e) {
+        return interpreter.createThrowable(interpreter.ERROR, e.toString())
+      }
+
+      item.sound = sound
+
+      sound.on('end', () => {
+        if (item.loop && item.loops > 1) {
+          item.loopCount--
+          if (!item.loopCount) {
+            sound.stop()
+          }
+        }
+      })
+      ;['play', 'end', 'pause'].forEach(type => {
+        sound.on(type, () => {
+          this.dispatchEvent({ target: item, type })
+        })
+      })
+      if (preload) {
+        // Save on stack for later
+        pool.push(item)
+      } else {
+        // Use new
+        this.sounds[options.id] = item
+        _startItem(item)
+      }
+      return item
+    },
     purgePageSounds() {
       for (const k of Object.keys(this.sounds)) {
         const item = this.sounds[k]
         if (!item.options.background) {
           item.sound.stop()
           if (item.options.fromPageScript) {
-            item.sound.unload()
+            const pool = this.getSoundPool(item.preloadKey)
+            pool.push(item) // Put sound back in pool for later re-use
             delete this.sounds[k]
           }
         }
@@ -23,75 +155,11 @@ export default {
       const vue = this
       const constructor = (opt, fromPageScript) => {
         const options = interpreter.pseudoToNative(opt)
-        const file = this.locatorLookup(options.locator)
-        if (!file.item) {
-          return interpreter.createThrowable(
-            interpreter.ERROR,
-            'Invalid sound locator: ' + options.locator
-          )
-        }
-        if (!options.id) {
-          options.id = '__sound_' + file.href
-        }
-        options.fromPageScript = fromPageScript
-
-        if (typeof options.id !== 'string') {
-          return interpreter.createThrowable(
-            interpreter.TYPE_ERROR,
-            'Given id must be undefined or a string'
-          )
-        }
-
-        const volume = Number(options.volume)
-
-        if (this.sounds[options.id]) {
-          const result = this.sounds[options.id]
-          result.loopCount = result.loops
-          if (!isNaN(volume)) this.sound.volume(volume)
-          result.sound.play()
-          return result
-        }
-
-        const item = interpreter.createObjectProto(proto)
-        item.options = options
-        item.loops = options.loops || 0
-        item.loop = item.loops > 1 || item.loops === 0
-        item.loopCount = item.loops
-
-        let sound
-
         try {
-          sound = new Howl({
-            src: [file.href],
-            loop: item.loop,
-            autoPlay: true,
-            volume: isNaN(volume) ? 1 : volume,
-          })
+          return this.createSoundItem(options, fromPageScript)
         } catch (e) {
           return interpreter.createThrowable(interpreter.ERROR, e.toString())
         }
-
-        item.sound = sound
-
-        this.sounds[options.id] = item
-
-        sound.on('end', () => {
-          if (item.loop && item.loops > 1) {
-            item.loopCount--
-            if (!item.loopCount) {
-              sound.stop()
-            }
-          }
-        })
-        ;['play', 'end', 'pause'].forEach(type => {
-          sound.on(type, () => {
-            this.dispatchEvent({ target: item, type })
-          })
-        })
-
-        sound.play()
-        console.log('Adding sound', item)
-        return item
       }
 
       const manager = interpreter.createNativeFunction(constructor, true)
@@ -101,7 +169,7 @@ export default {
         interpreter.createObject(globalObject.properties['EventTarget']),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
-      const proto = manager.properties['prototype']
+      PROTO = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Sound', manager)
 
       interpreter.setProperty(
@@ -229,7 +297,8 @@ export default {
       })
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
         this.sound.stop()
-        this.sound.unload()
+        const pool = vue.getSoundPool(this.preloadKey)
+        pool.push(this) // Put sound back in pool for later re-use
         delete vue.sounds[this.options.id]
       })
     },

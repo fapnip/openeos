@@ -1,9 +1,14 @@
 <template>
   <v-card @click.once="onClick" class="oeos-say-bubble">
+    <global-events
+      v-if="active && allowSkip"
+      @keydown.space.stop="onClick"
+      @keydown.enter.stop="onClick"
+    />
     <v-card-text class="px-7 py-1">
       <div v-html="filteredLabel"></div>
     </v-card-text>
-    <div class="blinkButton">
+    <div class="oeos-blink-button">
       <v-btn v-if="showButton" icon x-small
         ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
       >
@@ -126,23 +131,4 @@ export default {
 }
 </script>
 
-<style>
-/* Basic button styling */
-.blinkButton {
-  position: absolute;
-  right: 5px;
-  bottom: 3px;
-  animation: fadeinout 1.5s linear forwards;
-  animation-iteration-count: infinite;
-}
-
-@keyframes fadeinout {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-</style>
+<style></style>

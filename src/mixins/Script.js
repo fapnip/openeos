@@ -3,7 +3,20 @@ import { buildHref, extToType } from '../util/io'
 import minimatch from 'minimatch'
 let galleryLookup = {}
 let SCRIPT = {}
-const randomPreload = {}
+const preloadPools = {}
+function getPreloadPool(locator) {
+  let pool = preloadPools[locator]
+  if (!pool) {
+    pool = []
+    preloadPools[locator] = pool
+  }
+  return pool
+}
+function addToPreloadPool(locator, item) {
+  const pool = getPreloadPool(locator, item)
+  if (pool.length >= 3) return
+  pool.push(item)
+}
 
 export default {
   data: () => ({
@@ -27,11 +40,15 @@ export default {
       return (SCRIPT && SCRIPT.pages) || {}
     },
     locatorLookup(locator, preload) {
-      const preloaded = !preload && randomPreload[locator]
+      const preloaded = !preload && getPreloadPool(locator).pop()
       if (preloaded) {
         // A random locator was pre-loaded, but not yet used
+        if (!getPreloadPool(locator).length) {
+          // Pre-load pool is empty
+          // Add add one for next time
+          this.addPreload(locator)
+        }
         // use it
-        delete randomPreload[locator]
         return preloaded
       }
       if (typeof locator !== 'string') return null
@@ -62,7 +79,7 @@ export default {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile
       } else if (preload && isRandom) {
-        randomPreload[locator] = file
+        addToPreloadPool(locator, file)
       }
       return {
         item: file,
@@ -79,6 +96,16 @@ export default {
       }
       let image = null
       if (galleryMatch[2] === '*') {
+        const preloaded = !preload && getPreloadPool(locator).pop()
+        if (preloaded) {
+          if (!getPreloadPool(locator).length) {
+            // Pre-load pool is empty
+            // Add add one for next time
+            this.addPreload(locator)
+          }
+          // Return this one
+          return preloaded
+        }
         const images = this.galleries()[galleryMatch[1]].images
         image = images[getRandomInt(0, images.length - 1)]
         if (!image) {
@@ -88,7 +115,7 @@ export default {
           )
           return this.missingFile
         }
-        if (preload) randomPreload[locator] = image
+        if (preload) addToPreloadPool(locator, image)
       } else {
         image = gallery[galleryMatch[2]]
         if (!image) {

@@ -1,6 +1,8 @@
 import pageCompiler from '../util/pageCompiler'
 import pagesCode from '!!raw-loader!../interpreter/code/pages.js'
 import minimatch from 'minimatch'
+import compareVersions from 'compare-versions'
+import { version } from '../../package.json'
 
 let navCounter = 0
 let navIndex = 0
@@ -9,6 +11,10 @@ let pageScripts = {}
 const preloaded = {}
 const preloadedPage = {}
 let lastGetPageId = null
+let waitingPreloads = 0
+const afterPreload = []
+let startupSounds = []
+
 import { validateHTMLColorHex } from 'validate-color'
 
 export default {
@@ -30,7 +36,26 @@ export default {
     },
   },
   methods: {
-    addPreload(file, asType) {
+    popStartupSounds() {
+      const result = startupSounds
+      startupSounds = []
+      return result
+    },
+    incrementPreload() {
+      waitingPreloads++
+    },
+    doAfterPreload(wait) {
+      if (!wait) return
+      waitingPreloads--
+      if (waitingPreloads) return
+      let fn = afterPreload.shift()
+      while (fn) {
+        fn()
+        fn = afterPreload.shift()
+      }
+    },
+    addPreload(file, asType, wait) {
+      const _this = this
       if (asType === 'audio') {
         return // audio preloading not supported... yet?
       }
@@ -40,11 +65,20 @@ export default {
         var preload = document.createElement('link')
         preload.rel = 'preload'
         preload.href = file.href
-        preload.as = asType
+        if (asType) preload.as = asType
         preload.crossOrigin = 'anonymous'
         preload.onload = function() {
+          // console.log('Preloaded', preload, waitingPreloads)
           this.remove() // Remove preload element now that it's loaded
+          _this.doAfterPreload(wait)
         }
+        preload.onerror = function() {
+          // console.log('Preload Error', preload, waitingPreloads)
+          this.remove() // Remove preload element now that it's loaded
+          _this.doAfterPreload(wait)
+        }
+        if (wait) this.incrementPreload()
+        // console.log('Preloading', preload, waitingPreloads)
         document.head.appendChild(preload)
       }
     },
@@ -84,7 +118,7 @@ export default {
       this.purgePageInteractions()
       this.purgePageSounds()
     },
-    preloadPage(patten, parentPageId) {
+    preloadPage(patten, parentPageId, wait) {
       let pageId
       try {
         if (this.getPage(patten, true)) {
@@ -97,15 +131,11 @@ export default {
       const pageScript = this.getPageScript(pageId)
       for (const image of Object.keys(pageScript.images)) {
         const file = this.locatorLookup(image, true)
-        this.addPreload(file, 'image')
+        this.addPreload(file, 'image', wait)
       }
-      for (const sound of Object.keys(pageScript.sounds)) {
-        const file = this.locatorLookup(sound, true)
-        this.addPreload(file, 'audio')
-      }
+      if (!parentPageId) startupSounds.push(...pageScript.sounds)
     },
-    showPage(patten) {
-      // TODO
+    showPage(patten, noRun) {
       console.warn('Showing Page:', patten)
       const interpreter = this.interpreter
       const pageScript = this.getPageScript(patten)
@@ -115,12 +145,12 @@ export default {
       let pageCode = pageScript.code
       if (!pageCode) {
         // console.log('Building "' + pageId + '" page script', pageScript.script)
-        pageCode = this.interpreter.parseCode(pageScript.script)
+        pageCode = interpreter.parseCode(pageScript.script)
         pageScript.code = pageCode
       }
-      this.preloadPage(pageId, this.lastPageId)
+      this.preloadPage(pageId, this.lastPageId, true)
       const preloadedPages = {}
-      preloadedPages[pageId] = true
+      // preloadedPages[pageId] = true
       for (const target in Object.keys(pageScript.targets)) {
         this.preloadPage(target, pageId)
         preloadedPages[lastGetPageId] = true
@@ -137,7 +167,20 @@ export default {
       navIndex++ // Increment nav depth, so we know to skip consecutive gotos.
       this.beforePageChange()
       this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
-      interpreter.appendCode(pageCode)
+      if (waitingPreloads) {
+        this.addAfterPreload(() => {
+          interpreter.appendCode(pageCode)
+          if (!noRun) interpreter.run()
+        })
+      } else {
+        interpreter.appendCode(pageCode)
+      }
+    },
+    addAfterPreload(fn) {
+      afterPreload.push(fn)
+    },
+    shiftAfterPreload(fn) {
+      afterPreload.unshift(fn)
     },
     getPage(pattern, preload) {
       if (!preload && preloadedPage[pattern]) {
@@ -244,6 +287,11 @@ export default {
 
       interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
         this.image = this.locatorLookup(locator)
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'oeosVersion', v => {
+        if (v === undefined) return version
+        return compareVersions(version, v)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'setBarColor', color => {
