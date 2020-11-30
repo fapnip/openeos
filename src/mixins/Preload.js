@@ -21,7 +21,11 @@ export default {
     doAfterPreload(wait) {
       if (!wait) return
       waitingPreloads--
-      if (waitingPreloads) return
+      if (waitingPreloads) {
+        // console.warn('Waiting for preload...', waitingPreloads)
+        return
+      }
+      // console.log('Finished preload.')
       let fn = afterPreload.shift()
       while (fn) {
         fn()
@@ -40,7 +44,7 @@ export default {
         delete preloadedImages[file.href]
         _this.doAfterPreload(wait)
       }
-      if (file && !file.error /* && !preloaded[file.href] */) {
+      if (file && !file.error && file.href && !file.href.match(/^data:/)) {
         preloaded[file.href] = true
         const preload = new Image()
         preloadedImages[file.href] = preload
@@ -51,13 +55,11 @@ export default {
         // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
         if (wait) this.incrementPreload()
         // console.log('Preloading', file)
-      } else {
-        // console.log('Skipping preload', file)
       }
     },
     preloadImage(locator, wait) {
       const file = this.locatorLookup(locator, true)
-      this.addPreload(file, 'image', wait)
+      this.addPreload(file, 'image', wait && !this.hasInPreloadPool(locator))
     },
     preloadPage(patten, parentPageId, wait) {
       let pageId
@@ -71,9 +73,9 @@ export default {
       }
       const pageScript = this.getPageScript(pageId)
       for (const locator of Object.keys(pageScript.images)) {
-        this.preloadImage(locator)
+        this.preloadImage(locator, wait)
       }
-      if (!parentPageId) startupSounds.push(...pageScript.sounds)
+      if (!this.started) startupSounds.push(...pageScript.sounds)
     },
     addAfterPreload(fn) {
       afterPreload.push(fn)

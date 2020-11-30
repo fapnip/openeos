@@ -21,11 +21,17 @@ function addToPreloadPool(locator, item, lookupPool) {
   if (pool.length >= 5) {
     return
   }
-  console.log('Added Random Pool', pool, locator, item)
   pool.push(item)
 }
+function avoidLast(value, array, avoid, randomGetter) {
+  for (let i = 10, l = array.length; l > 2 && i > 0 && value !== avoid; i--) {
+    // Try not to repeat the last file
+    value = randomGetter()
+  }
+  return value
+}
 
-const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^file:.*\+\(\|oeos:(.+)\)$)/
+const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|oeos:(.+)\)$)/
 
 export default {
   data: () => ({
@@ -35,6 +41,12 @@ export default {
     },
   }),
   methods: {
+    hasInPreloadPool(locator) {
+      return (
+        (preloadPools[locator] && preloadPools[locator].length) ||
+        (locatorArrayPreload[locator] && locatorArrayPreload[locator].length)
+      )
+    },
     locatorLookup(locator, preload) {
       const fromArray = this.locatorArrayLookup(locator, preload)
       if (fromArray) return fromArray
@@ -43,12 +55,10 @@ export default {
       const pool = getPreloadPool(locator)
       const preloaded = !preload && pool.shift()
       if (preloaded) {
-        console.log('Used preloaded', pool, preloaded)
         // A random locator was pre-loaded, but not yet used
         if (!pool.length) {
           // Pre-load pool is empty
           // Add add one for next time
-          console.log('Adding random preload', pool, locator)
           this.preloadImage(locator)
         }
         // use it
@@ -66,9 +76,8 @@ export default {
       try {
         const locatorArray = JSON.parse(locator)
         if (!Array.isArray(locatorArray) || !locatorArray.length) return
-        const _getRandom = () => {
-          return locatorArray[Math.floor(Math.random() * locatorArray.length)]
-        }
+        const _getRandom = () =>
+          locatorArray[Math.floor(Math.random() * locatorArray.length)]
         const pool = getPreloadPool(locator, locatorArrayPreload)
         if (!preload) {
           const preloaded = pool.shift()
@@ -80,16 +89,13 @@ export default {
           }
           return this.locatorLookup(_getRandom())
         } else {
-          const lastInPool = pool[pool.length - 1]
           let randLocator = _getRandom()
-          for (
-            let i = 5, l = locatorArray.length;
-            l > 2 && i > 0 && randLocator !== lastInPool;
-            i--
-          ) {
-            // Try not to repeat the last locator
-            randLocator = _getRandom()
-          }
+          randLocator = avoidLast(
+            randLocator,
+            locatorArray,
+            pool[pool.length - 1],
+            _getRandom
+          )
           addToPreloadPool(locator, randLocator, locatorArrayPreload)
           return this.locatorLookup(randLocator, preload)
         }
@@ -100,8 +106,8 @@ export default {
     lookupRemoteLink(locator, preload) {
       const urlMatch = locator.match(allowedUrlMatcher)
       if (!urlMatch) return
-      if (urlMatch[3]) {
-        return this.locatorLookup(decodeURIComponent(urlMatch[3]), preload)
+      if (urlMatch[4]) {
+        return this.locatorLookup(decodeURIComponent(urlMatch[4]), preload)
       }
       let image = urlCache[locator]
       if (!image) {
@@ -131,22 +137,16 @@ export default {
         .filter(filter)
         .map(f => files[f])
         .filter(f => !type || f.type === type)
-      let file = matches[Math.floor(Math.random() * matches.length)]
+      const _getRandom = () =>
+        matches[Math.floor(Math.random() * matches.length)]
+      let file = _getRandom()
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile
       }
       if (preload && isRandom) {
         const pool = getPreloadPool(locator)
-        const lastInPool = pool[pool.length - 1]
-        for (
-          let i = 5, l = matches.length;
-          l > 2 && i > 0 && file !== lastInPool;
-          i--
-        ) {
-          // Try not to repeat the last file
-          file = matches[Math.floor(Math.random() * matches.length)]
-        }
+        file = avoidLast(file, matches, pool[pool.length - 1], _getRandom)
         const result = {
           item: file,
           href: buildHref(file),
@@ -170,7 +170,8 @@ export default {
       let image = null
       if (galleryMatch[2] === '*') {
         const images = this.galleries()[galleryMatch[1]].images
-        image = images[getRandomInt(0, images.length - 1)]
+        const _getRandom = () => images[getRandomInt(0, images.length - 1)]
+        image = _getRandom()
         if (!image) {
           const galleryName = this.galleries()[galleryMatch[1]].name
           console.error(
@@ -180,15 +181,7 @@ export default {
         }
         if (preload) {
           const pool = getPreloadPool(locator)
-          const lastInPool = pool[pool.length - 1]
-          for (
-            let i = 5, l = images.length;
-            l > 2 && i > 0 && image !== lastInPool;
-            i--
-          ) {
-            // Try not to repeat the last image
-            image = images[getRandomInt(0, images.length - 1)]
-          }
+          image = avoidLast(image, images, pool[pool.length - 1], _getRandom)
           const result = {
             item: image,
             href: buildHref(image),
