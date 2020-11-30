@@ -29,6 +29,7 @@ export default {
     image(image) {
       if (this.forcedBackgroundColor) return
       if (!image || !image.href) return
+      console.log('Displayed Image', { url: image.href })
       this.$nextTick(() => {
         this.setBackgroundFromImage()
       })
@@ -36,6 +37,8 @@ export default {
   },
   methods: {
     async setBackgroundFromImage() {
+      const image = this.image
+      if (!image || !image.href || image.error) return
       const img = this.$refs.mainImage
       if (!img) return
       let color = colors[img.src]

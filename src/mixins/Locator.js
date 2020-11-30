@@ -1,7 +1,10 @@
 import { getRandomInt } from '../util'
 import { buildHref, extToType } from '../util/io'
 import minimatch from 'minimatch'
+
 let galleryLookup = {}
+let urlIdCounter = 0
+const urlCache = {}
 
 const preloadPools = {}
 function getPreloadPool(locator) {
@@ -20,7 +23,8 @@ function addToPreloadPool(locator, item) {
   console.log('Added Random Pool', pool, locator, item)
   pool.push(item)
 }
-const allowedUrlMatcher = /(^https:\/\/cdn\.sex\.com\/images\/)/
+
+const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^file:.*\*\+\(\|oeos:(.+)\)$)/
 
 export default {
   data: () => ({
@@ -31,6 +35,8 @@ export default {
   }),
   methods: {
     locatorLookup(locator, preload) {
+      const link = this.lookupRemoteLink(locator, preload)
+      if (link) return link
       const pool = getPreloadPool(locator)
       const preloaded = !preload && pool.pop()
       if (preloaded) {
@@ -50,21 +56,29 @@ export default {
       if (galleryFile) return galleryFile
       const file = this.lookupFile(locator, preload)
       if (file) return file
-      const link = this.lookupRemoteLink(locator, preload)
-      if (link) return link
       console.error('Invalid locator', locator)
       return { href: 'invalid-locator', error: true }
     },
     lookupRemoteLink(locator, preload) {
-      if (!locator.match(allowedUrlMatcher)) return
-      return {
-        href: locator,
-        item: {
-          hash: locator,
-          id: locator,
-        },
-        noReferrer: true,
+      const urlMatch = locator.match(allowedUrlMatcher)
+      if (!urlMatch) return
+      if (urlMatch[3]) {
+        return this.locatorLookup(decodeURIComponent(urlMatch[3]))
       }
+      let image = urlCache[locator]
+      if (!image) {
+        const id = ++urlIdCounter
+        image = {
+          href: locator,
+          item: {
+            hash: id,
+            id: id,
+          },
+          noReferrer: true,
+        }
+        urlCache[locator] = image
+      }
+      return image
     },
     lookupFile(locator, preload) {
       const fileMatch = locator.match(/^file:(.*)$/)

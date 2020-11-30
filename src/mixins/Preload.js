@@ -19,10 +19,7 @@ export default {
       waitingPreloads++
     },
     doAfterPreload(wait) {
-      if (!wait) {
-        console.log('Waitng for preload...')
-        return
-      }
+      if (!wait) return
       waitingPreloads--
       if (waitingPreloads) return
       let fn = afterPreload.shift()
@@ -53,9 +50,9 @@ export default {
         preload.src = file.href
         // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
         if (wait) this.incrementPreload()
-        console.log('Preloading', file)
+        // console.log('Preloading', file)
       } else {
-        console.log('Skipping preload', file)
+        // console.log('Skipping preload', file)
       }
     },
     preloadImage(locator, wait) {
