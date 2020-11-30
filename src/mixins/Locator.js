@@ -5,18 +5,19 @@ import minimatch from 'minimatch'
 let galleryLookup = {}
 let urlIdCounter = 0
 const urlCache = {}
-
+const locatorArrayPreload = {}
 const preloadPools = {}
-function getPreloadPool(locator) {
-  let pool = preloadPools[locator]
+function getPreloadPool(locator, lookupPool) {
+  lookupPool = lookupPool || preloadPools
+  let pool = lookupPool[locator]
   if (!pool) {
     pool = []
-    preloadPools[locator] = pool
+    lookupPool[locator] = pool
   }
   return pool
 }
-function addToPreloadPool(locator, item) {
-  const pool = getPreloadPool(locator, item)
+function addToPreloadPool(locator, item, lookupPool) {
+  const pool = getPreloadPool(locator, lookupPool)
   if (pool.length >= 5) {
     return
   }
@@ -24,7 +25,7 @@ function addToPreloadPool(locator, item) {
   pool.push(item)
 }
 
-const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^file:.*\*\+\(\|oeos:(.+)\)$)/
+const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^file:.*\+\(\|oeos:(.+)\)$)/
 
 export default {
   data: () => ({
@@ -35,10 +36,12 @@ export default {
   }),
   methods: {
     locatorLookup(locator, preload) {
+      const fromArray = this.locatorArrayLookup(locator, preload)
+      if (fromArray) return fromArray
       const link = this.lookupRemoteLink(locator, preload)
       if (link) return link
       const pool = getPreloadPool(locator)
-      const preloaded = !preload && pool.pop()
+      const preloaded = !preload && pool.shift()
       if (preloaded) {
         console.log('Used preloaded', pool, preloaded)
         // A random locator was pre-loaded, but not yet used
@@ -59,11 +62,46 @@ export default {
       console.error('Invalid locator', locator)
       return { href: 'invalid-locator', error: true }
     },
+    locatorArrayLookup(locator, preload) {
+      try {
+        const locatorArray = JSON.parse(locator)
+        if (!Array.isArray(locatorArray) || !locatorArray.length) return
+        const _getRandom = () => {
+          return locatorArray[Math.floor(Math.random() * locatorArray.length)]
+        }
+        const pool = getPreloadPool(locator, locatorArrayPreload)
+        if (!preload) {
+          const preloaded = pool.shift()
+          if (preloaded) {
+            if (!pool.length) {
+              this.preloadImage(locator)
+            }
+            return this.locatorLookup(preloaded)
+          }
+          return this.locatorLookup(_getRandom())
+        } else {
+          const lastInPool = pool[pool.length - 1]
+          let randLocator = _getRandom()
+          for (
+            let i = 5, l = locatorArray.length;
+            l > 2 && i > 0 && randLocator !== lastInPool;
+            i--
+          ) {
+            // Try not to repeat the last locator
+            randLocator = _getRandom()
+          }
+          addToPreloadPool(locator, randLocator, locatorArrayPreload)
+          return this.locatorLookup(randLocator, preload)
+        }
+      } catch (e) {
+        return
+      }
+    },
     lookupRemoteLink(locator, preload) {
       const urlMatch = locator.match(allowedUrlMatcher)
       if (!urlMatch) return
       if (urlMatch[3]) {
-        return this.locatorLookup(decodeURIComponent(urlMatch[3]))
+        return this.locatorLookup(decodeURIComponent(urlMatch[3]), preload)
       }
       let image = urlCache[locator]
       if (!image) {
