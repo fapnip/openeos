@@ -72,7 +72,12 @@
     </div>
     <div v-if="image" class="oeos-top">
       <div class="oeos-image">
-        <img ref="mainImage" :src="image.href" crossOrigin="anonymous" />
+        <img
+          ref="mainImage"
+          :src="image.href"
+          crossOrigin="anonymous"
+          @click="imageClick"
+        />
       </div>
     </div>
     <div class="oeos-right">
@@ -137,6 +142,7 @@ import Prompt from '../mixins/Prompt'
 import Notification from '../mixins/Notification'
 import Sound from '../mixins/Sound'
 import Storage from '../mixins/Storage'
+import Image from '../mixins/Image'
 
 // Components
 import Loading from './common/Loading'
@@ -199,6 +205,7 @@ export default {
     Notification,
     Sound,
     Storage,
+    Image,
   ],
   data: () => ({
     loading: true,

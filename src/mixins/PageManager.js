@@ -61,24 +61,24 @@ export default {
     addPreload(file, asType, wait) {
       const _this = this
       if (asType === 'audio') {
-        return // audio preloading not supported... yet?
+        return // audio preloading done elsewhere
+      }
+      function _onPreload() {
+        if (this._preloaded) return
+        this._preloaded = true
+        // console.log('Preloaded', preload, waitingPreloads)
+        delete preloadedImages[file.href]
+        _this.doAfterPreload(wait)
       }
       if (file && !file.error && !preloaded[file.href]) {
         preloaded[file.href] = true
-        var preload = new Image()
+        const preload = new Image()
         preloadedImages[file.href] = preload
         preload.crossOrigin = 'anonymous'
-        preload.onload = function() {
-          // console.log('Preloaded', preload, waitingPreloads)
-          delete preloadedImages[file.href]
-          _this.doAfterPreload(wait)
-        }
-        preload.onerror = function() {
-          // console.log('Preload Error', preload, waitingPreloads)
-          delete preloadedImages[file.href]
-          _this.doAfterPreload(wait)
-        }
+        preload.onload = _onPreload
+        preload.onerror = _onPreload
         preload.src = file.href
+        // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
         if (wait) this.incrementPreload()
         // console.log('Preloading', preload, waitingPreloads)
       }
@@ -167,7 +167,11 @@ export default {
       navCounter++ // Increment nav counter so we know when to stop executing page commands
       navIndex++ // Increment nav depth, so we know to skip consecutive gotos.
       this.beforePageChange()
-      this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
+      try {
+        this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
+      } catch (e) {
+        return interpreter.createThrowable(interpreter.TYPE_ERROR, e.toString())
+      }
       if (waitingPreloads) {
         this.addAfterPreload(() => {
           interpreter.appendCode(pageCode)

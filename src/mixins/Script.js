@@ -17,6 +17,7 @@ function addToPreloadPool(locator, item) {
   if (pool.length >= 3) return
   pool.push(item)
 }
+const allowedUrlMatcher = /(^https:\/\/cdn\.sex\.com\/images\/)/
 
 export default {
   data: () => ({
@@ -52,14 +53,25 @@ export default {
         return preloaded
       }
       if (typeof locator !== 'string') return null
-      const galleryFile = this.lookupGalleryImage(locator)
+      const galleryFile = this.lookupGalleryImage(locator, preload)
       if (galleryFile) return galleryFile
-      const file = this.lookupFile(locator)
-      if (file) {
-        return file
-      }
+      const file = this.lookupFile(locator, preload)
+      if (file) return file
+      const link = this.lookupRemoteLink(locator, preload)
+      if (link) return link
       console.error('Invalid locator', locator)
       return { href: 'invalid-locator', error: true }
+    },
+    lookupRemoteLink(locator, preload) {
+      if (!locator.match(allowedUrlMatcher)) return
+      return {
+        href: locator,
+        item: {
+          hash: locator,
+          id: locator,
+        },
+        noReferrer: true,
+      }
     },
     lookupFile(locator, preload) {
       const fileMatch = locator.match(/^file:(.*)$/)
@@ -78,7 +90,8 @@ export default {
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
         return this.missingFile
-      } else if (preload && isRandom) {
+      }
+      if (preload && isRandom) {
         const pool = getPreloadPool(locator)
         const lastInPool = pool[pool.length - 1]
         for (
@@ -89,7 +102,12 @@ export default {
           // Try not to repeat the last file
           file = matches[Math.floor(Math.random() * matches.length)]
         }
-        addToPreloadPool(locator, file)
+        const result = {
+          item: file,
+          href: buildHref(file),
+        }
+        addToPreloadPool(locator, result)
+        return result
       }
       return {
         item: file,
@@ -126,7 +144,12 @@ export default {
             // Try not to repeat the last image
             image = images[getRandomInt(0, images.length - 1)]
           }
-          addToPreloadPool(locator, image)
+          const result = {
+            item: image,
+            href: buildHref(image),
+          }
+          addToPreloadPool(locator, result)
+          return result
         }
       } else {
         image = gallery[galleryMatch[2]]

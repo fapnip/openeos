@@ -23,7 +23,7 @@ export default {
     },
     installTimer(interpreter, globalObject) {
       const vue = this
-      const constructor = opt => {
+      const constructor = function(opt) {
         const optProps = opt.properties
         let timerId = '__timer_' + ++idCounter
         console.log('Creating timer')
@@ -31,7 +31,7 @@ export default {
         for (var i in optProps) {
           // Copy source props to our new timer
           const pseudoVal = optProps[i]
-          if (pseudoVal instanceof this.Interpreter.Object) {
+          if (pseudoVal instanceof vue.Interpreter.Object) {
             // Convert Interpreter objects to native
             timer[i] = interpreter.pseudoToNative(pseudoVal)
           } else if (typeof pseudoVal === 'object') {
@@ -52,12 +52,12 @@ export default {
           if (timer.properties.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(timer.properties.onTimeout, opt)
+            interpreter.queueFunction(timer.properties.onTimeout, timer)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
           if (timer.properties.onContinue) {
-            interpreter.queueFunction(timer.properties.onContinue, opt)
+            interpreter.queueFunction(timer.properties.onContinue, timer)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
@@ -66,12 +66,12 @@ export default {
           if (timer.properties.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(timer.properties.onTimeout, opt)
+            interpreter.queueFunction(timer.properties.onTimeout, timer)
             interpreter.run()
           }
         }
         console.log('Adding timer', timer)
-        this.timers.push(timer)
+        vue.timers.push(timer)
         return timer
       }
 
