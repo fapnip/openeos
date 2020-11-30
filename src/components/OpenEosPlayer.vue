@@ -148,12 +148,7 @@ import ChoiceBubble from './bubbles/ChoiceBubble'
 import PromptBubble from './bubbles/PromptBubble'
 
 // Interpreter Polyfills
-import PromisePoly from '!!raw-loader!../interpreter/polyfills/promise.js'
-
-// Raw code
-import TestCode from '!!raw-loader!../interpreter/code/test.js'
-
-// import testJson from '../assets/test.json'
+// import PromisePoly from '!!raw-loader!../interpreter/polyfills/promise.js'
 
 import backgroundImage from '../assets/bg-texture.png'
 
@@ -385,7 +380,7 @@ export default {
     installInterpreterModules(interpreter, globalObject) {
       this.installConsole(interpreter, globalObject)
       this.installNativeTimers(interpreter, globalObject)
-      interpreter.appendCode(PromisePoly)
+      // interpreter.appendCode(PromisePoly)
       interpreter.run()
       this.installEventManager(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
@@ -410,7 +405,6 @@ export default {
         interpreter.globalObject
       )
       this.setScript(this.script)
-      interpreter.appendCode(TestCode)
       interpreter.run()
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
