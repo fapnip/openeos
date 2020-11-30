@@ -3,6 +3,10 @@ const extensionMap = {
   'image/jpeg': 'jpg',
 }
 
+export const FIX_POLLUTION = encodeURIComponent(
+  '__oeos:' + window.location.hostname
+)
+
 export const extToType = Object.entries(extensionMap).reduce((a, e) => {
   a[e.value] = e.key
   return a
@@ -18,11 +22,11 @@ export const buildHref = (item, smaller) => {
   if (!item.type || item.type.match(/^image/)) {
     return `https://media.milovana.com/timg/tb_${smaller ? 'l' : 'xl'}/${
       item.hash
-    }.jpg?__oeos`
+    }.jpg?${FIX_POLLUTION}`
   } else {
     return `https://media.milovana.com/timg/${item.hash}.${
       extensionMap[item.type]
-    }?__oeos`
+    }?${FIX_POLLUTION}`
   }
 }
 

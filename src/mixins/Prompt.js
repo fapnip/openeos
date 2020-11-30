@@ -33,7 +33,7 @@ export default {
             interpreter.run()
           }
         }
-        this.addInteraction('prompt', interaction)
+        this.addBubble('prompt', interaction)
         return interaction
       }
 
@@ -52,7 +52,7 @@ export default {
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
-        vue.removeInteraction(this)
+        vue.removeBubble(this)
       })
     },
   },

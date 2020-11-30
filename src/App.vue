@@ -173,6 +173,7 @@ import {
   downloadEosFile,
   convertToValidFilename,
   CORS_PROXY,
+  FIX_POLLUTION,
 } from './util/io'
 import prettysize from 'prettysize'
 
@@ -379,7 +380,7 @@ export default {
     getRemoteScript(uri) {
       this.loading = true
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php?id=${uri}&__oeos`
+        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php?id=${uri}&${FIX_POLLUTION}`
       )
         .then(response => response.json())
         .then(script => {
@@ -402,7 +403,7 @@ export default {
         })
         .catch(e => {
           fetch(
-            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&__oeos`
+            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&${FIX_POLLUTION}`
           )
             .then(response => response.text())
             .then(contents => {
@@ -428,7 +429,7 @@ export default {
     },
     getRemoteScriptName(uri, script) {
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&__oeos`
+        `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&${FIX_POLLUTION}`
       )
         .then(response => response.text())
         .then(contents => {

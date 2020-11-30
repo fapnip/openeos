@@ -51,7 +51,7 @@ export default {
           }
         }
         this.$set(interaction, 'selectedOption', null)
-        this.addInteraction('choice', interaction)
+        this.addBubble('choice', interaction)
         return interaction
       }
 
@@ -79,7 +79,7 @@ export default {
         if (i !== undefined) {
           if (getOptionByIndex(i)) this.options.splice(i, 1)
         } else {
-          vue.removeInteraction(this)
+          vue.removeBubble(this)
         }
       })
 

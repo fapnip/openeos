@@ -60,7 +60,7 @@ export default {
           }
         }
         interaction.duration = parseEosDuration(optProps.duration || '0s')
-        this.addInteraction('say', interaction)
+        this.addBubble('say', interaction)
         return interaction
       }
 
@@ -79,7 +79,7 @@ export default {
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
-        vue.removeInteraction(this)
+        vue.removeBubble(this)
       })
     },
   },

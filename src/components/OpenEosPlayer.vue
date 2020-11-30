@@ -36,31 +36,31 @@
         >
         </v-row>
         <v-row
-          v-for="interaction in interactions"
-          :key="interaction.id"
+          v-for="bubble in bubbles"
+          :key="bubble.id"
           class="text-center pa-0 ma-0"
         >
-          <div :class="bubbleClass(interaction)">
-            <vue-switch :value="interaction.type">
+          <div :class="bubbleClass(bubble)">
+            <vue-switch :value="bubble.type">
               <template #say>
                 <say-bubble
-                  :ref="'say_' + interaction.id"
-                  :value="interaction.item"
-                  :active="interaction.item.active"
+                  :ref="'say_' + bubble.id"
+                  :value="bubble.item"
+                  :active="bubble.item.active"
                   :is-debug="isDebug"
                 ></say-bubble>
               </template>
               <template #choice>
                 <choice-bubble
-                  :value="interaction.item"
-                  :active="interaction.item.active"
+                  :value="bubble.item"
+                  :active="bubble.item.active"
                   :is-debug="isDebug"
                 ></choice-bubble>
               </template>
               <template #prompt>
                 <prompt-bubble
-                  :value="interaction.item"
-                  :active="interaction.item.active"
+                  :value="bubble.item"
+                  :active="bubble.item.active"
                   :is-debug="isDebug"
                 ></prompt-bubble>
               </template>
@@ -130,7 +130,12 @@ const interpreter = new Interpreter('')
 interpreter.REGEXP_MODE = 1
 
 // Module Mixins
+import Image from '../mixins/Image'
+import Background from '../mixins/Background'
+import Bubbles from '../mixins/Bubbles'
 import Script from '../mixins/Script'
+import Locator from '../mixins/Locator'
+import Preload from '../mixins/Preload'
 import Console from '../mixins/Console'
 import EventManager from '../mixins/EventManager'
 import NativeTimers from '../mixins/NativeTimers'
@@ -142,7 +147,6 @@ import Prompt from '../mixins/Prompt'
 import Notification from '../mixins/Notification'
 import Sound from '../mixins/Sound'
 import Storage from '../mixins/Storage'
-import Image from '../mixins/Image'
 
 // Components
 import Loading from './common/Loading'
@@ -155,17 +159,6 @@ import PromptBubble from './bubbles/PromptBubble'
 
 // Interpreter Polyfills
 // import PromisePoly from '!!raw-loader!../interpreter/polyfills/promise.js'
-
-import backgroundImage from '../assets/bg-texture.png'
-
-import Vibrant from 'node-vibrant/lib/browser.js'
-import Pipeline from 'node-vibrant/lib/pipeline/index.js'
-
-Vibrant.use(Pipeline)
-
-let interactCounter = 0
-let scrolling = false
-let isScrolled = null
 
 export default {
   name: 'OpenEosPlayer',
@@ -193,7 +186,12 @@ export default {
     },
   },
   mixins: [
+    Image,
+    Background,
+    Bubbles,
     Script,
+    Locator,
+    Preload,
     Console,
     EventManager,
     NativeTimers,
@@ -205,34 +203,15 @@ export default {
     Notification,
     Sound,
     Storage,
-    Image,
   ],
   data: () => ({
     loading: true,
     started: false,
     isDebug: true,
-    stack: [],
-    commands: [],
-    currentAction: null,
-    interactions: [],
-    scrolledToBottom: true,
     image: null,
-    backgroundTexture: null,
-    backgroundColor: null,
-    forcedBackgroundColor: null,
-    bubbleHeight: 0,
     loadingText: 'Preloading images...',
   }),
   computed: {
-    currentBackgroundColor() {
-      return this.forcedBackgroundColor || this.backgroundColor
-    },
-    selectedBackgroundTexture() {
-      return (
-        this.currentBackgroundColor &&
-        (this.backgroundTexture || backgroundImage)
-      )
-    },
     initScript() {
       return this.script.init || ''
     },
@@ -244,13 +223,6 @@ export default {
     this.initInterpreter()
   },
   watch: {
-    image(image) {
-      if (this.forcedBackgroundColor) return
-      if (!image || !image.href) return
-      this.$nextTick(() => {
-        this.setBackgroundFromImage()
-      })
-    },
     started(val) {
       if (val) {
         this.$nextTick(() => {
@@ -260,128 +232,9 @@ export default {
     },
   },
   methods: {
-    bubbleClass(interaction) {
-      const item = interaction.item || {}
-      const result = {
-        'oeos-bubble': true,
-      }
-      result[`oeos-${interaction.type}-item`] = true
-      result['oeos-align-' + (item.align || 'center')] = true
-      return result
-    },
-    async setBackgroundFromImage() {
-      const img = this.$refs.mainImage
-      if (!img) return
-      const { DarkMuted } = await Vibrant.from(img).getPalette()
-      this.backgroundColor = DarkMuted.getHex()
-    },
     debug() {
       if (this.isDebug) {
         console.log(...arguments)
-      }
-    },
-    onBodyClick() {
-      const li = this.interactions[this.interactions.length - 1]
-      if (li && li.type === 'say' && li.item.active) {
-        const ref = this.$refs['say_' + li.id]
-        if (ref) {
-          console.log('clicking say', ref)
-          ref[0].$el.click()
-        }
-      }
-    },
-    purgePageInteractions() {
-      for (let i = this.interactions.length - 1; i >= 0; i--) {
-        if (!this.interactions[i].persist) {
-          this.interactions.splice(i, 1)
-        }
-      }
-    },
-    removeInteraction(item) {
-      const index = this.interactions.findIndex(i => i === item)
-      if (index > -1) {
-        this.interactions.splice(index, 1)
-      }
-    },
-    addInteraction(type, item) {
-      const currentInteraction = this.interactions[this.interactions.length - 1]
-      if (
-        currentInteraction &&
-        typeof currentInteraction.item.setInactive === 'function'
-      ) {
-        currentInteraction.item.setInactive()
-      }
-      const newInteraction = {
-        type: type,
-        item: item,
-        id: interactCounter++,
-      }
-      this.interactions.push(newInteraction)
-
-      console.log(
-        'Adding ' + newInteraction.type,
-        newInteraction,
-        this.interactions
-      )
-      this.$nextTick(() => {
-        this.scrollToBottom()
-      })
-      return interactCounter
-    },
-    checkActionContainer() {
-      const oeosBottom = this.$refs.oeosBottom
-      if (oeosBottom) {
-        this.setScrollToBottom(oeosBottom)
-      }
-    },
-    setScrollToBottom(oeosBottom) {
-      // console.log(scrollTop, clientHeight, scrollHeight)
-
-      this.bubbleHeight = oeosBottom.clientHeight
-      let isAtBottom =
-        oeosBottom.scrollTop + oeosBottom.clientHeight >=
-        oeosBottom.scrollHeight
-      if (isScrolled) clearTimeout(isScrolled)
-      isScrolled = false
-      if (!isAtBottom && this.scrolledToBottom) {
-        isScrolled = setTimeout(() => {
-          this.scrolledToBottom =
-            oeosBottom.scrollTop + oeosBottom.clientHeight >=
-            oeosBottom.scrollHeight
-        }, 250)
-      } else if (isAtBottom) {
-        this.scrolledToBottom = isAtBottom
-      }
-    },
-    scrollToBottom() {
-      if (scrolling) return
-      const oeosBottom = this.$refs.oeosBottom
-      const lastItem = this.$refs.lastItem
-      if (oeosBottom && lastItem) {
-        const srollpx =
-          oeosBottom.scrollHeight -
-          (oeosBottom.scrollTop + oeosBottom.clientHeight)
-        if (oeosBottom && lastItem) {
-          if (srollpx > 0) {
-            this.$scrollTo(lastItem, {
-              container: oeosBottom,
-              duration: 500,
-              onStart: () => {
-                console.log('Doing Scroll')
-                scrolling = true
-              },
-              onDone: () => {
-                scrolling = false
-                // this.scrollToBottom()
-              },
-              onCancel: () => {
-                scrolling = false
-              },
-              // easing: 'ease-in',
-              lazy: false,
-            })
-          }
-        }
       }
     },
     installInterpreterModules(interpreter, globalObject) {

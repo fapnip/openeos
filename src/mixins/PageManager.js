@@ -8,13 +8,8 @@ let navCounter = 0
 let navIndex = 0
 let disabledPages = {}
 let pageScripts = {}
-const preloaded = {}
 const preloadedPage = {}
 let lastGetPageId = null
-let waitingPreloads = 0
-const afterPreload = []
-let startupSounds = []
-const preloadedImages = {}
 
 import { validateHTMLColorHex } from 'validate-color'
 
@@ -37,52 +32,6 @@ export default {
     },
   },
   methods: {
-    popStartupSounds() {
-      const result = startupSounds
-      startupSounds = []
-      return result
-    },
-    incrementPreload() {
-      waitingPreloads++
-    },
-    doAfterPreload(wait) {
-      if (!wait) {
-        console.log('Waitng for preload...')
-        return
-      }
-      waitingPreloads--
-      if (waitingPreloads) return
-      let fn = afterPreload.shift()
-      while (fn) {
-        fn()
-        fn = afterPreload.shift()
-      }
-    },
-    addPreload(file, asType, wait) {
-      const _this = this
-      if (asType === 'audio') {
-        return // audio preloading done elsewhere
-      }
-      function _onPreload() {
-        if (this._preloaded) return
-        this._preloaded = true
-        // console.log('Preloaded', preload, waitingPreloads)
-        delete preloadedImages[file.href]
-        _this.doAfterPreload(wait)
-      }
-      if (file && !file.error && !preloaded[file.href]) {
-        preloaded[file.href] = true
-        const preload = new Image()
-        preloadedImages[file.href] = preload
-        preload.crossOrigin = 'anonymous'
-        preload.onload = _onPreload
-        preload.onerror = _onPreload
-        preload.src = file.href
-        // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
-        if (wait) this.incrementPreload()
-        // console.log('Preloading', preload, waitingPreloads)
-      }
-    },
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
     },
@@ -116,25 +65,8 @@ export default {
     },
     beforePageChange() {
       this.purgePageTimers()
-      this.purgePageInteractions()
+      this.purgePageBubbles()
       this.purgePageSounds()
-    },
-    preloadPage(patten, parentPageId, wait) {
-      let pageId
-      try {
-        if (this.getPage(patten, true)) {
-          pageId = lastGetPageId
-        }
-      } catch (e) {
-        console.warn(`Linked pageId "${patten}" in ${parentPageId} not found.`)
-        return
-      }
-      const pageScript = this.getPageScript(pageId)
-      for (const image of Object.keys(pageScript.images)) {
-        const file = this.locatorLookup(image, true)
-        this.addPreload(file, 'image', wait)
-      }
-      if (!parentPageId) startupSounds.push(...pageScript.sounds)
     },
     showPage(patten, noRun) {
       console.warn('Showing Page:', patten)
@@ -151,8 +83,7 @@ export default {
       }
       this.preloadPage(pageId, this.lastPageId, true)
       const preloadedPages = {}
-      // preloadedPages[pageId] = true
-      for (const target in Object.keys(pageScript.targets)) {
+      for (const target of Object.keys(pageScript.targets)) {
         this.preloadPage(target, pageId)
         preloadedPages[lastGetPageId] = true
       }
@@ -172,7 +103,7 @@ export default {
       } catch (e) {
         return interpreter.createThrowable(interpreter.TYPE_ERROR, e.toString())
       }
-      if (waitingPreloads) {
+      if (this.hasWaitingPreloads()) {
         this.addAfterPreload(() => {
           interpreter.appendCode(pageCode)
           if (!noRun) interpreter.run()
@@ -181,11 +112,8 @@ export default {
         interpreter.appendCode(pageCode)
       }
     },
-    addAfterPreload(fn) {
-      afterPreload.push(fn)
-    },
-    shiftAfterPreload(fn) {
-      afterPreload.unshift(fn)
+    lastGetPageId() {
+      return lastGetPageId
     },
     getPage(pattern, preload) {
       if (!preload && preloadedPage[pattern]) {
@@ -271,7 +199,7 @@ export default {
         manager,
         'clearInteractions',
         () => {
-          this.purgePageInteractions()
+          this.purgePageBubbles()
         }
       )
 
