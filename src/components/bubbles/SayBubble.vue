@@ -5,9 +5,7 @@
       @keydown.space.stop="onClick"
       @keydown.enter.stop="onClick"
     />
-    <v-card-text class="px-7 py-1">
-      <div v-html="filteredLabel"></div>
-    </v-card-text>
+    <v-card-text :class="textClass" v-html="filteredLabel"> </v-card-text>
     <div class="oeos-blink-button">
       <v-btn v-if="showButton" icon x-small
         ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
@@ -62,6 +60,14 @@ export default {
   },
 
   computed: {
+    textClass() {
+      const result = {
+        'px-7': true,
+        'py-1': true,
+      }
+      result[`text-${this.align}`] = true
+      return result
+    },
     showButton() {
       return this.active && (this.isPause || (!this.noPause && this.allowSkip))
     },
