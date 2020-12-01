@@ -21,7 +21,7 @@
       }"
     ></div>
     <div
-      v-show="image"
+      v-show="image && !hideImage"
       :class="{
         'oeos-top': true,
         'oeos-full': fullScreenImage,
@@ -217,7 +217,6 @@ export default {
     loading: true,
     started: false,
     isDebug: true,
-    image: null,
     loadingText: 'Preloading images...',
   }),
   computed: {

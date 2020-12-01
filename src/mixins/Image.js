@@ -1,6 +1,8 @@
 export default {
   data: () => ({
     fullScreenImage: false,
+    hideImage: false,
+    image: null,
   }),
   methods: {
     // imageError(image) {
@@ -17,6 +19,10 @@ export default {
     //     value: image,
     //   })
     // },
+    setImage(locator) {
+      this.hideImage = false
+      this.image = this.locatorLookup(locator)
+    },
     imageClick(e) {
       if (!this.captureImageClicks()) return
       e.stopPropagation()

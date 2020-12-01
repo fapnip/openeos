@@ -12,6 +12,7 @@ const preloadedPage = {}
 let lastGetPageId = null
 let captureImageClicks = false
 let capturePageClicks = false
+let skipNextBubbleClear = false
 
 import { validateHTMLColorHex } from 'validate-color'
 
@@ -74,7 +75,8 @@ export default {
     },
     beforePageChange() {
       this.purgePageTimers()
-      this.purgePageBubbles()
+      if (!skipNextBubbleClear) this.purgePageBubbles()
+      skipNextBubbleClear = false
       this.purgePageSounds()
     },
     showPage(patten, noRun) {
@@ -282,6 +284,17 @@ export default {
         this.purgePageBubbles()
       })
 
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'skipNextBubbleClear',
+        v => {
+          if (!arguments.length) {
+            return skipNextBubbleClear
+          }
+          skipNextBubbleClear = !!v
+        }
+      )
+
       interpreter.setNativeFunctionPrototype(manager, 'hideBubbles', v => {
         if (!arguments.length) {
           return this.hideBubbles
@@ -294,7 +307,14 @@ export default {
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
-        this.image = this.locatorLookup(_prepLocator(locator))
+        this.setImage(_prepLocator(locator))
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'hideImage', v => {
+        if (!arguments.length) {
+          return this.hideImage
+        }
+        this.hideImage = !!v
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'fullHeightImage', v => {
