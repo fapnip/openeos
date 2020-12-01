@@ -21,7 +21,7 @@
       }"
     ></div>
     <div
-      v-if="image"
+      v-show="image"
       :class="{
         'oeos-top': true,
         'oeos-full': fullScreenImage,
@@ -30,7 +30,7 @@
       <div class="oeos-image">
         <img
           ref="mainImage"
-          :src="image.href"
+          :src="image && image.href"
           crossOrigin="anonymous"
           @click="imageClick"
         />

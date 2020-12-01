@@ -25,7 +25,7 @@ function addToPreloadPool(locator, item, lookupPool) {
   pool.push(item)
 }
 function avoidLast(value, array, avoid, randomGetter) {
-  for (let i = 10, l = array.length; l > 2 && i > 0 && value !== avoid; i--) {
+  for (let i = 10, l = array.length; l > 2 && i > 0 && value === avoid; i--) {
     // Try not to repeat the last file
     value = randomGetter()
   }
