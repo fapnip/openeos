@@ -5,9 +5,11 @@ import minimatch from 'minimatch'
 
 let galleryLookup = {}
 let urlIdCounter = 0
-const urlCache = {}
+// const urlCache = {}
 const locatorArrayPreload = {}
 const preloadPools = {}
+const lastRandoms = {}
+const lastArrayRandoms = {}
 function getPreloadPool(locator, lookupPool) {
   lookupPool = lookupPool || preloadPools
   let pool = lookupPool[locator]
@@ -24,7 +26,15 @@ function addToPreloadPool(locator, item, lookupPool) {
   }
   pool.push(item)
 }
-function avoidLast(value, array, avoid, randomGetter) {
+function avoidLast(value, array, randomGetter, locator, lookupPool, lasts) {
+  lasts = lasts || lastRandoms
+  lookupPool = lookupPool || preloadPools
+  const pool = getPreloadPool(locator, lookupPool)
+  let avoid = pool[pool.length - 1] || lasts[locator]
+  if (typeof avoid === 'object' && avoid !== null) {
+    avoid = avoid.locator
+  }
+  delete lasts[locator]
   for (let i = 10, l = array.length; l > 2 && i > 0 && value === avoid; i--) {
     // Try not to repeat the last file
     value = randomGetter()
@@ -56,6 +66,7 @@ export default {
         if (!pool.length) {
           // Random pre-load pool is now empty
           // Add add one in case we need it next time
+          lastRandoms[locator] = preloaded.locator
           this.preloadImage(locator)
         }
         // use preloaded object
@@ -80,6 +91,7 @@ export default {
           const preloaded = pool.shift()
           if (preloaded) {
             if (!pool.length) {
+              lastArrayRandoms[locator] = preloaded
               this.preloadImage(locator)
             }
             return this.locatorLookup(preloaded)
@@ -90,8 +102,10 @@ export default {
           randLocator = avoidLast(
             randLocator,
             locatorArray,
-            pool[pool.length - 1],
-            _getRandom
+            _getRandom,
+            locator,
+            locatorArrayPreload,
+            lastArrayRandoms
           )
           addToPreloadPool(locator, randLocator, locatorArrayPreload)
           return this.locatorLookup(randLocator, preload)
@@ -115,19 +129,20 @@ export default {
       if (urlMatch[4]) {
         return this.locatorLookup(decodeURIComponent(urlMatch[4]), preload)
       }
-      let image = urlCache[locator]
-      if (!image) {
-        const id = ++urlIdCounter
-        image = {
-          href: locator,
-          item: {
-            hash: id,
-            id: id,
-          },
-          noReferrer: true,
-        }
-        urlCache[locator] = image
+      // let image = urlCache[locator]
+      // if (!image) {
+      const id = ++urlIdCounter
+      const image = {
+        href: locator,
+        item: {
+          hash: id,
+          id: id,
+        },
+        locator: locator,
+        noReferrer: true,
       }
+      // urlCache[locator] = image
+      // }
       return image
     },
     lookupFile(locator, preload) {
@@ -154,8 +169,7 @@ export default {
         }
       }
       if (preload && isRandom) {
-        const pool = getPreloadPool(locator)
-        file = avoidLast(file, matches, pool[pool.length - 1], _getRandom)
+        file = avoidLast(file, matches, _getRandom, locator)
         const result = {
           item: file,
           href: buildHref(file),
@@ -197,8 +211,7 @@ export default {
           }
         }
         if (preload) {
-          const pool = getPreloadPool(locator)
-          image = avoidLast(image, images, pool[pool.length - 1], _getRandom)
+          image = avoidLast(image, images, _getRandom, locator)
           const result = {
             item: image,
             href: buildHref(image),
