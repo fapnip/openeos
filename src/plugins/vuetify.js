@@ -13,6 +13,7 @@ export default new Vuetify({
     themes: {
       dark: {
         primary: '#773435',
+        background: '#000000',
       },
     },
   },

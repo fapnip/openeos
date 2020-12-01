@@ -21,6 +21,23 @@
       }"
     ></div>
     <div
+      v-if="image"
+      :class="{
+        'oeos-top': true,
+        'oeos-full': fullScreenImage,
+      }"
+    >
+      <div class="oeos-image">
+        <img
+          ref="mainImage"
+          :src="image.href"
+          crossOrigin="anonymous"
+          @click="imageClick"
+        />
+      </div>
+    </div>
+    <div
+      v-show="!hideBubbles"
       :class="{
         'oeos-bottom': true,
         'has-image': !!image,
@@ -69,16 +86,6 @@
         </v-row>
         <div ref="lastItem"></div>
       </v-container>
-    </div>
-    <div v-if="image" class="oeos-top">
-      <div class="oeos-image">
-        <img
-          ref="mainImage"
-          :src="image.href"
-          crossOrigin="anonymous"
-          @click="imageClick"
-        />
-      </div>
     </div>
     <div class="oeos-right">
       <countdown-timer
@@ -140,6 +147,7 @@ import Console from '../mixins/Console'
 import EventManager from '../mixins/EventManager'
 import NativeTimers from '../mixins/NativeTimers'
 import PageManager from '../mixins/PageManager'
+import FileManager from '../mixins/FileManager'
 import Timer from '../mixins/Timer'
 import Say from '../mixins/Say'
 import Choice from '../mixins/Choice'
@@ -196,6 +204,7 @@ export default {
     EventManager,
     NativeTimers,
     PageManager,
+    FileManager,
     Timer,
     Say,
     Choice,
@@ -244,6 +253,7 @@ export default {
       interpreter.run()
       this.installEventManager(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
+      this.installFileManager(interpreter, globalObject)
       this.installTimer(interpreter, globalObject)
       this.installSay(interpreter, globalObject)
       this.installChoice(interpreter, globalObject)
@@ -349,6 +359,9 @@ export default {
   left: 0;
   right: 0;
 }
+.oeos-top.oeos-full {
+  height: 100%;
+}
 .oeos-right {
   position: absolute;
   top: 0;
@@ -427,6 +440,13 @@ export default {
 }
 .oeos-say-item {
   max-width: 90%;
+}
+.oeos-choice-item {
+  margin-bottom: 0px;
+  max-width: 90%;
+}
+.oeos-choice-item .v-btn {
+  margin-bottom: 6px;
 }
 .oeos-blink-button,
 .oeos-start-button {

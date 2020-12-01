@@ -61,11 +61,6 @@ EventTarget.prototype.removeEventListener = function(type, oldListener) {
   }
 }
 
-EventTarget.prototype.dispatchEventFromNative = function(event) {
-  event.timeStamp = Date.now()
-  this.dispatchEvent(event)
-}
-
 EventTarget.prototype.dispatchEvent = function(event) {
   var listeners
   var stopImmediatePropagation = false

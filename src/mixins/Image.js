@@ -1,33 +1,36 @@
 export default {
-  data: () => ({}),
+  data: () => ({
+    fullScreenImage: false,
+  }),
   methods: {
+    // imageError(image) {
+    //   this.dispatchEvent({
+    //     target: this.pagesInstance,
+    //     type: 'image-error',
+    //     value: image,
+    //   })
+    // },
+    // imageLoad(image) {
+    //   this.dispatchEvent({
+    //     target: this.pagesInstance,
+    //     type: 'image-load',
+    //     value: image,
+    //   })
+    // },
     imageClick(e) {
+      if (!this.captureImageClicks()) return
+      e.stopPropagation()
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
-      const xPerc = x / e.target.clientWidth
-      const yPerc = y / e.target.clientHeight
-      console.log('Image clicked', xPerc, yPerc, e)
-      console.log('Left? : ' + x + ' ; Top? : ' + y + '.')
+      this.dispatchEvent({
+        target: this.pagesInstance,
+        type: 'image-click',
+        value: {
+          x: x / e.target.clientWidth, // between 0 and 1, where clicked
+          y: y / e.target.clientHeight, // between 0 and 1, where clicked
+        },
+      })
     },
-    // installConsole(interpreter, globalObject) {
-    //   const vmConsole = interpreter.createObject(interpreter.OBJECT)
-    //   interpreter.setProperty(globalObject, 'console', vmConsole)
-    //   ;['log', 'info', 'warn', 'error', 'dir'].forEach(method => {
-    //     let raw = method === 'dir'
-    //     interpreter.setProperty(
-    //       vmConsole,
-    //       method,
-    //       interpreter.createNativeFunction((message, ...args) => {
-    //         console[raw ? 'log' : method](
-    //           'vm:',
-    //           interpreter.pseudoToNative(message),
-    //           ...args.map(arg => (raw ? arg : interpreter.pseudoToNative(arg)))
-    //         )
-    //       }),
-    //       this.Interpreter.NONENUMERABLE_DESCRIPTOR
-    //     )
-    //   })
-    // },
   },
 }

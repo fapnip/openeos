@@ -2,7 +2,7 @@
   <v-row
     v-if="options[0] && selectedOption === null"
     align="center"
-    class="oeos-choices"
+    class="oeos-choices text-center"
   >
     <template v-for="(option, i) in options">
       <v-btn
@@ -17,12 +17,16 @@
       ></v-btn>
     </template>
   </v-row>
-  <v-row v-else-if="selectedOption" align="center">
+  <v-row
+    v-else-if="selectedOption"
+    align="center"
+    class="oeos-choices text-center"
+  >
     <v-btn class="custom-transform-class text-none" small disabled>
       <span v-html="selectedOption.label"></span
     ></v-btn>
   </v-row>
-  <v-row v-else align="center">
+  <v-row v-else align="center" class="oeos-choices text-center">
     <v-btn small disabled> <span> ... </span></v-btn>
   </v-row>
 </template>
@@ -77,7 +81,10 @@ export default {
 </script>
 
 <style scoped>
+.oeos-choices {
+  display: block;
+}
 .oeos-choices .v-btn {
-  min-width: 30px;
+  min-width: 20px;
 }
 </style>

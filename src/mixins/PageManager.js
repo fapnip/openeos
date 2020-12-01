@@ -10,6 +10,8 @@ let disabledPages = {}
 let pageScripts = {}
 const preloadedPage = {}
 let lastGetPageId = null
+let captureImageClicks = false
+let capturePageClicks = false
 
 import { validateHTMLColorHex } from 'validate-color'
 
@@ -32,6 +34,12 @@ export default {
     },
   },
   methods: {
+    captureImageClicks() {
+      return captureImageClicks
+    },
+    capturePageClicks() {
+      return capturePageClicks
+    },
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
     },
@@ -57,6 +65,7 @@ export default {
       if (!pageScript) {
         pageScript = pageCompiler(page)
         pageScripts[pageId] = pageScript
+        // console.log('Page Script: ' + pageId, pageScript.script)
       }
       return pageScript
     },
@@ -99,7 +108,14 @@ export default {
       navIndex++ // Increment nav depth, so we know to skip consecutive gotos.
       this.beforePageChange()
       try {
-        this.dispatchEvent({ target: this.pagesInstance, type: 'change' })
+        this.dispatchEvent({
+          target: this.pagesInstance,
+          type: 'change',
+          value: {
+            to: pageId,
+            from: this.lastPageId,
+          },
+        })
       } catch (e) {
         return interpreter.createThrowable(interpreter.TYPE_ERROR, e.toString())
       }
@@ -148,8 +164,10 @@ export default {
       }
     },
     installPageManager(interpreter, globalObject) {
+      const vue = this
       const constructor = () => {
-        throw new Error(
+        return interpreter.createThrowable(
+          interpreter.ERROR,
           'Cannot construct PageManager object, use `pages` global'
         )
       }
@@ -164,6 +182,18 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'PageManager', manager)
 
+      interpreter.setNativeFunctionPrototype(manager, 'list', () => {
+        return interpreter.nativeToPseudo(Object.keys(this.pages()))
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'galleries', () => {
+        return interpreter.nativeToPseudo(Object.keys(this.galleries()))
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'files', () => {
+        return interpreter.nativeToPseudo(Object.keys(this.files()))
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'isEnabled', pageId => {
         if (typeof pageId !== 'string') {
           return interpreter.createThrowable(
@@ -174,6 +204,7 @@ export default {
 
         return this.isPageEnabled(pageId)
       })
+
       interpreter.setNativeFunctionPrototype(manager, 'enable', pattern => {
         if (typeof pattern !== 'string') {
           return interpreter.createThrowable(
@@ -203,11 +234,11 @@ export default {
         }
       )
 
-      interpreter.setNativeFunctionPrototype(manager, 'getNavId', () => {
+      interpreter.setNativeFunctionPrototype(manager, '_getNavId', () => {
         return navCounter
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'getNavQueued', () => {
+      interpreter.setNativeFunctionPrototype(manager, '_getNavQueued', () => {
         // If more than one pages.goto(...) were executed in a row before the
         // interpreted script returns control to us, this will make sure only the last
         // goto is executed, just like the original EOS player
@@ -218,16 +249,93 @@ export default {
         return navIndex
       })
 
+      const _prepLocator = locator => {
+        if (locator instanceof this.Interpreter.Object) {
+          locator = JSON.stringify(interpreter.pseudoToNative(locator))
+        }
+        return locator
+      }
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'captureImageClicks',
+        v => {
+          if (!arguments.length) {
+            return captureImageClicks
+          }
+          captureImageClicks = !!v
+        }
+      )
+
+      // interpreter.setNativeFunctionPrototype(
+      //   manager,
+      //   'capturePageClicks',
+      //   v => {
+      //     if (!arguments.length) {
+      //       return capturePageClicks
+      //     }
+      //     capturePageClicks = !!v
+      //   }
+      // )
+
+      interpreter.setNativeFunctionPrototype(manager, 'clearBubbles', () => {
+        this.purgePageBubbles()
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'hideBubbles', v => {
+        if (!arguments.length) {
+          return this.hideBubbles
+        }
+        this.hideBubbles = !!v
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'getImage', () => {
+        return interpreter.nativeToPseudo(this.image)
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
-        this.image = this.locatorLookup(locator)
+        this.image = this.locatorLookup(_prepLocator(locator))
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'fullHeightImage', v => {
+        if (!arguments.length) {
+          return this.fullScreenImage
+        }
+        this.fullScreenImage = !!v
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'preloadImage', function(
+        locator,
+        onLoadFunc,
+        onErrorFunc
+      ) {
+        this.image = vue.preloadImage(
+          _prepLocator(locator),
+          false,
+          () => {
+            if (onLoadFunc) {
+              interpreter.queueFunction(onLoadFunc, this)
+              interpreter.run()
+            }
+          },
+          e => {
+            if (onErrorFunc) {
+              interpreter.queueFunction(onErrorFunc, this, e)
+              interpreter.run()
+            }
+          }
+        )
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'oeosVersion', v => {
-        if (v === undefined) return version
+        if (!arguments.length) return version
         return compareVersions(version, v)
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'setBarColor', color => {
+      interpreter.setNativeFunctionPrototype(manager, 'barColor', color => {
+        if (!arguments.length) {
+          return this.$vuetify.theme.themes.dark.primary
+        }
         if (!validateHTMLColorHex(color)) {
           return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
@@ -250,7 +358,10 @@ export default {
         this.forcedBackgroundColor = color
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'setBgColor', color => {
+      interpreter.setNativeFunctionPrototype(manager, 'bgColor', color => {
+        if (!arguments.length) {
+          return this.currentBackgroundColor
+        }
         if (!color) {
           this.backgroundColor = null
         }
@@ -261,10 +372,6 @@ export default {
           )
         }
         this.backgroundColor = color
-      })
-
-      interpreter.setNativeFunctionPrototype(manager, 'getBgColor', () => {
-        return this.currentBackgroundColor
       })
 
       interpreter.setNativeFunctionPrototype(

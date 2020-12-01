@@ -17,23 +17,13 @@ export default {
       if (!(value instanceof this.Interpreter.Object)) {
         value = interpreter.nativeToPseudo(value)
       }
-      // this.type = type
-      // this.value = value
-      // this.timeStamp = Date.now()
-      // this.cancelable = false
-      const dispatchFn = interpreter.getProperty(
-        target,
-        'dispatchEventFromNative'
-      )
+      const dispatchFunc = interpreter.getProperty(target, 'dispatchEvent')
       const event = interpreter.createObjectProto(eventProto)
       interpreter.setProperty(event, 'type', type)
       interpreter.setProperty(event, 'cancelable', false)
       interpreter.setProperty(event, 'value', value)
-      interpreter.queueFunction(dispatchFn, target, event)
-      // interpreter.setProperty(eventTarget, 'currentTarget', target)
-      // interpreter.appendCode(
-      //   `EventTarget.currentTarget.dispatchEvent(new ${eventClass}('${type}'))`
-      // )
+      interpreter.setProperty(event, 'timeStamp', Date.now())
+      interpreter.queueFunction(dispatchFunc, target, event)
       interpreter.run()
       return interpreter.value
     },

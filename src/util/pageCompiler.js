@@ -17,7 +17,7 @@ export default function pageCompiler(page) {
   targets = {}
   return {
     script: `
-    if (!pages.getNavQueued()) (function(continueFns){
+    if (!pages._getNavQueued()) (function(continueFns){
       ${pageCompilerUtil}
       _doCommandFns(${compileCommandsToArray(page)}, continueFns, []);
     })([])
@@ -207,11 +207,11 @@ const commandList = {
       timerDuration: ${buildExpression(c.timerDuration)},
       buttonLabel: ${parseHtmlToJS(c.buttonLabel)},
       onClick: function () {
-        _navId = pages.getNavId(); // Allow execution on any page
+        _navId = pages._getNavId(); // Allow execution on any page
         _doCommandFns(${compileCommandsToArray(c.buttonCommands)}, [], []);
       },
       onTimeout: function () {
-        _navId = pages.getNavId(); // Allow execution on any page
+        _navId = pages._getNavId(); // Allow execution on any page
         _doCommandFns(${compileCommandsToArray(c.timerCommands)}, [], []);
       }
     });
@@ -311,7 +311,7 @@ function buildExpression(exp) {
 // Replace ...<eval>expression</eval>... with "..." + (isolated eval expression) + "..."
 // (Further xss filtering comes at run time/render with markupFilter)
 function parseHtmlToJS(string) {
-  if (typeof string !== 'string') return null
+  if (typeof string !== 'string') return JSON.stringify('')
   const result = []
   const doc = parser
     .parseFromString(string, 'text/html')
@@ -335,5 +335,6 @@ function parseHtmlToJS(string) {
   if (docstring.length) {
     result.push(JSON.stringify(docstring))
   }
+  if (!result.length) return JSON.stringify('')
   return result.join(' + ')
 }

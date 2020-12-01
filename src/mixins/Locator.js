@@ -1,3 +1,4 @@
+// TODO:  Clean up, simplify
 import { getRandomInt } from '../util'
 import { buildHref, extToType } from '../util/io'
 import minimatch from 'minimatch'
@@ -30,16 +31,12 @@ function avoidLast(value, array, avoid, randomGetter) {
   }
   return value
 }
-
-const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|oeos:(.+)\)$)/
+const supportedHosts = ['https://i.ibb.co', 'https://media.milovana.com']
+// TODO: break this out to multiple lines
+const allowedUrlMatcher = /(^(https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|oeos:(.+)\)$)/
 
 export default {
-  data: () => ({
-    missingFile: {
-      href: 'missing-file',
-      error: true,
-    },
-  }),
+  data: () => ({}),
   methods: {
     hasInPreloadPool(locator) {
       return (
@@ -57,11 +54,11 @@ export default {
       if (preloaded) {
         // A random locator was pre-loaded, but not yet used
         if (!pool.length) {
-          // Pre-load pool is empty
-          // Add add one for next time
+          // Random pre-load pool is now empty
+          // Add add one in case we need it next time
           this.preloadImage(locator)
         }
-        // use it
+        // use preloaded object
         return preloaded
       }
       if (typeof locator !== 'string') return null
@@ -70,7 +67,7 @@ export default {
       const file = this.lookupFile(locator, preload)
       if (file) return file
       console.error('Invalid locator', locator)
-      return { href: 'invalid-locator', error: true }
+      return { href: 'invalid-locator', error: 'Invalid locator: ' + locator }
     },
     locatorArrayLookup(locator, preload) {
       try {
@@ -105,7 +102,16 @@ export default {
     },
     lookupRemoteLink(locator, preload) {
       const urlMatch = locator.match(allowedUrlMatcher)
-      if (!urlMatch) return
+      if (!urlMatch) {
+        const hrefMatch = locator.match(/^https*:\/\/(^[/])/i)
+        if (hrefMatch) {
+          return {
+            href: 'invalid-host',
+            error: `Host not in whitelist: ${supportedHosts.join(', ')}`,
+          }
+        }
+        return
+      }
       if (urlMatch[4]) {
         return this.locatorLookup(decodeURIComponent(urlMatch[4]), preload)
       }
@@ -142,7 +148,10 @@ export default {
       let file = _getRandom()
       if (!file) {
         console.error(`Unknown file: ${fileMatch[1]}`)
-        return this.missingFile
+        return {
+          href: 'unknown-file',
+          error: `Unknown file: ${fileMatch[1]}`,
+        }
       }
       if (preload && isRandom) {
         const pool = getPreloadPool(locator)
@@ -150,6 +159,7 @@ export default {
         const result = {
           item: file,
           href: buildHref(file),
+          locator: locator,
         }
         addToPreloadPool(locator, result)
         return result
@@ -157,6 +167,7 @@ export default {
       return {
         item: file,
         href: buildHref(file),
+        locator: locator,
       }
     },
     lookupGalleryImage(locator, preload) {
@@ -165,7 +176,10 @@ export default {
       const gallery = galleryLookup[galleryMatch[1]]
       if (!gallery) {
         console.error(`Unknown gallery: ${gallery}`)
-        return this.missingFile
+        return {
+          href: 'unknown-gallery',
+          error: `Unknown gallery: ${gallery}`,
+        }
       }
       let image = null
       if (galleryMatch[2] === '*') {
@@ -177,7 +191,10 @@ export default {
           console.error(
             `Unknown image ID in gallery "${galleryName}": ${galleryMatch[2]}`
           )
-          return this.missingFile
+          return {
+            href: 'unknown-image-id',
+            error: `Unknown image id: ${galleryMatch[2]}`,
+          }
         }
         if (preload) {
           const pool = getPreloadPool(locator)
@@ -185,6 +202,7 @@ export default {
           const result = {
             item: image,
             href: buildHref(image),
+            locator: locator,
           }
           addToPreloadPool(locator, result)
           return result
@@ -196,12 +214,16 @@ export default {
           console.error(
             `Unknown image ID in gallery "${galleryName}": ${galleryMatch[2]}`
           )
-          return this.missingFile
+          return {
+            href: 'unknown-image-id',
+            error: `Unknown image id: ${galleryMatch[2]}`,
+          }
         }
       }
       return {
         item: image,
         href: buildHref(image),
+        locator: locator,
       }
     },
     updateGalleryLookup() {

@@ -18,7 +18,7 @@ export default {
     incrementPreload() {
       waitingPreloads++
     },
-    doAfterPreload(wait) {
+    doAfterPreload(wait, isError) {
       if (!wait) return
       waitingPreloads--
       if (waitingPreloads) {
@@ -32,34 +32,46 @@ export default {
         fn = afterPreload.shift()
       }
     },
-    addPreload(file, asType, wait) {
+    addPreload(file, asType, wait, onLoad, onError) {
       const _this = this
       if (asType === 'audio') {
         return // audio preloading done elsewhere
       }
       function _onPreload() {
-        if (this._preloaded) return
-        this._preloaded = true
-        // console.log('Preloaded', preload, waitingPreloads)
         delete preloadedImages[file.href]
         _this.doAfterPreload(wait)
       }
-      if (file && !file.error && file.href && !file.href.match(/^data:/)) {
+      if (file && !file.error && file.href) {
         preloaded[file.href] = true
         const preload = new Image()
         preloadedImages[file.href] = preload
         preload.crossOrigin = 'anonymous'
-        preload.onload = _onPreload
-        preload.onerror = _onPreload
+        preload.onload = () => {
+          _onPreload()
+          if (typeof onLoad === 'function')
+            onLoad(file.href.match(/^data:/) ? 'data-url' : file.href)
+        }
+        preload.onerror = e => {
+          _onPreload()
+          if (typeof onError === 'function') onError(e)
+        }
         preload.src = file.href
         // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
         if (wait) this.incrementPreload()
         // console.log('Preloading', file)
+      } else {
+        onError((file && file.error) || 'Invalid locator')
       }
     },
-    preloadImage(locator, wait) {
+    preloadImage(locator, wait, onLoad, onError) {
       const file = this.locatorLookup(locator, true)
-      this.addPreload(file, 'image', wait && !this.hasInPreloadPool(locator))
+      this.addPreload(
+        file,
+        'image',
+        wait && !this.hasInPreloadPool(locator),
+        onLoad,
+        onError
+      )
     },
     preloadPage(patten, parentPageId, wait) {
       let pageId

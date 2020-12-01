@@ -1,7 +1,7 @@
 /**
  * Common functions for page compiler
  */
-var _navId = pages.getNavId()
+var _navId = pages._getNavId()
 // eslint-disable-next-line no-unused-vars
 var _globalEval = eval
 
@@ -40,5 +40,5 @@ var _doCommandFns = function(commandFns, continueFns, continueFns2) {
 }
 
 var _isComplete = function() {
-  return pages.getNavId() !== _navId
+  return pages._getNavId() !== _navId
 }

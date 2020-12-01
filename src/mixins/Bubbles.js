@@ -7,6 +7,7 @@ export default {
     bubbles: [],
     scrolledToBottom: true,
     bubbleHeight: 0,
+    hideBubbles: false,
   }),
   methods: {
     bubbleClass(bubbles) {
