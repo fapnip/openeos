@@ -19,10 +19,16 @@ export default {
       result['oeos-align-' + (item.align || 'center')] = true
       return result
     },
-    purgePageBubbles() {
-      for (let i = this.bubbles.length - 1; i >= 0; i--) {
-        if (!this.bubbles[i].persist) {
-          this.bubbles.splice(i, 1)
+    purgePageBubbles(keep) {
+      if (keep) {
+        let end = this.bubbles.length - keep
+        if (end < 0) end = this.bubbles.length
+        this.bubbles.splice(0, end)
+      } else {
+        for (let i = this.bubbles.length - 1; i >= 0; i--) {
+          if (!this.bubbles[i].persist) {
+            this.bubbles.splice(i, 1)
+          }
         }
       }
     },

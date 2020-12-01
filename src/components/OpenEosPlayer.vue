@@ -245,6 +245,11 @@ export default {
         console.log(...arguments)
       }
     },
+    debugWarn() {
+      if (this.isDebug) {
+        console.warn(...arguments)
+      }
+    },
     installInterpreterModules(interpreter, globalObject) {
       this.installConsole(interpreter, globalObject)
       this.installNativeTimers(interpreter, globalObject)

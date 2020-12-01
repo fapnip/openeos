@@ -5,7 +5,7 @@ let idCounter = 0
 function getWaitMode(interpreter, opt) {
   const nativeOpt = interpreter.pseudoToNative(opt)
   const nextCommand = nativeOpt.nextCommand || { type: 'none' }
-  switch (nativeOpt.mode || '') {
+  switch (nativeOpt.mode || 'auto') {
     case 'auto':
       switch (nextCommand.type) {
         case 'choice':
@@ -41,13 +41,15 @@ export default {
         for (const k of Object.keys(optProps)) {
           const val = optProps[k]
           if (val === undefined) continue
-          if (typeof val !== 'object') {
+          if (typeof val !== 'object' || val === null) {
             vue.$set(interaction, k, val) // make reactive
           } else {
             interaction[k] = val
           }
         }
-        this.$set(interaction, 'label', interaction.label)
+        this.$set(interaction, 'label', interaction.label || null)
+        this.$set(interaction, 'color', interaction.color || null)
+        interaction.mode = interaction.mode || 'auto'
         interaction.isAuto = interaction.mode === 'auto'
         interaction.mode = getWaitMode(interpreter, opt)
         interaction.onContinue = () => {
@@ -74,8 +76,20 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Say', manager)
 
-      interpreter.setNativeFunctionPrototype(manager, 'update', function(val) {
+      interpreter.setNativeFunctionPrototype(manager, 'label', function(val) {
+        if (!arguments.length) {
+          return this.label
+        }
         vue.$set(this, 'label', val)
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'color', function(val) {
+        if (!arguments.length) {
+          return this.color
+        }
+        vue.$set(this, 'color', val)
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {

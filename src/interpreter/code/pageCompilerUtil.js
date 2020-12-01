@@ -1,5 +1,5 @@
 /**
- * Common functions for page compiler
+ * Common functions for compiled page
  */
 var _navId = pages._getNavId()
 // eslint-disable-next-line no-unused-vars

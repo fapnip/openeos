@@ -17,15 +17,25 @@ export default {
           this.$set(interaction, 'active', false)
         }
 
+        const _doComplete = selectedIndex => {
+          if (optProps.onComplete) {
+            interpreter.queueFunction(
+              optProps.onComplete,
+              interaction,
+              selectedIndex === undefined ? -1 : selectedIndex
+            )
+            interpreter.run()
+          }
+        }
+
         const origOptions = (optProps.options || {}).properties || []
         const options = []
 
         for (const k of Object.keys(origOptions)) {
-          const option = {}
+          const option = interpreter.pseudoToNative(origOptions[k])
           const o = origOptions[k].properties
-          for (var i in o) {
-            option[i] = o[i]
-          }
+          if (origOptions.visible === undefined) option.visible = true
+          this.setReactive(option, ['label', 'visible'])
           option.onSelect = () => {
             this.$set(interaction, 'selectedOption', option)
             if (interaction.active) {
@@ -35,6 +45,7 @@ export default {
                 interpreter.queueFunction(o.onSelect, opt)
                 interpreter.run()
               }
+              _doComplete(parseInt(k, 10))
             }
           }
           options.push(option)
@@ -48,6 +59,7 @@ export default {
               interpreter.queueFunction(optProps.onContinue, opt)
               interpreter.run()
             }
+            _doComplete()
           }
         }
         this.$set(interaction, 'selectedOption', null)
@@ -65,26 +77,73 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Choice', manager)
 
-      function getOptionByIndex(i) {
-        if (!this.options[i]) {
+      function getOptionByIndex(choice, i) {
+        if (!choice.options[i]) {
           return interpreter.createThrowable(
             interpreter.RANGE_ERROR,
             'Invalid option index: ' + i
           )
         }
-        return this.options[i]
+        return choice.options[i]
       }
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function(i) {
-        if (i !== undefined) {
-          if (getOptionByIndex(i)) this.options.splice(i, 1)
+        if (arguments.length) {
+          const option = getOptionByIndex(this, i)
+          if (option instanceof vue.Interpreter.Throwable) return option
+          this.options.splice(i, 1)
+          return this
         } else {
           vue.removeBubble(this)
         }
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'select', function(i) {
-        if (getOptionByIndex(i)) this.options[i].onSelect()
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        option.onSelect()
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'visible', function(
+        i,
+        v
+      ) {
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        if (arguments.length === 1) {
+          return option.visible
+        }
+        option.visible = !!v
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'color', function(
+        i,
+        color
+      ) {
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        if (arguments.length === 1) {
+          return option.color
+        }
+        color = vue.validateHexColor(color)
+        if (color instanceof vue.Interpreter.Throwable) return color
+        option.color = color
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'label', function(
+        i,
+        text
+      ) {
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        if (arguments.length === 1) {
+          return option.label
+        }
+        if (text === undefined) text = ''
+        option.label = text + ''
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'cancel', function(i) {

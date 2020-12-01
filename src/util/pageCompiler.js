@@ -19,6 +19,7 @@ export default function pageCompiler(page) {
     script: `
     if (!pages._getNavQueued()) (function(continueFns){
       ${pageCompilerUtil}
+      /* Compiled Page */
       _doCommandFns(${compileCommandsToArray(page)}, continueFns, []);
     })([])
     `,

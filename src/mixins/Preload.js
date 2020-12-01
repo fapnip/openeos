@@ -83,10 +83,14 @@ export default {
         console.warn(`Linked pageId "${patten}" in ${parentPageId} not found.`)
         return
       }
+      console.log('Preloading Page:', pageId)
       const pageScript = this.getPageScript(pageId)
       for (const locator of Object.keys(pageScript.images)) {
         this.preloadImage(locator, wait)
       }
+      // TODO: Look at stack trace to see if we were triggered by user interaction.
+      //       If so, "preload" audio.
+      // For now, we'll only preload audio on the initial start pre-load
       if (!this.started) startupSounds.push(...pageScript.sounds)
     },
     addAfterPreload(fn) {

@@ -1,4 +1,3 @@
-import pageCompiler from '../util/pageCompiler'
 import pagesCode from '!!raw-loader!../interpreter/code/pages.js'
 import minimatch from 'minimatch'
 import compareVersions from 'compare-versions'
@@ -7,14 +6,12 @@ import { version } from '../../package.json'
 let navCounter = 0
 let navIndex = 0
 let disabledPages = {}
-let pageScripts = {}
 const preloadedPage = {}
 let lastGetPageId = null
 let captureImageClicks = false
 let capturePageClicks = false
 let skipNextBubbleClear = false
-
-import { validateHTMLColorHex } from 'validate-color'
+let nextPageFuncs = []
 
 export default {
   data: () => ({
@@ -26,7 +23,6 @@ export default {
   }),
   mounted() {
     navCounter = 0
-    pageScripts = {}
     disabledPages = {}
   },
   watch: {
@@ -60,24 +56,23 @@ export default {
         disabledPages[page] = true
       }
     },
-    getPageScript(pageId) {
-      const page = this.getPage(pageId)
-      let pageScript = pageScripts[pageId]
-      if (!pageScript) {
-        pageScript = pageCompiler(page)
-        pageScripts[pageId] = pageScript
-        // console.log('Page Script: ' + pageId, pageScript.script)
-      }
-      return pageScript
-    },
     getCurrentPageId() {
       return this.currentPageId
     },
     beforePageChange() {
       this.purgePageTimers()
-      if (!skipNextBubbleClear) this.purgePageBubbles()
-      skipNextBubbleClear = false
+      if (skipNextBubbleClear) {
+        skipNextBubbleClear = false
+        console.log('Skipping bubble clear')
+      } else {
+        this.purgePageBubbles()
+      }
       this.purgePageSounds()
+      let func = nextPageFuncs.shift()
+      while (func) {
+        this.interpreter.queueFunction(func, this.pagesInstance)
+        func = nextPageFuncs.shift()
+      }
     },
     showPage(patten, noRun) {
       console.warn('Showing Page:', patten)
@@ -93,15 +88,19 @@ export default {
         pageScript.code = pageCode
       }
       this.preloadPage(pageId, this.lastPageId, true)
-      const preloadedPages = {}
+      const didPages = {}
+      didPages[pageId] = true
       for (const target of Object.keys(pageScript.targets)) {
-        this.preloadPage(target, pageId)
-        preloadedPages[lastGetPageId] = true
+        if (!didPages[preloadedPage[target]] && !didPages[target]) {
+          this.preloadPage(target, pageId)
+          didPages[lastGetPageId] = true
+        }
       }
       if (pageIndex > -1) {
         const nextPagePreload = pageKeys[pageIndex + 1]
-        if (nextPagePreload && !preloadedPages[nextPagePreload]) {
+        if (nextPagePreload && !didPages[nextPagePreload]) {
           this.preloadPage(nextPagePreload)
+          didPages[nextPagePreload] = true
         }
       }
       this.lastPageId = this.currentPageId
@@ -207,25 +206,29 @@ export default {
         return this.isPageEnabled(pageId)
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'enable', pattern => {
+      interpreter.setNativeFunctionPrototype(manager, 'enable', function(
+        pattern
+      ) {
         if (typeof pattern !== 'string') {
           return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
             'pattern must be a string'
           )
         }
-
-        this.enablePage(pattern)
+        vue.enablePage(pattern)
+        return this
       })
-      interpreter.setNativeFunctionPrototype(manager, 'disable', pattern => {
+      interpreter.setNativeFunctionPrototype(manager, 'disable', function(
+        pattern
+      ) {
         if (typeof pattern !== 'string') {
           return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
             'pattern must be a string'
           )
         }
-
-        this.disablePage(pattern)
+        vue.disablePage(pattern)
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(
@@ -261,67 +264,115 @@ export default {
       interpreter.setNativeFunctionPrototype(
         manager,
         'captureImageClicks',
-        v => {
+        function(v) {
           if (!arguments.length) {
             return captureImageClicks
           }
           captureImageClicks = !!v
+          return this
         }
       )
 
       // interpreter.setNativeFunctionPrototype(
       //   manager,
       //   'capturePageClicks',
-      //   v => {
+      //   function(v) {
       //     if (!arguments.length) {
       //       return capturePageClicks
       //     }
       //     capturePageClicks = !!v
+      //     return this
       //   }
       // )
 
-      interpreter.setNativeFunctionPrototype(manager, 'clearBubbles', () => {
-        this.purgePageBubbles()
+      interpreter.setNativeFunctionPrototype(manager, 'clearBubbles', function(
+        keep
+      ) {
+        vue.purgePageBubbles(keep)
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(
         manager,
         'skipNextBubbleClear',
-        v => {
+        function(v) {
           if (!arguments.length) {
             return skipNextBubbleClear
           }
+          console.log('Setting skipNextBubbleClear', v)
           skipNextBubbleClear = !!v
+          return this
         }
       )
 
-      interpreter.setNativeFunctionPrototype(manager, 'hideBubbles', v => {
+      interpreter.setNativeFunctionPrototype(manager, 'hideBubbles', function(
+        v
+      ) {
         if (!arguments.length) {
-          return this.hideBubbles
+          return vue.hideBubbles
         }
-        this.hideBubbles = !!v
+        vue.hideBubbles = !!v
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'getImage', () => {
         return interpreter.nativeToPseudo(this.image)
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'setImage', locator => {
-        this.setImage(_prepLocator(locator))
+      interpreter.setNativeFunctionPrototype(manager, 'setImage', function(
+        locator
+      ) {
+        vue.setImage(_prepLocator(locator))
+        return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'hideImage', v => {
+      interpreter.setNativeFunctionPrototype(manager, 'hideImage', function(v) {
         if (!arguments.length) {
-          return this.hideImage
+          return vue.hideImage
         }
-        this.hideImage = !!v
+        vue.hideImage = !!v
+        return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'fullHeightImage', v => {
-        if (!arguments.length) {
-          return this.fullScreenImage
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'addOnNextPageChange',
+        function(func) {
+          if (func) nextPageFuncs.push(func)
+          return this
         }
-        this.fullScreenImage = !!v
+      )
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'removeOnNextPageChange',
+        function(func) {
+          let index = nextPageFuncs.findIndex(i => i === func)
+          while (index > -1) {
+            nextPageFuncs.splice(index, 1)
+            index = nextPageFuncs.findIndex(i => i === func)
+          }
+          return this
+        }
+      )
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'fullHeightImage',
+        function(v) {
+          if (!arguments.length) {
+            return vue.fullScreenImage
+          }
+          vue.fullScreenImage = !!v
+          return this
+        }
+      )
+
+      interpreter.setNativeFunctionPrototype(manager, 'preload', function(
+        target
+      ) {
+        vue.preloadPage(target, vue.getCurrentPageId())
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'preloadImage', function(
@@ -329,7 +380,7 @@ export default {
         onLoadFunc,
         onErrorFunc
       ) {
-        this.image = vue.preloadImage(
+        vue.preloadImage(
           _prepLocator(locator),
           false,
           () => {
@@ -345,6 +396,7 @@ export default {
             }
           }
         )
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'oeosVersion', v => {
@@ -352,46 +404,46 @@ export default {
         return compareVersions(version, v)
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'barColor', color => {
+      interpreter.setNativeFunctionPrototype(manager, 'barColor', function(
+        color
+      ) {
         if (!arguments.length) {
-          return this.$vuetify.theme.themes.dark.primary
+          return vue.$vuetify.theme.themes.dark.primary
         }
-        if (!validateHTMLColorHex(color)) {
-          return interpreter.createThrowable(
-            interpreter.TYPE_ERROR,
-            `Invalid HEX color: ${color}`
-          )
-        }
-        this.$vuetify.theme.themes.dark.primary = color
+        color = vue.validateHexColor(color)
+        if (color instanceof vue.Interpreter.Throwable) return color
+        vue.$vuetify.theme.themes.dark.primary = color
+        return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'lockBgColor', color => {
+      interpreter.setNativeFunctionPrototype(manager, 'bgLockColor', function(
+        color
+      ) {
+        if (!arguments.length) {
+          return vue.forcedBackgroundColor
+        }
         if (!color) {
-          this.forcedBackgroundColor = null
+          vue.forcedBackgroundColor = null
         }
-        if (!validateHTMLColorHex(color)) {
-          return interpreter.createThrowable(
-            interpreter.TYPE_ERROR,
-            `Invalid HEX color: ${color}`
-          )
-        }
-        this.forcedBackgroundColor = color
+        color = vue.validateHexColor(color)
+        if (color instanceof vue.Interpreter.Throwable) return color
+        vue.forcedBackgroundColor = color
+        return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'bgColor', color => {
+      interpreter.setNativeFunctionPrototype(manager, 'bgColor', function(
+        color
+      ) {
         if (!arguments.length) {
-          return this.currentBackgroundColor
+          return vue.currentBackgroundColor
         }
         if (!color) {
-          this.backgroundColor = null
+          vue.backgroundColor = null
         }
-        if (!validateHTMLColorHex(color)) {
-          return interpreter.createThrowable(
-            interpreter.TYPE_ERROR,
-            `Invalid HEX color: ${color}`
-          )
-        }
-        this.backgroundColor = color
+        color = vue.validateHexColor(color)
+        if (color instanceof vue.Interpreter.Throwable) return color
+        vue.backgroundColor = color
+        return this
       })
 
       interpreter.setNativeFunctionPrototype(
