@@ -11,6 +11,7 @@ export default {
         target: this.pagesInstance,
         type: 'image-error',
         value: this.image,
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
     },
     imageLoad(e) {
@@ -19,6 +20,7 @@ export default {
         target: this.pagesInstance,
         type: 'image-load',
         value: this.image,
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
     },
     setImage(locator) {
@@ -38,6 +40,7 @@ export default {
           x: x / e.target.clientWidth, // between 0 and 1, where clicked
           y: y / e.target.clientHeight, // between 0 and 1, where clicked
         },
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
     },
   },

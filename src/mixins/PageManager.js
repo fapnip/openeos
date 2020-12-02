@@ -57,6 +57,7 @@ export default {
           x: x / e.target.clientWidth, // between 0 and 1, where clicked
           y: y / e.target.clientHeight, // between 0 and 1, where clicked
         },
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
     },
     enablePage(pattern) {
