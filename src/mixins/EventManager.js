@@ -7,7 +7,13 @@ export default {
       interpreter.appendCode(eventsCode)
       interpreter.run()
     },
-    dispatchEvent({ target, type, eventClass = 'Event', value }) {
+    dispatchEvent({
+      target,
+      type,
+      timeStamp = Date.now(),
+      eventClass = 'Event',
+      value,
+    }) {
       const interpreter = this.interpreter
       const eventTarget = interpreter.globalObject.properties['EventTarget']
       if (!interpreter.isa(target, eventTarget)) {
@@ -22,7 +28,7 @@ export default {
       interpreter.setProperty(event, 'type', type)
       interpreter.setProperty(event, 'cancelable', false)
       interpreter.setProperty(event, 'value', value)
-      interpreter.setProperty(event, 'timeStamp', Date.now())
+      interpreter.setProperty(event, 'timeStamp', timeStamp)
       interpreter.queueFunction(dispatchFunc, target, event)
       interpreter.run()
       return interpreter.value

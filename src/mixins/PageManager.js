@@ -10,6 +10,7 @@ const preloadedPage = {}
 let lastGetPageId = null
 let captureImageClicks = false
 let capturePageClicks = false
+let captureImageLoads = false
 let skipNextBubbleClear = false
 let nextPageFuncs = []
 
@@ -33,6 +34,9 @@ export default {
   methods: {
     captureImageClicks() {
       return captureImageClicks
+    },
+    captureImageLoads() {
+      return captureImageLoads
     },
     capturePageClicks() {
       return capturePageClicks
@@ -269,6 +273,18 @@ export default {
             return captureImageClicks
           }
           captureImageClicks = !!v
+          return this
+        }
+      )
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'captureImageLoads',
+        function(v) {
+          if (!arguments.length) {
+            return captureImageLoads
+          }
+          captureImageLoads = !!v
           return this
         }
       )
