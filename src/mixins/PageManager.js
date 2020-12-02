@@ -44,6 +44,21 @@ export default {
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
     },
+    pageClick(e) {
+      if (!this.capturePageClicks()) return this.clickLastSayBubble(e)
+      e.stopPropagation()
+      const rect = e.target.getBoundingClientRect()
+      const x = e.clientX - rect.left //x position within the element.
+      const y = e.clientY - rect.top //y position within the element.
+      this.dispatchEvent({
+        target: this.pagesInstance,
+        type: 'click',
+        value: {
+          x: x / e.target.clientWidth, // between 0 and 1, where clicked
+          y: y / e.target.clientHeight, // between 0 and 1, where clicked
+        },
+      })
+    },
     enablePage(pattern) {
       const filter = minimatch.filter(pattern)
       const pages = Object.keys(this.pages()).filter(filter)
@@ -289,17 +304,15 @@ export default {
         }
       )
 
-      // interpreter.setNativeFunctionPrototype(
-      //   manager,
-      //   'capturePageClicks',
-      //   function(v) {
-      //     if (!arguments.length) {
-      //       return capturePageClicks
-      //     }
-      //     capturePageClicks = !!v
-      //     return this
-      //   }
-      // )
+      interpreter.setNativeFunctionPrototype(manager, 'captureClicks', function(
+        v
+      ) {
+        if (!arguments.length) {
+          return capturePageClicks
+        }
+        capturePageClicks = !!v
+        return this
+      })
 
       interpreter.setNativeFunctionPrototype(manager, 'clearBubbles', function(
         keep
@@ -415,7 +428,9 @@ export default {
         return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'oeosVersion', v => {
+      interpreter.setNativeFunctionPrototype(manager, 'oeosVersion', function(
+        v
+      ) {
         if (!arguments.length) return version
         return compareVersions(version, v)
       })

@@ -5,19 +5,20 @@ export default {
     image: null,
   }),
   methods: {
-    // imageError(image) {
-    //   this.dispatchEvent({
-    //     target: this.pagesInstance,
-    //     type: 'image-error',
-    //     value: image,
-    //   })
-    // },
+    imageError(e) {
+      if (!this.captureImageLoads()) return
+      this.dispatchEvent({
+        target: this.pagesInstance,
+        type: 'image-error',
+        value: this.image,
+      })
+    },
     imageLoad(e) {
       if (!this.captureImageLoads()) return
       this.dispatchEvent({
         target: this.pagesInstance,
         type: 'image-load',
-        value: this.image.locator,
+        value: this.image,
       })
     },
     setImage(locator) {

@@ -38,8 +38,11 @@ export default {
         this.bubbles.splice(index, 1)
       }
     },
+    currentBubble() {
+      return this.bubbles[this.bubbles.length - 1]
+    },
     addBubble(type, item) {
-      const currentBubble = this.bubbles[this.bubbles.length - 1]
+      const currentBubble = this.currentBubble()
       if (
         currentBubble &&
         typeof currentBubble.item.setInactive === 'function'
@@ -65,12 +68,11 @@ export default {
         this.setScrollToBottom(oeosBottom)
       }
     },
-    onBodyClick() {
-      const li = this.bubbles[this.bubbles.length - 1]
+    clickLastSayBubble(e) {
+      const li = this.currentBubble()
       if (li && li.type === 'say' && li.item.active) {
         const ref = this.$refs['say_' + li.id]
         if (ref) {
-          console.log('clicking say', ref)
           ref[0].$el.click()
         }
       }

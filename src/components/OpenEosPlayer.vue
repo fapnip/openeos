@@ -10,7 +10,7 @@
       >
     </div>
   </div>
-  <div v-else class="oeos-main" @click="onBodyClick">
+  <div v-else class="oeos-main" @click="pageClick">
     <div
       v-if="currentBackgroundColor"
       class="oeos-background"
@@ -34,6 +34,7 @@
           crossOrigin="anonymous"
           @click="imageClick"
           @load="imageLoad"
+          @error="imageError"
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ export default {
         interaction.options = []
         this.$set(interaction, 'active', true)
         interaction.setInactive = () => {
+          console.log('Setting inactive', interaction)
           this.$set(interaction, 'active', false)
         }
 
@@ -35,17 +36,21 @@ export default {
           const option = interpreter.pseudoToNative(origOptions[k])
           const o = origOptions[k].properties
           if (o.visible === undefined) option.visible = true
-          this.setReactive(option, ['label', 'visible', 'color'])
+          this.setReactive(option, ['label', 'visible', 'color', 'keep'])
           option.onSelect = () => {
-            this.$set(interaction, 'selectedOption', option)
+            if (!option.keep) this.$set(interaction, 'selectedOption', option)
             if (interaction.active) {
-              interaction.setInactive()
+              if (!option.keep) interaction.setInactive()
               if (o.onSelect) {
-                console.log('Doing choice onSelect', o.onSelect)
-                interpreter.queueFunction(o.onSelect, opt)
+                console.log('Doing choice onSelect', option, o.onSelect)
+                interpreter.queueFunction(
+                  o.onSelect,
+                  interaction,
+                  parseInt(k, 10)
+                )
                 interpreter.run()
               }
-              _doComplete(parseInt(k, 10))
+              if (!option.keep) _doComplete(parseInt(k, 10))
             }
           }
           options.push(option)
@@ -56,7 +61,7 @@ export default {
             interaction.setInactive()
             if (optProps.onContinue) {
               console.log('Doing choice onContinue')
-              interpreter.queueFunction(optProps.onContinue, opt)
+              interpreter.queueFunction(optProps.onContinue, interaction)
               interpreter.run()
             }
             _doComplete()
@@ -87,6 +92,14 @@ export default {
         return choice.options[i]
       }
 
+      interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
+        if (arguments.length === 1) {
+          return this.active
+        }
+        this.active = !!v
+        return this
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'remove', function(i) {
         if (arguments.length) {
           const option = getOptionByIndex(this, i)
@@ -114,6 +127,16 @@ export default {
           return option.visible
         }
         option.visible = !!v
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'keep', function(i, v) {
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        if (arguments.length === 1) {
+          return option.keep
+        }
+        option.keep = !!v
         return this
       })
 

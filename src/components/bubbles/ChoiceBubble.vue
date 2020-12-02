@@ -5,17 +5,18 @@
     class="oeos-choices text-center"
   >
     <template v-for="(option, i) in options">
-      <v-btn
-        v-show="optionVisible(option)"
-        :key="option.label + ':' + i"
-        small
-        :color="option.color"
-        :transition="transition"
-        class="custom-transform-class text-none mx-1"
-        @click.stop="optionSelect(option)"
-      >
-        <span v-html="markupFilter(option.label)"></span
-      ></v-btn>
+      <v-expand-x-transition :key="option.label + ':' + i">
+        <v-btn
+          v-show="optionVisible(option)"
+          :key="option.label + ':' + i"
+          small
+          :color="option.color"
+          class="custom-transform-class text-none mx-1"
+          @click.stop="optionSelect(option)"
+        >
+          <span v-html="markupFilter(option.label)"></span
+        ></v-btn>
+      </v-expand-x-transition>
     </template>
   </v-row>
   <v-row

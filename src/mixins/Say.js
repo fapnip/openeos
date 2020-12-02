@@ -75,6 +75,14 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Say', manager)
 
+      interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
+        if (arguments.length === 1) {
+          return this.active
+        }
+        this.active = !!v
+        return this
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'label', function(val) {
         if (!arguments.length) {
           return this.label
