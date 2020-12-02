@@ -34,7 +34,7 @@ export default {
         for (const k of Object.keys(origOptions)) {
           const option = interpreter.pseudoToNative(origOptions[k])
           const o = origOptions[k].properties
-          if (origOptions.visible === undefined) option.visible = true
+          if (o.visible === undefined) option.visible = true
           this.setReactive(option, ['label', 'visible', 'color'])
           option.onSelect = () => {
             this.$set(interaction, 'selectedOption', option)

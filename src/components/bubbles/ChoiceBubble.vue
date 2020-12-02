@@ -6,10 +6,11 @@
   >
     <template v-for="(option, i) in options">
       <v-btn
-        v-if="optionVisible(option)"
+        v-show="optionVisible(option)"
         :key="option.label + ':' + i"
         small
         :color="option.color"
+        :transition="transition"
         class="custom-transform-class text-none mx-1"
         @click.stop="optionSelect(option)"
       >
@@ -45,7 +46,9 @@ export default {
       default: false,
     },
   },
-  data: () => ({}),
+  data: () => ({
+    transition: null,
+  }),
 
   computed: {
     hasVisibleOptions() {
@@ -66,11 +69,13 @@ export default {
     ) {
       this.value.onContinue()
     }
+    this.transition = 'expand-x-transition'
   },
 
   methods: {
     markupFilter: markupFilter,
     optionSelect(option) {
+      if (!this.optionVisible(option)) return
       option.onSelect()
     },
     optionVisible(option) {
