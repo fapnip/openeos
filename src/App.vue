@@ -460,7 +460,7 @@ export default {
   },
 }
 </script>
-<style scoped>
+<style>
 .oeos-title b {
   display: inline-block;
   margin-right: 5px;
@@ -473,5 +473,11 @@ export default {
 }
 .oeos-title svg + b {
   margin-left: 5px;
+}
+.theme--dark.v-application {
+  background-color: var(--v-background-base, #121212) !important;
+}
+.theme--light.v-application {
+  background-color: var(--v-background-base, white) !important;
 }
 </style>
