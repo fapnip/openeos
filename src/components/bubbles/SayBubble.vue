@@ -1,5 +1,5 @@
 <template>
-  <v-card @click.once="onClick" class="oeos-say-bubble">
+  <v-card :color="value.color" @click.once="onClick" class="oeos-say-bubble">
     <global-events
       v-if="active && allowSkip"
       @keydown.space.stop="onClick"
@@ -137,4 +137,8 @@ export default {
 }
 </script>
 
-<style></style>
+<style>
+.oeos-say-bubble {
+  transition: background-color 0.25s ease;
+}
+</style>

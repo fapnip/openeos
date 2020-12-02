@@ -85,6 +85,7 @@ export default {
   display: block;
 }
 .oeos-choices .v-btn {
+  transition: background-color 0.25s ease;
   min-width: 20px;
 }
 </style>

@@ -33,6 +33,7 @@
           :src="image && image.href"
           crossOrigin="anonymous"
           @click="imageClick"
+          @load="imageLoad"
         />
       </div>
     </div>

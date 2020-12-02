@@ -47,8 +47,7 @@ export default {
             interaction[k] = val
           }
         }
-        this.$set(interaction, 'label', interaction.label || null)
-        this.$set(interaction, 'color', interaction.color || null)
+        this.setReactive(interaction, ['label', 'color'])
         interaction.mode = interaction.mode || 'auto'
         interaction.isAuto = interaction.mode === 'auto'
         interaction.mode = getWaitMode(interpreter, opt)
@@ -80,7 +79,7 @@ export default {
         if (!arguments.length) {
           return this.label
         }
-        vue.$set(this, 'label', val)
+        this.label = val
         return this
       })
 
@@ -88,7 +87,7 @@ export default {
         if (!arguments.length) {
           return this.color
         }
-        vue.$set(this, 'color', val)
+        vue.color = val
         return this
       })
 

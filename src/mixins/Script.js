@@ -48,6 +48,7 @@ export default {
       }
     },
     validateHexColor(color) {
+      if (!color) return null
       const interpreter = this.interpreter
       if (!validateHTMLColorHex(color)) {
         return interpreter.createThrowable(

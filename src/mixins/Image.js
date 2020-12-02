@@ -12,13 +12,14 @@ export default {
     //     value: image,
     //   })
     // },
-    // imageLoad(image) {
-    //   this.dispatchEvent({
-    //     target: this.pagesInstance,
-    //     type: 'image-load',
-    //     value: image,
-    //   })
-    // },
+    imageLoad(e) {
+      console.log('Image Loaded', e)
+      // this.dispatchEvent({
+      //   target: this.pagesInstance,
+      //   type: 'image-load',
+      //   value: image,
+      // })
+    },
     setImage(locator) {
       this.hideImage = false
       this.image = this.locatorLookup(locator)
