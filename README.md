@@ -1,5 +1,7 @@
 # open-eos
 
+See the [Wiki](https://github.com/fapnip/openeos/wiki) for more details.
+
 ## Project setup
 ```
 npm install
