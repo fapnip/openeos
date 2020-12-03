@@ -18,13 +18,9 @@ export default {
           this.$set(interaction, 'active', false)
         }
 
-        const _doComplete = selectedIndex => {
+        const _doComplete = option => {
           if (optProps.onComplete) {
-            interpreter.queueFunction(
-              optProps.onComplete,
-              interaction,
-              selectedIndex === undefined ? -1 : selectedIndex
-            )
+            interpreter.queueFunction(optProps.onComplete, interaction, option)
             interpreter.run()
           }
         }
@@ -34,6 +30,7 @@ export default {
 
         for (const k of Object.keys(origOptions)) {
           const option = interpreter.pseudoToNative(origOptions[k])
+          option._index = parseInt(k, 10)
           const o = origOptions[k].properties
           if (o.visible === undefined) option.visible = true
           this.setReactive(option, ['label', 'visible', 'color', 'keep'])
@@ -41,16 +38,13 @@ export default {
             if (!option.keep) this.$set(interaction, 'selectedOption', option)
             if (interaction.active) {
               if (!option.keep) interaction.setInactive()
+              const pseudoOpt = getOptionProto.call(interaction, option)
               if (o.onSelect) {
                 console.log('Doing choice onSelect', option, o.onSelect)
-                interpreter.queueFunction(
-                  o.onSelect,
-                  interaction,
-                  parseInt(k, 10)
-                )
+                interpreter.queueFunction(o.onSelect, pseudoOpt, option._index)
                 interpreter.run()
               }
-              if (!option.keep) _doComplete(parseInt(k, 10))
+              if (!option.keep) _doComplete(pseudoOpt)
             }
           }
           options.push(option)
@@ -71,7 +65,6 @@ export default {
         this.addBubble('choice', interaction)
         return interaction
       }
-
       const manager = interpreter.createNativeFunction(constructor, true)
       interpreter.setProperty(
         manager,
@@ -81,6 +74,20 @@ export default {
       )
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Choice', manager)
+
+      const optionConstructor = opt => {}
+      const optionManager = interpreter.createNativeFunction(
+        optionConstructor,
+        true
+      )
+      interpreter.setProperty(
+        optionManager,
+        'prototype',
+        interpreter.createObject(globalObject.properties['EventTarget']),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+      const optionProto = optionManager.properties['prototype']
+      interpreter.setProperty(proto, 'Option', manager)
 
       function getOptionByIndex(choice, i) {
         if (!choice.options[i]) {
@@ -92,6 +99,23 @@ export default {
         return choice.options[i]
       }
 
+      const getOptionProto = function(option) {
+        let opt = option._pseudoOption
+        if (!opt) {
+          opt = interpreter.createObjectProto(optionProto)
+          opt._index = option._index
+          option._pseudoOption = opt
+          opt._choice = this
+        }
+        return opt
+      }
+
+      interpreter.setNativeFunctionPrototype(manager, 'get', function(i) {
+        const option = getOptionByIndex(this, i)
+        if (option instanceof vue.Interpreter.Throwable) return option
+        return getOptionProto.call(this, option)
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
         if (arguments.length === 1) {
           return this.active
@@ -100,7 +124,46 @@ export default {
         return this
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'remove', function(i) {
+      interpreter.setNativeFunctionPrototype(manager, 'cancel', function() {
+        this.onContinue()
+      })
+
+      interpreter.setNativeFunctionPrototype(
+        optionManager,
+        'remove',
+        function() {
+          _remove.call(this._choice, this._index)
+        }
+      )
+      interpreter.setNativeFunctionPrototype(
+        optionManager,
+        'select',
+        function() {
+          _select.call(this._choice, this._index)
+        }
+      )
+      interpreter.setNativeFunctionPrototype(optionManager, 'visible', function(
+        ...args
+      ) {
+        _visible.call(this._choice, this._index, ...args)
+      })
+      interpreter.setNativeFunctionPrototype(optionManager, 'keep', function(
+        ...args
+      ) {
+        _keep.call(this._choice, this._index, ...args)
+      })
+      interpreter.setNativeFunctionPrototype(optionManager, 'color', function(
+        ...args
+      ) {
+        _color.call(this._choice, this._index, ...args)
+      })
+      interpreter.setNativeFunctionPrototype(optionManager, 'label', function(
+        ...args
+      ) {
+        _label.call(this._choice, this._index, ...args)
+      })
+
+      const _remove = function(i) {
         if (arguments.length) {
           const option = getOptionByIndex(this, i)
           if (option instanceof vue.Interpreter.Throwable) return option
@@ -109,18 +172,15 @@ export default {
         } else {
           vue.removeBubble(this)
         }
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'select', function(i) {
+      const _select = function(i) {
         const option = getOptionByIndex(this, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         option.onSelect()
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'visible', function(
-        i,
-        v
-      ) {
+      const _visible = function(i, v) {
         const option = getOptionByIndex(this, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
@@ -128,9 +188,9 @@ export default {
         }
         option.visible = !!v
         return this
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'keep', function(i, v) {
+      const _keep = function(i, v) {
         const option = getOptionByIndex(this, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
@@ -138,12 +198,9 @@ export default {
         }
         option.keep = !!v
         return this
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'color', function(
-        i,
-        color
-      ) {
+      const _color = function(i, color) {
         const option = getOptionByIndex(this, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
@@ -153,12 +210,9 @@ export default {
         if (color instanceof vue.Interpreter.Throwable) return color
         option.color = color
         return this
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'label', function(
-        i,
-        text
-      ) {
+      const _label = function(i, text) {
         const option = getOptionByIndex(this, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
@@ -167,11 +221,14 @@ export default {
         if (text === undefined) text = ''
         option.label = text + ''
         return this
-      })
+      }
 
-      interpreter.setNativeFunctionPrototype(manager, 'cancel', function(i) {
-        this.onContinue()
-      })
+      interpreter.setNativeFunctionPrototype(manager, 'remove', _remove)
+      interpreter.setNativeFunctionPrototype(manager, 'select', _select)
+      interpreter.setNativeFunctionPrototype(manager, 'visible', _visible)
+      interpreter.setNativeFunctionPrototype(manager, 'keep', _keep)
+      interpreter.setNativeFunctionPrototype(manager, 'color', _color)
+      interpreter.setNativeFunctionPrototype(manager, 'label', _label)
     },
   },
 }
