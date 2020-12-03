@@ -132,8 +132,6 @@ const commandList = {
       loops: ${buildExpression(loops)},
       style: ${JSON.stringify(c.style)},
       isAsync: ${JSON.stringify(isAsync)},
-      keepState: ${JSON.stringify(c.keepState)},
-      threshold: {10000: {color: 'orange'}, 5000: {color: 'red'}},
       onTimeout: ${
         isAsync
           ? `function() {
@@ -141,7 +139,6 @@ const commandList = {
       }`
           : `null`
       },
-      onThreshold: null,
       onContinue: ${
         isAsync
           ? `null`
