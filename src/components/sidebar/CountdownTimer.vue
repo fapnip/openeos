@@ -135,6 +135,10 @@ export default {
       if (t !== this.timePassed) {
         this.timePassed = t
       }
+      this.$emit('update', {
+        remaining: this.duration - this.timePassed,
+        loop: this.loopCount,
+      })
     },
 
     startTimer() {

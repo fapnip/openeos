@@ -47,6 +47,7 @@ export default {
         const duration = parseEosDuration(timer.duration)
         timer.duration = duration
         timer.timeLeft = duration
+        timer.loop = 0
         timer.id = timerId
         timer.onTimeout = () => {
           if (timer.properties.onTimeout) {
@@ -69,6 +70,10 @@ export default {
             interpreter.queueFunction(timer.properties.onTimeout, timer)
             interpreter.run()
           }
+        }
+        timer.onUpdate = ({ remaining, loop }) => {
+          timer.loop = loop
+          timer.remaining = remaining
         }
         console.log('Adding timer', timer)
         vue.timers.push(timer)
@@ -110,21 +115,25 @@ export default {
         vue.removeTimer(this.id)
       })
 
-      interpreter.setNativeFunctionPrototype(
-        manager,
-        'getTimeLeft',
-        function() {
-          return this.timeLeft
-        }
-      )
+      interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
+        return this.id
+      })
 
       interpreter.setNativeFunctionPrototype(
         manager,
-        'getDurration',
+        'getRemaining',
         function() {
-          return this.durration
+          return this.remaining
         }
       )
+
+      interpreter.setNativeFunctionPrototype(manager, 'getLoop', function() {
+        return this.loop
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'geLoops', function() {
+        return this.loops
+      })
     },
   },
 }
