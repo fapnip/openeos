@@ -162,6 +162,20 @@ export default {
       ) {
         _label.call(this._choice, this._index, ...args)
       })
+      interpreter.setNativeFunctionPrototype(
+        optionManager,
+        'parent',
+        function() {
+          return this._choice
+        }
+      )
+      interpreter.setNativeFunctionPrototype(
+        optionManager,
+        'index',
+        function() {
+          return this._index
+        }
+      )
 
       const _remove = function(i) {
         if (arguments.length) {
