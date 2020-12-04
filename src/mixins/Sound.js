@@ -55,7 +55,7 @@ export default {
 
       function _startItem(item) {
         if (!isNaN(volume)) item.sound.volume(volume)
-        item.sound.play()
+        if (!item.sound.playing()) item.sound.play()
       }
 
       item = this.sounds[options.id]
