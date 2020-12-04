@@ -103,6 +103,7 @@ export default {
         }
         sound = new Howl({
           src: [file.href],
+          html5: true, // Allows us no not preload the entire file
           loop: item.loop,
           autoPlay: true,
           volume: isNaN(volume) ? 1 : volume,
