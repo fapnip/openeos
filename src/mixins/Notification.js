@@ -39,8 +39,8 @@ export default {
         this.removeNotification(id)
 
         const notification = interpreter.createObjectProto(proto)
-        notification.title = optProps.title || ''
-        notification.buttonLabel = optProps.buttonLabel || ''
+        vue.$set(notification, 'title', optProps.title || '')
+        vue.$set(notification, 'buttonLabel', optProps.buttonLabel || '')
         notification.id = id
 
         notification.timerDuration =
@@ -79,6 +79,21 @@ export default {
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
 
+      interpreter.setProperty(
+        manager,
+        'getAll',
+        interpreter.createNativeFunction(() => {
+          return interpreter.arrayNativeToPseudo(
+            this.notifications.map(n => n.id)
+          )
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
+        return this.id
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
         vue.removeNotification(this.id)
       })
@@ -87,14 +102,16 @@ export default {
         manager,
         'setButtonLabel',
         function(buttonLabel) {
-          vue.$set(this, 'buttonLabel', buttonLabel)
+          this.buttonLabel = buttonLabel
+          return this
         }
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'setTitle', function(
         title
       ) {
-        vue.$set(this, 'title', title)
+        this.title = title
+        return this
       })
     },
   },
