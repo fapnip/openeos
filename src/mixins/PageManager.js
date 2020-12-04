@@ -99,7 +99,6 @@ export default {
       const interpreter = this.interpreter
       const pageScript = this.getPageScript(patten)
       const pageId = lastGetPageId
-      // const pageIndex = pageKeys.indexOf(pageId)
       let pageCode = pageScript.code
       if (!pageCode) {
         // console.log('Building "' + pageId + '" page script', pageScript.script)

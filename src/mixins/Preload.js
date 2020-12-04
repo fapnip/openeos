@@ -73,7 +73,13 @@ export default {
         onError
       )
     },
-    preloadPage(patten, parentPageId, wait) {
+    preloadPageScriptsAndSounds() {
+      const pageKeys = Object.keys(this.pages())
+      for (const pageId of pageKeys) {
+        this.preloadPage(pageId, '_preload', false, true)
+      }
+    },
+    preloadPage(patten, parentPageId, wait, noImagePreload) {
       let pageId
       try {
         if (this.getPage(patten, true)) {
@@ -85,12 +91,14 @@ export default {
       }
       console.log('Preloading Page:', pageId)
       const pageScript = this.getPageScript(pageId)
-      for (const locator of Object.keys(pageScript.images)) {
-        this.preloadImage(locator, wait)
+      if (!noImagePreload) {
+        for (const locator of Object.keys(pageScript.images)) {
+          this.preloadImage(locator, wait)
+        }
+      } else {
+        console.log('Skipping image preload on:', pageId)
       }
-      // TODO: Look at stack trace to see if we were triggered by user interaction.
-      //       If so, "preload" audio.
-      // For now, we'll only preload audio on the initial start pre-load
+      // Preload all sounds on tease start
       if (!this.started) startupSounds.push(...pageScript.sounds)
     },
     addAfterPreload(fn) {

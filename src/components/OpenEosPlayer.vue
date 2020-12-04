@@ -285,16 +285,17 @@ export default {
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script')
+      this.debug('Precompiling all page scripts...')
+      this.preloadPageScriptsAndSounds()
       this.showPage('start', true)
       this.loading = false
     },
     runTease() {
       const sounds = this.popStartupSounds()
-
       if (sounds.length) {
         // We have sounds to pre-load
         this.loading = true
-        this.loadingText = 'Preloading audio...'
+        this.loadingText = 'Prebuffering audio...'
         this.shiftAfterPreload(() => {
           this.loading = false
           this.started = true
