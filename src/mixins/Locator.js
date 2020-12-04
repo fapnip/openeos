@@ -42,13 +42,14 @@ function avoidLast(value, array, randomGetter, locator, lookupPool, lasts) {
   return value
 }
 const supportedHosts = [
+  'https://www.mboxdrive.com/',
   'https://media*.vocaroo.com/', // https://vocaroo.com/
   'https://i.ibb.co', // imgbb.com
   'https://media.milovana.com',
   'https://iili.io', // Freeimage.host
 ]
 // TODO: break this out to multiple lines
-const allowedUrlMatcher = /(^(https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|oeos:(.+)\)$)/
+const allowedUrlMatcher = /(^(https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|oeos:(.+)\)$)/
 
 export default {
   data: () => ({}),
