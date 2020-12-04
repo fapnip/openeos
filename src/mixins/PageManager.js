@@ -243,14 +243,6 @@ export default {
         return this
       })
 
-      interpreter.setNativeFunctionPrototype(
-        manager,
-        'clearInteractions',
-        () => {
-          this.purgePageBubbles()
-        }
-      )
-
       interpreter.setNativeFunctionPrototype(manager, '_getNavId', () => {
         return navCounter
       })
