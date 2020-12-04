@@ -99,8 +99,7 @@ export default {
       const interpreter = this.interpreter
       const pageScript = this.getPageScript(patten)
       const pageId = lastGetPageId
-      const pageKeys = Object.keys(this.pages())
-      const pageIndex = pageKeys.indexOf(pageId)
+      // const pageIndex = pageKeys.indexOf(pageId)
       let pageCode = pageScript.code
       if (!pageCode) {
         // console.log('Building "' + pageId + '" page script', pageScript.script)
@@ -114,13 +113,6 @@ export default {
         if (!didPages[preloadedPage[target]] && !didPages[target]) {
           this.preloadPage(target, pageId)
           didPages[lastGetPageId] = true
-        }
-      }
-      if (pageIndex > -1) {
-        const nextPagePreload = pageKeys[pageIndex + 1]
-        if (nextPagePreload && !didPages[nextPagePreload]) {
-          this.preloadPage(nextPagePreload)
-          didPages[nextPagePreload] = true
         }
       }
       this.lastPageId = this.currentPageId
