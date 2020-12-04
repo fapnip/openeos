@@ -121,11 +121,14 @@ export default {
       item.sound = sound
 
       sound.on('end', () => {
+        console.log('Sound end detected:', file.href, item)
         if (item.loop && item.loops > 1) {
           item.loopCount--
           if (!item.loopCount) {
             sound.stop()
           }
+        } else {
+          sound.stop()
         }
       })
       ;['play', 'end', 'pause'].forEach(type => {
