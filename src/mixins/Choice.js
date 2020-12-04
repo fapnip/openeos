@@ -32,7 +32,8 @@ export default {
           const option = interpreter.pseudoToNative(origOptions[k])
           option._index = parseInt(k, 10)
           const o = origOptions[k].properties
-          if (o.visible === undefined) option.visible = true
+          if (!Object.prototype.hasOwnProperty.call(o, 'visible'))
+            option.visible = true
           this.setReactive(option, ['label', 'visible', 'color', 'keep'])
           option.onSelect = () => {
             if (!option.keep) this.$set(interaction, 'selectedOption', option)
