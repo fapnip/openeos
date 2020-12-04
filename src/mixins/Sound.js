@@ -45,6 +45,7 @@ export default {
       let item
 
       function _setItem(item) {
+        // console.log('Setting sound item', item, options)
         item.options = options
         item.loops = options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
@@ -121,13 +122,12 @@ export default {
       item.sound = sound
 
       sound.on('end', () => {
-        console.log('Sound end detected:', file.href, item)
         if (item.loop && item.loops > 1) {
           item.loopCount--
           if (!item.loopCount) {
             sound.stop()
           }
-        } else {
+        } else if (!item.loop || item.loops === 1) {
           sound.stop()
         }
       })
@@ -144,6 +144,7 @@ export default {
         this.sounds[options.id] = item
         _startItem(item)
       }
+      console.log('Created sound item', item)
       return item
     },
     purgePageSounds() {
@@ -164,7 +165,9 @@ export default {
       const constructor = (opt, fromPageScript) => {
         const options = interpreter.pseudoToNative(opt)
         try {
-          return this.createSoundItem(options, fromPageScript)
+          const item = this.createSoundItem(options, fromPageScript)
+          // console.log('Playing sound item from constructor', item)
+          return item
         } catch (e) {
           return interpreter.createThrowable(interpreter.ERROR, e.toString())
         }
