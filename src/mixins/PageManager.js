@@ -207,14 +207,6 @@ export default {
         return interpreter.nativeToPseudo(Object.keys(this.pages()))
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'galleries', () => {
-        return interpreter.nativeToPseudo(Object.keys(this.galleries()))
-      })
-
-      interpreter.setNativeFunctionPrototype(manager, 'files', () => {
-        return interpreter.nativeToPseudo(Object.keys(this.files()))
-      })
-
       interpreter.setNativeFunctionPrototype(manager, 'isEnabled', pageId => {
         if (typeof pageId !== 'string') {
           return interpreter.createThrowable(

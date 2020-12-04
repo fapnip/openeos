@@ -98,19 +98,30 @@ export default {
         vue.removeNotification(this.id)
       })
 
-      interpreter.setNativeFunctionPrototype(
-        manager,
-        'setButtonLabel',
-        function(buttonLabel) {
-          this.buttonLabel = buttonLabel
-          return this
+      interpreter.setNativeFunctionPrototype(manager, 'buttonLabel', function(
+        val
+      ) {
+        if (!arguments.length) {
+          return this.buttonLabel
         }
-      )
+        this.buttonLabel = val
+        return this
+      })
 
+      // For compatibility with EOS
       interpreter.setNativeFunctionPrototype(manager, 'setTitle', function(
         title
       ) {
         this.title = title
+        return this
+      })
+
+      // Getter / setter
+      interpreter.setNativeFunctionPrototype(manager, 'title', function(val) {
+        if (!arguments.length) {
+          return this.title
+        }
+        this.title = val
         return this
       })
     },
