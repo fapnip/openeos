@@ -39,7 +39,7 @@ export default {
       if (typeof options.id !== 'string') {
         throw new Error('Given id must be undefined or a string')
       }
-
+      // console.log('Loading sound:', file)
       const volume = Number(options.volume)
 
       let item
@@ -106,8 +106,12 @@ export default {
           loop: item.loop,
           autoPlay: true,
           volume: isNaN(volume) ? 1 : volume,
+          format: [file.format || 'mp3'],
           onload: doPreload,
-          onloaderror: doPreload,
+          onloaderror: function(id, error) {
+            console.error('Unable to load sound', file.href, error)
+            doPreload.call(this)
+          },
         })
       } catch (e) {
         return interpreter.createThrowable(interpreter.ERROR, e.toString())
