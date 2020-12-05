@@ -333,6 +333,20 @@ export default {
         return interpreter.nativeToPseudo(this.image)
       })
 
+      interpreter.setNativeFunctionPrototype(manager, 'restartImage', function(
+        onLoadFunc,
+        onErrorFunc
+      ) {
+        vue.addImageOnLoad(onLoadFunc)
+        vue.addImageOnError(onErrorFunc)
+        const img = vue.$refs.mainImage
+        if (img) {
+          // eslint-disable-next-line no-self-assign
+          img.src = img['src']
+        }
+        return this
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'setImage', function(
         locator,
         onLoadFunc,
