@@ -10,7 +10,7 @@ const preloadedPage = {}
 let lastGetPageId = null
 let captureImageClicks = false
 let capturePageClicks = false
-let captureImageLoads = false
+// let captureImageLoads = false
 let skipNextBubbleClear = false
 let nextPageFuncs = []
 
@@ -35,9 +35,9 @@ export default {
     captureImageClicks() {
       return captureImageClicks
     },
-    captureImageLoads() {
-      return captureImageLoads
-    },
+    // captureImageLoads() {
+    //   return captureImageLoads
+    // },
     capturePageClicks() {
       return capturePageClicks
     },
@@ -277,10 +277,14 @@ export default {
         manager,
         'captureImageLoads',
         function(v) {
+          console.warn(
+            'pages.captureImageLoads is deprecated.  Image loads are always captured.  Do not use.'
+          )
           if (!arguments.length) {
-            return captureImageLoads
+            return true
+            // return captureImageLoads
           }
-          captureImageLoads = !!v
+          // captureImageLoads = !!v
           return this
         }
       )

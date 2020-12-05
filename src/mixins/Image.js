@@ -17,7 +17,7 @@ export default {
       if (func) onNextImageError.push(func)
     },
     imageError(e) {
-      if (!this.captureImageLoads() && !onNextImageError.length) return
+      // if (!this.captureImageLoads() && !onNextImageError.length) return
       const payload = {
         target: this.pagesInstance,
         type: 'image-error',
@@ -26,10 +26,11 @@ export default {
       }
       this.doEventCallbackFuncs(onNextImageError, payload)
       onNextImageLoad.length = 0
-      if (this.captureImageLoads()) this.dispatchEvent(payload)
+      // if (this.captureImageLoads())
+      this.dispatchEvent(payload)
     },
     imageLoad(e) {
-      if (!this.captureImageLoads() && !onNextImageLoad.length) return
+      // if (!this.captureImageLoads() && !onNextImageLoad.length) return
       const payload = {
         target: this.pagesInstance,
         type: 'image-load',
@@ -38,7 +39,8 @@ export default {
       }
       this.doEventCallbackFuncs(onNextImageLoad, payload)
       onNextImageError.length = 0
-      if (this.captureImageLoads()) this.dispatchEvent(payload)
+      // if (this.captureImageLoads())
+      this.dispatchEvent(payload)
     },
     setImage(locator) {
       this.hideImage = false
