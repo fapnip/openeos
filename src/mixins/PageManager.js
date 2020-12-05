@@ -80,6 +80,19 @@ export default {
       return this.currentPageId
     },
     beforePageChange() {
+      const interpreter = this.interpreter
+      try {
+        this.dispatchEvent({
+          target: this.pagesInstance,
+          type: 'change',
+          value: {
+            to: this.currentPageId,
+            from: this.lastPageId,
+          },
+        })
+      } catch (e) {
+        return interpreter.createThrowable(interpreter.TYPE_ERROR, e.toString())
+      }
       this.purgePageTimers()
       if (skipNextBubbleClear) {
         skipNextBubbleClear = false
@@ -88,6 +101,8 @@ export default {
         this.purgePageBubbles()
       }
       this.purgePageSounds()
+    },
+    doNextPageFuncs() {
       let func = nextPageFuncs.shift()
       while (func) {
         this.interpreter.queueFunction(func, this.pagesInstance)
@@ -119,24 +134,14 @@ export default {
       navCounter++ // Increment nav counter so we know when to stop executing page commands
       navIndex++ // Increment nav depth, so we know to skip consecutive gotos.
       this.beforePageChange()
-      try {
-        this.dispatchEvent({
-          target: this.pagesInstance,
-          type: 'change',
-          value: {
-            to: pageId,
-            from: this.lastPageId,
-          },
-        })
-      } catch (e) {
-        return interpreter.createThrowable(interpreter.TYPE_ERROR, e.toString())
-      }
       if (this.hasWaitingPreloads()) {
         this.addAfterPreload(() => {
+          this.doNextPageFuncs()
           interpreter.appendCode(pageCode)
           if (!noRun) interpreter.run()
         })
       } else {
+        this.doNextPageFuncs()
         interpreter.appendCode(pageCode)
       }
     },
