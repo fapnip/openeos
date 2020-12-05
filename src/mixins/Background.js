@@ -38,14 +38,15 @@ export default {
   methods: {
     async setBackgroundFromImage() {
       const image = this.image
-      if (!image || !image.href || image.error) return
-      const img = this.$refs.mainImage
-      if (!img) return
-      let color = colors[img.src]
+      const href = image && image.href
+      if (!href || image.error) return
+      // const img = this.$refs.mainImage
+      // if (!img) return
+      let color = colors[href]
       if (!color) {
-        const { DarkMuted } = await Vibrant.from(img).getPalette()
+        const { DarkMuted } = await Vibrant.from(href).getPalette()
         color = DarkMuted.getHex()
-        colors[img.src] = color
+        colors[href] = color
         const els = document.getElementsByClassName('@vibrant/canvas')
         if (els.length) els[els.length - 1].remove()
       }
