@@ -330,8 +330,12 @@ export default {
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'setImage', function(
-        locator
+        locator,
+        onLoadFunc,
+        onErrorFunc
       ) {
+        vue.addImageOnLoad(onLoadFunc)
+        vue.addImageOnError(onErrorFunc)
         vue.setImage(_prepLocator(locator))
         return this
       })
