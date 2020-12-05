@@ -47,6 +47,9 @@ export default {
         const { DarkMuted } = await Vibrant.from(href).getPalette()
         color = DarkMuted.getHex()
         colors[href] = color
+        // Vibrant seems to have a memory leak
+        // This helps, but there's more it leaves behind
+        // What's the correct way to destroy a vibrant instance?
         const els = document.getElementsByClassName('@vibrant/canvas')
         if (els.length) els[els.length - 1].remove()
       }
