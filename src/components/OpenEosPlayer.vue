@@ -412,6 +412,7 @@ export default {
   align-items: center;
   height: 100%;
   box-sizing: border-box;
+  user-select: none;
   /* padding: 5px; */
 }
 .oeos-image img {
@@ -422,6 +423,7 @@ export default {
   max-width: 100%;
   box-sizing: border-box;
   filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
+  user-select: none;
 }
 .oeos-scroll-button {
   position: absolute;
@@ -431,10 +433,12 @@ export default {
 }
 .oeos-bubble {
   margin-bottom: 6px;
+  user-select: none;
 }
 
 .oeos-bubble p {
   margin-bottom: 0px;
+  user-select: text;
 }
 .oeos-bubble.oeos-align-center {
   margin-right: auto;
