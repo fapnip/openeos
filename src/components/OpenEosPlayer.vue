@@ -259,6 +259,7 @@ export default {
       interpreter.run()
       this.installEventManager(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
+      this.installImage(interpreter, globalObject)
       this.installFileManager(interpreter, globalObject)
       this.installTimer(interpreter, globalObject)
       this.installSay(interpreter, globalObject)

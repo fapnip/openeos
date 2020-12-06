@@ -1,12 +1,45 @@
 const onNextImageLoad = []
 const onNextImageError = []
 
+// let PROTO
+
+let supportsWebpAnimation = false
+
+// from: https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
+// checkWebpFeature:
+//   'feature' can be one of 'lossy', 'lossless', 'alpha' or 'animation'.
+//   'callback(feature, isSupported)' will be passed back the detection result (in an asynchronous way!)
+function checkWebpFeature(feature, callback) {
+  var kTestImages = {
+    lossy: 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA',
+    lossless: 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==',
+    alpha:
+      'UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==',
+    animation:
+      'UklGRlIAAABXRUJQVlA4WAoAAAASAAAAAAAAAAAAQU5JTQYAAAD/////AABBTk1GJgAAAAAAAAAAAAAAAAAAAGQAAABWUDhMDQAAAC8AAAAQBxAREYiI/gcA',
+  }
+  var img = new Image()
+  img.onload = function() {
+    var result = img.width > 0 && img.height > 0
+    callback(feature, result)
+  }
+  img.onerror = function() {
+    callback(feature, false)
+  }
+  img.src = 'data:image/webp;base64,' + kTestImages[feature]
+}
+
 export default {
   data: () => ({
     fullScreenImage: false,
     hideImage: false,
     image: null,
   }),
+  beforeMount() {
+    checkWebpFeature('animation', r => {
+      supportsWebpAnimation = !!r
+    })
+  },
   methods: {
     addImageOnLoad(func) {
       // TODO: validate that func is actually a pseudo function
@@ -67,6 +100,34 @@ export default {
         },
         timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
+    },
+    installImage(interpreter, globalObject) {
+      // const vue = this
+      const constructor = (opt, fromPageScript) => {
+        return interpreter.createThrowable(
+          interpreter.ERROR,
+          'Sorry. No Image constructor, yet.'
+        )
+      }
+
+      const manager = interpreter.createNativeFunction(constructor, true)
+      interpreter.setProperty(
+        manager,
+        'prototype',
+        interpreter.createObject(globalObject.properties['EventTarget']),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+      // PROTO = manager.properties['prototype']
+      interpreter.setProperty(globalObject, 'Image', manager)
+
+      interpreter.setProperty(
+        manager,
+        'webpAnimation',
+        interpreter.createNativeFunction(() => {
+          return supportsWebpAnimation
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
     },
   },
 }
