@@ -25,6 +25,13 @@ export default {
   mounted() {
     navCounter = 0
     disabledPages = {}
+    document.addEventListener('visibilitychange', this.documentVisibilityChange)
+  },
+  beforeDestroy() {
+    document.removeEventListener(
+      'visibilitychange',
+      this.documentVisibilityChange
+    )
   },
   watch: {
     currentPageId(val) {
@@ -40,6 +47,13 @@ export default {
     // },
     capturePageClicks() {
       return capturePageClicks
+    },
+    documentVisibilityChange(e) {
+      this.dispatchEvent({
+        target: this.pagesInstance,
+        type: 'visibilitychange', // Tab lost or gained focus
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
+      })
     },
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
@@ -331,6 +345,10 @@ export default {
 
       interpreter.setNativeFunctionPrototype(manager, 'getImage', () => {
         return interpreter.nativeToPseudo(this.image)
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'visibilityState', () => {
+        return document.visibilityState
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'restartImage', function(
