@@ -10,7 +10,7 @@
       >
     </div>
   </div>
-  <div v-else class="oeos-main" @click="pageClick">
+  <div v-else class="oeos-main" v-resize="scrollToBottom" @click="pageClick">
     <div
       v-if="currentBackgroundColor"
       class="oeos-background"
@@ -44,8 +44,7 @@
         'oeos-bottom': true,
         'has-image': !!image,
       }"
-      v-scroll.self="checkActionContainer"
-      v-resize="checkActionContainer"
+      v-scroll.self="checkBubbleScroll"
       ref="oeosBottom"
     >
       <v-container fill-height class="pa-0">
@@ -120,7 +119,7 @@
     </div>
     <v-fab-transition>
       <v-btn
-        v-show="!scrolledToBottom"
+        v-show="!scrolling && !scrolledToBottom"
         class="oeos-scroll-button"
         fab
         dark
@@ -236,7 +235,7 @@ export default {
     started(val) {
       if (val) {
         this.$nextTick(() => {
-          this.checkActionContainer()
+          this.scrollToBottom()
         })
       }
     },
@@ -308,6 +307,7 @@ export default {
       } else {
         this.started = true
         this.interpreter.run()
+        this.scrollToBottom()
       }
     },
   },

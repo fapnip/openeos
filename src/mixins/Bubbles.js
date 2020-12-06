@@ -1,6 +1,7 @@
 let interactCounter = 0
-let scrolling = false
+// let scrolling = false
 let isScrolled = null
+let scrollCheckTimer
 
 export default {
   data: () => ({
@@ -8,6 +9,7 @@ export default {
     scrolledToBottom: true,
     bubbleHeight: 0,
     hideBubbles: false,
+    scrolling: false,
   }),
   methods: {
     bubbleClass(bubbles) {
@@ -57,12 +59,12 @@ export default {
       this.bubbles.push(newBubble)
 
       console.log('Adding ' + newBubble.type, newBubble, this.bubbles)
-      this.$nextTick(() => {
+      setTimeout(() => {
         this.scrollToBottom()
-      })
+      }, 0)
       return interactCounter
     },
-    checkActionContainer() {
+    checkBubbleScroll() {
       const oeosBottom = this.$refs.oeosBottom
       if (oeosBottom) {
         this.setScrollToBottom(oeosBottom)
@@ -78,26 +80,32 @@ export default {
       }
     },
     setScrollToBottom(oeosBottom) {
-      // console.log(scrollTop, clientHeight, scrollHeight)
-      this.bubbleHeight = oeosBottom.clientHeight
-      let isAtBottom =
-        oeosBottom.scrollTop + oeosBottom.clientHeight >=
-        oeosBottom.scrollHeight
+      this.doSetScrollToBottom(oeosBottom)
+      clearTimeout(scrollCheckTimer)
+      scrollCheckTimer = setTimeout(
+        () => this.doSetScrollToBottom(oeosBottom),
+        100
+      )
+    },
+    doSetScrollToBottom(e) {
+      this.bubbleHeight = e.clientHeight
+      let isAtBottom = e.scrollHeight - e.scrollTop - e.clientHeight < 1
       if (isScrolled) clearTimeout(isScrolled)
       isScrolled = false
       if (!isAtBottom && this.scrolledToBottom) {
         isScrolled = setTimeout(() => {
           this.scrolledToBottom =
-            oeosBottom.scrollTop + oeosBottom.clientHeight >=
-            oeosBottom.scrollHeight
+            e.scrollHeight - e.scrollTop - e.clientHeight < 1
         }, 250)
       } else if (isAtBottom) {
         this.scrolledToBottom = isAtBottom
       }
     },
     scrollToBottom() {
-      if (scrolling) return
+      if (this.scrolling) return
       const oeosBottom = this.$refs.oeosBottom
+      if (!oeosBottom) return
+      this.doSetScrollToBottom(oeosBottom)
       const lastItem = this.$refs.lastItem
       if (oeosBottom && lastItem) {
         const srollpx =
@@ -105,15 +113,15 @@ export default {
           (oeosBottom.scrollTop + oeosBottom.clientHeight)
         if (oeosBottom && lastItem) {
           if (srollpx > 0) {
-            scrolling = true
+            this.scrolling = true
             this.$scrollTo(lastItem, {
               container: oeosBottom,
               duration: 500,
               onDone: () => {
-                scrolling = false
+                this.scrolling = false
               },
               onCancel: () => {
-                scrolling = false
+                this.scrolling = false
               },
               // easing: 'ease-in',
               lazy: false,
