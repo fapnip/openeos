@@ -53,6 +53,14 @@ export default {
         }
       )
 
+      interpreter.setNativeFunctionPrototype(
+        eventFunc,
+        'preventDefault',
+        function() {
+          interpreter.setProperty(this, 'defaultPrevented ', true)
+        }
+      )
+
       function addEventListener(type, listener) {
         const listeners = getTypeListeners(this, type)
         listeners.set(listener, true)
@@ -75,8 +83,6 @@ export default {
         const _this = this
         const type = interpreter.getProperty(event, 'type')
         const listeners = getTypeListeners(_this, type).keys()
-
-        event._stopImmediatePropagation = false
 
         const callChain = listeners => {
           const listener = listeners.next()
@@ -139,7 +145,7 @@ export default {
       const dispatchFunc = interpreter.getProperty(target, 'dispatchEvent')
       interpreter.queueFunction(dispatchFunc, target, event)
       interpreter.run()
-      return interpreter.value
+      return event
     },
     doEventCallbackFuncs(funcs, eventObj) {
       const interpreter = this.interpreter
