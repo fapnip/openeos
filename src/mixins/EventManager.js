@@ -121,6 +121,7 @@ export default {
       type,
       timeStamp = Date.now(),
       cancelable = false,
+      target = null,
       eventClass = 'Event',
       value,
     }) {
@@ -132,6 +133,7 @@ export default {
       }
       interpreter.setProperty(event, 'type', type)
       interpreter.setProperty(event, 'cancelable', cancelable)
+      interpreter.setProperty(event, 'target', target)
       interpreter.setProperty(event, 'value', value)
       interpreter.setProperty(event, 'timeStamp', timeStamp)
       return event
