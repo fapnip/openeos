@@ -28,7 +28,9 @@ export default {
       interpreter.setProperty(globalObject, 'EventTarget', eventTarget)
 
       const eventFunc = interpreter.createNativeFunction(function(type, value) {
-        const event = interpreter.createObjectProto(eventFunc)
+        const event = interpreter.createObjectProto(
+          eventFunc.properties['prototype']
+        )
         interpreter.setProperty(event, 'type', type)
         interpreter.setProperty(event, 'cancelable', false)
         interpreter.setProperty(event, 'value', value)
@@ -64,13 +66,11 @@ export default {
       function addEventListener(type, listener) {
         const listeners = getTypeListeners(this, type)
         listeners.set(listener, true)
-        console.log('addEventListener', listeners, this)
       }
 
       function removeEventListener(type, listener) {
         const listeners = getTypeListeners(this, type)
         listeners.delete(listener)
-        console.log('removeEventListener', listeners)
       }
 
       function dispatchEvent(event) {
@@ -126,8 +126,10 @@ export default {
       value,
     }) {
       const interpreter = this.interpreter
-      const eventProto = interpreter.globalObject.properties[eventClass]
-      const event = interpreter.createObjectProto(eventProto)
+      const eventFunc = interpreter.globalObject.properties[eventClass]
+      const event = interpreter.createObjectProto(
+        eventFunc.properties['prototype']
+      )
       if (!(value instanceof this.Interpreter.Object)) {
         value = interpreter.nativeToPseudo(value)
       }

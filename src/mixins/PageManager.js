@@ -47,7 +47,8 @@ export default {
       return !disabledPages[pageId]
     },
     pageClick(e) {
-      if (!this.hasEventListeners(this.pagesInstance, 'click')) return
+      if (!this.hasEventListeners(this.pagesInstance, 'click'))
+        return this.clickLastSayBubble(e)
       e.stopPropagation()
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
@@ -64,6 +65,9 @@ export default {
         },
         e
       )
+      if (!e._stopImmediatePropagation) {
+        this.clickLastSayBubble(e)
+      }
     },
     enablePage(pattern) {
       const filter = minimatch.filter(pattern)
@@ -101,7 +105,6 @@ export default {
       this.purgePageTimers()
       if (skipNextBubbleClear) {
         skipNextBubbleClear = false
-        console.log('Skipping bubble clear')
       } else {
         this.purgePageBubbles()
       }
@@ -320,7 +323,6 @@ export default {
           if (!arguments.length) {
             return skipNextBubbleClear
           }
-          console.log('Setting skipNextBubbleClear', v)
           skipNextBubbleClear = !!v
           return this
         }
