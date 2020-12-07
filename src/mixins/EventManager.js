@@ -63,9 +63,9 @@ export default {
         }
       )
 
-      function addEventListener(type, listener) {
+      function addEventListener(type, listener, options) {
         const listeners = getTypeListeners(this, type)
-        listeners.set(listener, true)
+        listeners.set(listener, options || {})
       }
 
       function removeEventListener(type, listener) {
@@ -82,14 +82,26 @@ export default {
         }
         const _this = this
         const type = interpreter.getProperty(event, 'type')
-        const listeners = getTypeListeners(_this, type).keys()
+        const listeners = getTypeListeners(_this, type).entries()
 
         const callChain = listeners => {
           const listener = listeners.next()
           if (!listener.done && !event._stopImmediatePropagation) {
+            const listenerFunc = listener.value[0]
+            const listenerOpts = listener.value[1]
             return interpreter
-              .callFunction(listener.value, _this, event)
-              .then(() => callChain(listeners))
+              .callFunction(listenerFunc, _this, event)
+              .then(() => {
+                if (listenerOpts.once)
+                  getTypeListeners(_this, type).delete(listenerFunc)
+                return callChain(listeners)
+              })
+              .catch(error => {
+                console.error(error)
+                if (listenerOpts.once)
+                  getTypeListeners(_this, type).delete(listenerFunc)
+                return callChain(listeners)
+              })
           }
           return !interpreter.getProperty(event, 'defaultPrevented')
         }
