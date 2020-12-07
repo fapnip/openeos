@@ -17,6 +17,9 @@ function getTypeListeners(target, type) {
 export default {
   data: () => ({}),
   methods: {
+    hasEventListeners(target, type) {
+      return getTypeListeners(target, type).size > 0
+    },
     installEventManager(interpreter, globalObject) {
       const NONENUMERABLE_DESCRIPTOR = this.Interpreter.NONENUMERABLE_DESCRIPTOR
 
@@ -39,6 +42,14 @@ export default {
         'stopImmediatePropagation',
         function() {
           this._stopImmediatePropagation = true
+        }
+      )
+
+      interpreter.setNativeFunctionPrototype(
+        eventFunc,
+        'stopPropagation',
+        function() {
+          this._stopPropagation = true
         }
       )
 
