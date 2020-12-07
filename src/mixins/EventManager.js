@@ -1,6 +1,18 @@
-import eventsCode from '!!raw-loader!../interpreter/code/events.js'
-
 let eventTarget
+
+function getTypeListeners(target, type) {
+  let listeners = target.listeners
+  if (!listeners) {
+    listeners = {}
+    target.listeners = listeners
+  }
+  let typeListeners = listeners[type]
+  if (!typeListeners) {
+    typeListeners = new Map()
+    listeners[type] = typeListeners
+  }
+  return typeListeners
+}
 
 export default {
   data: () => ({}),
@@ -9,30 +21,31 @@ export default {
       const NONENUMERABLE_DESCRIPTOR = this.Interpreter.NONENUMERABLE_DESCRIPTOR
 
       eventTarget = interpreter.createNativeFunction(() => {}, true)
-      interpreter.appendCode(eventsCode)
-      interpreter.run()
-
       const eventTargetProto = interpreter.getProperty(eventTarget, 'prototype')
       interpreter.setProperty(globalObject, 'EventTarget', eventTarget)
 
-      function getTypeListeners(target, type) {
-        let listeners = target.listeners
-        if (!listeners) {
-          listeners = {}
-          target.listeners = listeners
+      const eventFunc = interpreter.createNativeFunction(function(type, value) {
+        const event = interpreter.createObjectProto(eventFunc)
+        interpreter.setProperty(event, 'type', type)
+        interpreter.setProperty(event, 'cancelable', false)
+        interpreter.setProperty(event, 'value', value)
+        interpreter.setProperty(event, 'timeStamp', Date.now())
+        return event
+      }, true)
+      interpreter.setProperty(globalObject, 'Event', eventFunc)
+
+      interpreter.setNativeFunctionPrototype(
+        eventFunc,
+        'stopImmediatePropagation',
+        function() {
+          this._stopImmediatePropagation = true
         }
-        let typeListeners = listeners[type]
-        if (!typeListeners) {
-          typeListeners = new Map()
-          listeners[type] = typeListeners
-        }
-        return typeListeners
-      }
+      )
 
       function addEventListener(type, listener) {
         const listeners = getTypeListeners(this, type)
         listeners.set(listener, true)
-        console.log('addEventListener', listeners)
+        console.log('addEventListener', listeners, this)
       }
 
       function removeEventListener(type, listener) {
@@ -52,21 +65,11 @@ export default {
         const type = interpreter.getProperty(event, 'type')
         const listeners = Array.from(getTypeListeners(_this, type).keys())
 
-        let stopImmediatePropagation = false
-        if (listeners.length) {
-          interpreter.setProperty(
-            event,
-            'stopImmediatePropagation',
-            interpreter.createNativeFunction(function() {
-              stopImmediatePropagation = true
-            }),
-            NONENUMERABLE_DESCRIPTOR
-          )
-        }
+        event._stopImmediatePropagation = false
 
         const callChain = listeners => {
           let listener = listeners.shift()
-          if (listener && !stopImmediatePropagation) {
+          if (listener && !event._stopImmediatePropagation) {
             return interpreter
               .callFunction(listener, _this, event)
               .then(() => callChain(listeners))
