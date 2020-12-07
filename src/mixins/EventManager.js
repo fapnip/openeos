@@ -63,15 +63,15 @@ export default {
         }
         const _this = this
         const type = interpreter.getProperty(event, 'type')
-        const listeners = Array.from(getTypeListeners(_this, type).keys())
+        const listeners = getTypeListeners(_this, type).keys()
 
         event._stopImmediatePropagation = false
 
         const callChain = listeners => {
-          let listener = listeners.shift()
-          if (listener && !event._stopImmediatePropagation) {
+          const listener = listeners.next()
+          if (!listener.done && !event._stopImmediatePropagation) {
             return interpreter
-              .callFunction(listener, _this, event)
+              .callFunction(listener.value, _this, event)
               .then(() => callChain(listeners))
           }
           return !interpreter.getProperty(event, 'defaultPrevented')
