@@ -135,7 +135,7 @@ export default {
       interpreter.setProperty(event, 'timeStamp', timeStamp)
       return event
     },
-    dispatchEvent(eventObj) {
+    dispatchEvent(eventObj, originatingEvent) {
       const interpreter = this.interpreter
       const target = eventObj.target
       if (!interpreter.isa(target, eventTarget)) {
@@ -145,6 +145,14 @@ export default {
       const dispatchFunc = interpreter.getProperty(target, 'dispatchEvent')
       interpreter.queueFunction(dispatchFunc, target, event)
       interpreter.run()
+      if (originatingEvent) {
+        if (event._stopPropagation) {
+          originatingEvent.stopPropagation()
+        }
+        if (event._stopImmediatePropagation) {
+          originatingEvent.stopImmediatePropagation()
+        }
+      }
       return event
     },
     doEventCallbackFuncs(funcs, eventObj) {

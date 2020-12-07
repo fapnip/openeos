@@ -50,7 +50,7 @@ export default {
       if (func) onNextImageError.push(func)
     },
     imageError(e) {
-      // if (!this.captureImageLoads() && !onNextImageError.length) return
+      if (!this.hasEventListeners(this.pagesInstance, 'image-error')) return
       const payload = {
         target: this.pagesInstance,
         type: 'image-error',
@@ -59,11 +59,10 @@ export default {
       }
       this.doEventCallbackFuncs(onNextImageError, payload)
       onNextImageLoad.length = 0
-      // if (this.captureImageLoads())
-      this.dispatchEvent(payload)
+      this.dispatchEvent(payload, e)
     },
     imageLoad(e) {
-      // if (!this.captureImageLoads() && !onNextImageLoad.length) return
+      if (!this.hasEventListeners(this.pagesInstance, 'image-load')) return
       const payload = {
         target: this.pagesInstance,
         type: 'image-load',
@@ -72,34 +71,29 @@ export default {
       }
       this.doEventCallbackFuncs(onNextImageLoad, payload)
       onNextImageError.length = 0
-      // if (this.captureImageLoads())
-      this.dispatchEvent(payload)
+      this.dispatchEvent(payload, e)
     },
     setImage(locator) {
       this.hideImage = false
       this.image = this.locatorLookup(locator)
     },
     imageClick(e) {
-      console.log(
-        'image-click-event',
-        e.timeStamp,
-        performance.timing.navigationStart,
-        Number.isInteger(e.timeStamp)
-      )
-      if (!this.captureImageClicks()) return
-      e.stopPropagation()
+      if (!this.hasEventListeners(this.pagesInstance, 'image-click')) return
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
-      this.dispatchEvent({
-        target: this.pagesInstance,
-        type: 'image-click',
-        value: {
-          x: x / e.target.clientWidth, // between 0 and 1, where clicked
-          y: y / e.target.clientHeight, // between 0 and 1, where clicked
+      this.dispatchEvent(
+        {
+          target: this.pagesInstance,
+          type: 'image-click',
+          value: {
+            x: x / e.target.clientWidth, // between 0 and 1, where clicked
+            y: y / e.target.clientHeight, // between 0 and 1, where clicked
+          },
+          timeStamp: e.timeStamp + performance.timing.navigationStart,
         },
-        timeStamp: e.timeStamp + performance.timing.navigationStart,
-      })
+        e
+      )
     },
     installImage(interpreter, globalObject) {
       // const vue = this

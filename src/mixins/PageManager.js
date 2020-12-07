@@ -64,15 +64,18 @@ export default {
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
-      this.dispatchEvent({
-        target: this.pagesInstance,
-        type: 'click',
-        value: {
-          x: x / e.target.clientWidth, // between 0 and 1, where clicked
-          y: y / e.target.clientHeight, // between 0 and 1, where clicked
+      this.dispatchEvent(
+        {
+          target: this.pagesInstance,
+          type: 'click',
+          value: {
+            x: x / e.target.clientWidth, // between 0 and 1, where clicked
+            y: y / e.target.clientHeight, // between 0 and 1, where clicked
+          },
+          timeStamp: e.timeStamp + performance.timing.navigationStart,
         },
-        timeStamp: e.timeStamp + performance.timing.navigationStart,
-      })
+        e
+      )
     },
     enablePage(pattern) {
       const filter = minimatch.filter(pattern)

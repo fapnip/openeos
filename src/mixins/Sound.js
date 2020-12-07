@@ -132,8 +132,8 @@ export default {
         }
       })
       ;['play', 'end', 'pause'].forEach(type => {
-        sound.on(type, () => {
-          this.dispatchEvent({ target: item, type })
+        sound.on(type, e => {
+          this.dispatchEvent({ target: item, type }, e)
         })
       })
       if (preload) {
