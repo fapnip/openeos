@@ -350,12 +350,12 @@ export default {
         onLoadFunc,
         onErrorFunc
       ) {
-        vue.addImageOnLoad(onLoadFunc)
-        vue.addImageOnError(onErrorFunc)
         const img = vue.$refs.mainImage
         if (img) {
+          vue.addImageOnLoad(onLoadFunc)
+          vue.addImageOnError(onErrorFunc)
           // eslint-disable-next-line no-self-assign
-          img.src = img['src']
+          img.src = img.src
         }
         return this
       })

@@ -1,5 +1,6 @@
 const onNextImageLoad = []
 const onNextImageError = []
+let pageImageLoadCounter = 0
 
 // let PROTO
 
@@ -41,6 +42,9 @@ export default {
     })
   },
   methods: {
+    pageImageLoadCounter() {
+      return pageImageLoadCounter
+    },
     addImageOnLoad(func) {
       // TODO: validate that func is actually a pseudo function
       if (func) onNextImageLoad.push(func)
@@ -50,7 +54,11 @@ export default {
       if (func) onNextImageError.push(func)
     },
     imageError(e) {
-      if (!this.hasEventListeners(this.pagesInstance, 'image-error')) return
+      if (
+        !this.hasEventListeners(this.pagesInstance, 'image-error') &&
+        !onNextImageError.length
+      )
+        return
       const payload = {
         target: this.pagesInstance,
         type: 'image-error',
@@ -62,7 +70,11 @@ export default {
       this.dispatchEvent(payload, e)
     },
     imageLoad(e) {
-      if (!this.hasEventListeners(this.pagesInstance, 'image-load')) return
+      if (
+        !this.hasEventListeners(this.pagesInstance, 'image-load') &&
+        !onNextImageLoad.length
+      )
+        return
       const payload = {
         target: this.pagesInstance,
         type: 'image-load',
@@ -76,6 +88,7 @@ export default {
     setImage(locator) {
       this.hideImage = false
       this.image = this.locatorLookup(locator)
+      pageImageLoadCounter++
     },
     imageClick(e) {
       if (!this.hasEventListeners(this.pagesInstance, 'image-click')) return
