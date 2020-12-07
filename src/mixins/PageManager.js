@@ -8,9 +8,6 @@ let navIndex = 0
 let disabledPages = {}
 const preloadedPage = {}
 let lastGetPageId = null
-let captureImageClicks = false
-let capturePageClicks = false
-// let captureImageLoads = false
 let skipNextBubbleClear = false
 let nextPageFuncs = []
 
@@ -39,15 +36,6 @@ export default {
     },
   },
   methods: {
-    captureImageClicks() {
-      return captureImageClicks
-    },
-    // captureImageLoads() {
-    //   return captureImageLoads
-    // },
-    capturePageClicks() {
-      return capturePageClicks
-    },
     documentVisibilityChange(e) {
       this.dispatchEvent({
         target: this.pagesInstance,
@@ -59,7 +47,7 @@ export default {
       return !disabledPages[pageId]
     },
     pageClick(e) {
-      if (!this.capturePageClicks()) return this.clickLastSayBubble(e)
+      if (!this.hasEventListeners(this.pagesInstance, 'click')) return
       e.stopPropagation()
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
@@ -282,10 +270,12 @@ export default {
         manager,
         'captureImageClicks',
         function(v) {
+          console.warn(
+            'pages.captureImageClicks is deprecated.  Use stopImmediatePropagation() and stopPropagation().'
+          )
           if (!arguments.length) {
-            return captureImageClicks
+            return true
           }
-          captureImageClicks = !!v
           return this
         }
       )
@@ -299,9 +289,7 @@ export default {
           )
           if (!arguments.length) {
             return true
-            // return captureImageLoads
           }
-          // captureImageLoads = !!v
           return this
         }
       )
@@ -309,10 +297,12 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'captureClicks', function(
         v
       ) {
+        console.warn(
+          'pages.captureClicks is deprecated.  Use stopImmediatePropagation() and stopPropagation().'
+        )
         if (!arguments.length) {
-          return capturePageClicks
+          return true
         }
-        capturePageClicks = !!v
         return this
       })
 

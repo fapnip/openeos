@@ -120,6 +120,7 @@ export default {
     buildEventObject({
       type,
       timeStamp = Date.now(),
+      cancelable = false,
       eventClass = 'Event',
       value,
     }) {
@@ -130,7 +131,7 @@ export default {
         value = interpreter.nativeToPseudo(value)
       }
       interpreter.setProperty(event, 'type', type)
-      interpreter.setProperty(event, 'cancelable', false)
+      interpreter.setProperty(event, 'cancelable', cancelable)
       interpreter.setProperty(event, 'value', value)
       interpreter.setProperty(event, 'timeStamp', timeStamp)
       return event
