@@ -1,11 +1,101 @@
 import eventsCode from '!!raw-loader!../interpreter/code/events.js'
 
+let eventTarget
+
 export default {
   data: () => ({}),
   methods: {
     installEventManager(interpreter, globalObject) {
+      const NONENUMERABLE_DESCRIPTOR = this.Interpreter.NONENUMERABLE_DESCRIPTOR
+
+      eventTarget = interpreter.createNativeFunction(() => {}, true)
       interpreter.appendCode(eventsCode)
       interpreter.run()
+
+      const eventTargetProto = interpreter.getProperty(eventTarget, 'prototype')
+      interpreter.setProperty(globalObject, 'EventTarget', eventTarget)
+
+      function getTypeListeners(target, type) {
+        let listeners = target.listeners
+        if (!listeners) {
+          listeners = {}
+          target.listeners = listeners
+        }
+        let typeListeners = listeners[type]
+        if (!typeListeners) {
+          typeListeners = new Map()
+          listeners[type] = typeListeners
+        }
+        return typeListeners
+      }
+
+      function addEventListener(type, listener) {
+        const listeners = getTypeListeners(this, type)
+        listeners.set(listener, true)
+        console.log('addEventListener', listeners)
+      }
+
+      function removeEventListener(type, listener) {
+        const listeners = getTypeListeners(this, type)
+        listeners.delete(listener)
+        console.log('removeEventListener', listeners)
+      }
+
+      function dispatchEvent(event) {
+        if (!event) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'parameter 1 is not of type "Event"'
+          )
+        }
+        const _this = this
+        const type = interpreter.getProperty(event, 'type')
+        const listeners = Array.from(getTypeListeners(_this, type).keys())
+
+        let stopImmediatePropagation = false
+        if (listeners.length) {
+          interpreter.setProperty(
+            event,
+            'stopImmediatePropagation',
+            interpreter.createNativeFunction(function() {
+              stopImmediatePropagation = true
+            }),
+            NONENUMERABLE_DESCRIPTOR
+          )
+        }
+
+        const callChain = listeners => {
+          let listener = listeners.shift()
+          if (listener && !stopImmediatePropagation) {
+            return interpreter
+              .callFunction(listener, _this, event)
+              .then(() => callChain(listeners))
+          }
+          return !interpreter.getProperty(event, 'defaultPrevented')
+        }
+        return callChain(listeners)
+      }
+
+      interpreter.setProperty(
+        eventTargetProto,
+        'addEventListener',
+        interpreter.createNativeFunction(addEventListener),
+        NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setProperty(
+        eventTargetProto,
+        'removeEventListener',
+        interpreter.createNativeFunction(removeEventListener),
+        NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setProperty(
+        eventTargetProto,
+        'dispatchEvent',
+        interpreter.createNativeFunction(dispatchEvent),
+        NONENUMERABLE_DESCRIPTOR
+      )
     },
     buildEventObject({
       type,
@@ -27,7 +117,6 @@ export default {
     },
     dispatchEvent(eventObj) {
       const interpreter = this.interpreter
-      const eventTarget = interpreter.globalObject.properties['EventTarget']
       const target = eventObj.target
       if (!interpreter.isa(target, eventTarget)) {
         throw new TypeError('tried to dispatch an event on a non-EventTarget')
