@@ -193,6 +193,10 @@ export default {
       type: String,
       default: '',
     },
+    teaseId: {
+      type: String,
+      default: null,
+    },
   },
   mixins: [
     Image,

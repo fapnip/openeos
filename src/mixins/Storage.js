@@ -1,15 +1,39 @@
 let STORAGE = {}
+let MAX_STORAGE = 1024
 
 export default {
-  data: () => ({
-    // vmStorage: {},
-  }),
+  data: () => ({}),
+  mounted() {
+    this.loadStorage()
+  },
   methods: {
+    getStorageKey() {
+      return 'oeosTeaseStorage-' + this.teaseId
+    },
     saveStorage() {
-      //
+      if (!this.teaseId) return
+      const data = JSON.stringify(STORAGE)
+      if (data.length > MAX_STORAGE) {
+        console.error(
+          `Unable to save Tease Storage.  Over ${MAX_STORAGE} bytes.`
+        )
+        return
+      }
+      localStorage.setItem(this.getStorageKey(), data)
     },
     loadStorage() {
-      //
+      if (!this.teaseId) return
+      const data = localStorage.getItem(this.getStorageKey())
+      if (data) {
+        try {
+          const decoded = JSON.parse(data)
+          STORAGE = decoded
+          return
+        } catch (e) {
+          console.error('Invalid storage data', data)
+        }
+      }
+      STORAGE = {}
     },
     installStorage(interpreter, globalObject) {
       const manager = interpreter.createObject(interpreter.OBJECT)
@@ -19,9 +43,11 @@ export default {
         'key',
         interpreter.createNativeFunction(index => {
           if (typeof index !== 'number') {
-            throw new TypeError('Index must be a number')
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'Index must be a number'
+            )
           }
-
           return Object.keys(STORAGE)[index]
         })
       )
@@ -30,7 +56,10 @@ export default {
         'getItem',
         interpreter.createNativeFunction(keyName => {
           if (typeof keyName !== 'string') {
-            throw new TypeError('Key must be a string')
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'Key must be a string'
+            )
           }
 
           if (Object.keys(STORAGE).indexOf(keyName) !== -1) {
@@ -45,10 +74,12 @@ export default {
         'setItem',
         interpreter.createNativeFunction((keyName, value) => {
           if (typeof keyName !== 'string') {
-            throw new TypeError('Key must be a string')
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'Key must be a string'
+            )
           }
-
-          // Sanitize value a bit by using JSON
+          // Sanitize value
           STORAGE[keyName] = JSON.parse(
             JSON.stringify(interpreter.pseudoToNative(value))
           )
@@ -61,7 +92,10 @@ export default {
         'removeItem',
         interpreter.createNativeFunction(keyName => {
           if (typeof keyName !== 'string') {
-            throw new TypeError('Key must be a string')
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'Key must be a string'
+            )
           }
 
           delete STORAGE[keyName]

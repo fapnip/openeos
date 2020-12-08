@@ -48,6 +48,7 @@
         :script="script"
         :title="title"
         :author="author"
+        :tease-id="teaseId"
         :is-fullscreen="this.isFullscreen"
         @page-change="pageChange"
       />
