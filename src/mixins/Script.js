@@ -1,4 +1,8 @@
-import { validateHTMLColorHex } from 'validate-color'
+import {
+  validateHTMLColorHex,
+  validateHTMLColorRgb,
+  validateHTMLColorName,
+} from 'validate-color'
 import pageCompiler from '../util/pageCompiler'
 
 let pageScripts = {}
@@ -50,10 +54,14 @@ export default {
     validateHexColor(color) {
       if (!color) return null
       const interpreter = this.interpreter
-      if (!validateHTMLColorHex(color)) {
+      if (
+        !validateHTMLColorHex(color) &&
+        !validateHTMLColorRgb(color) &&
+        !validateHTMLColorName(color)
+      ) {
         return interpreter.createThrowable(
           interpreter.TYPE_ERROR,
-          `Invalid HEX color: ${color}`
+          `Invalid HTML color: ${color}`
         )
       }
       return color
