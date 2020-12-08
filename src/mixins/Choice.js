@@ -221,7 +221,7 @@ export default {
         if (arguments.length === 1) {
           return option.color
         }
-        color = vue.validateHexColor(color)
+        color = vue.validateHTMLColor(color)
         if (color instanceof vue.Interpreter.Throwable) return color
         option.color = color
         return this

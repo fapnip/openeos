@@ -51,7 +51,7 @@ export default {
         this.$set(object, i, value)
       }
     },
-    validateHexColor(color) {
+    validateHTMLColor(color) {
       if (!color) return null
       const interpreter = this.interpreter
       if (

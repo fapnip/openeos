@@ -450,7 +450,7 @@ export default {
         if (!arguments.length) {
           return vue.$vuetify.theme.themes.dark.primary
         }
-        color = vue.validateHexColor(color)
+        color = vue.validateHTMLColor(color)
         if (color instanceof vue.Interpreter.Throwable) return color
         vue.$vuetify.theme.themes.dark.primary = color
         return this
@@ -465,7 +465,7 @@ export default {
         if (!color) {
           vue.forcedBackgroundColor = null
         }
-        color = vue.validateHexColor(color)
+        color = vue.validateHTMLColor(color)
         if (color instanceof vue.Interpreter.Throwable) return color
         vue.forcedBackgroundColor = color
         return this
@@ -480,7 +480,7 @@ export default {
         if (!color) {
           vue.backgroundColor = null
         }
-        color = vue.validateHexColor(color)
+        color = vue.validateHTMLColor(color)
         if (color instanceof vue.Interpreter.Throwable) return color
         vue.backgroundColor = color
         return this
