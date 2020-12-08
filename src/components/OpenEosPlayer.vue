@@ -282,6 +282,7 @@ export default {
       )
       this.setScript(this.script)
       interpreter.run()
+      this.loadingText = 'Loading Script...'
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script')

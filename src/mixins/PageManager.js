@@ -181,13 +181,6 @@ export default {
       lastGetPageId = pattern
       return result
     },
-    startPage(pageId) {
-      const page = this.getPage(pageId)
-      this.currentPage = page
-      for (let i in page) {
-        console.log(i)
-      }
-    },
     installPageManager(interpreter, globalObject) {
       const vue = this
       const constructor = () => {
