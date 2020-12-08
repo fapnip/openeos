@@ -250,6 +250,49 @@ const commandList = {
     return false;
     `
   },
+  'nyx.page': (c, i, cl) => {
+    const commands = []
+    if (c.media) {
+      commands.push({
+        image: {
+          locator: c.media['nyx.image'],
+        },
+      })
+    }
+    if (c.text) {
+      commands.push({
+        say: {
+          label: c.text,
+          mode: 'instant',
+        },
+      })
+    }
+    const hidden = c.hidden
+    if (hidden) {
+      commands.push(hidden)
+    }
+    const action = c.action
+    if (action) {
+      const timer = action['nyx.timer']
+      if (timer) {
+        timer.push({
+          timer: {
+            ...timer,
+          },
+        })
+      }
+      const buttons = action['nyx.buttons']
+      if (buttons) {
+        commands.push({
+          choice: {
+            options: buttons,
+          },
+        })
+      }
+    }
+    return `
+    `
+  },
 }
 
 function buildChoiceOptions(options) {
