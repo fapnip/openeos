@@ -66,6 +66,7 @@
                   :value="bubble.item"
                   :active="bubble.item.active"
                   :is-debug="isDebug"
+                  @oeos-click="handleOeosClick"
                 ></say-bubble>
               </template>
               <template #choice>
@@ -113,6 +114,7 @@
           style="margin-bottom: 5px;"
           @timeout="notification.onTimeout"
           @button-click="notification.onClick"
+          @oeos-click="handleOeosClick"
         >
         </notification-item>
       </div>

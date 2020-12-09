@@ -5,7 +5,8 @@
       @keydown.space.stop="onClick"
       @keydown.enter.stop="onClick"
     />
-    <v-card-text :class="textClass" v-html="filteredLabel"> </v-card-text>
+    <v-card-text ref="labelHtml" :class="textClass" v-html="filteredLabel">
+    </v-card-text>
     <div class="oeos-blink-button">
       <v-btn v-if="showButton" icon x-small
         ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
@@ -15,6 +16,7 @@
 </template>
 
 <script>
+import oeosElementHandler from '../../util/oeosElementHandler'
 import markupFilter from '../../util/markupFilter'
 import stripHtml from 'string-strip-html'
 import wordsCounter from 'word-counting'
@@ -115,6 +117,11 @@ export default {
         }, duration)
       }
     }
+    this.addHandlersToOeosHtml()
+  },
+
+  updated() {
+    this.addHandlersToOeosHtml()
   },
 
   beforeUnmount() {
@@ -122,6 +129,9 @@ export default {
   },
 
   methods: {
+    addHandlersToOeosHtml() {
+      oeosElementHandler(this, this.$refs.labelHtml)
+    },
     continue() {
       if (!this.active) return
       clearTimeout(timeout)

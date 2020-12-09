@@ -152,6 +152,38 @@ export default {
       interpreter.setProperty(event, 'timeStamp', timeStamp)
       return event
     },
+    handleOeosClick(e, oeosCallbackJs, value, target) {
+      console.log('handleOeosClick', e, oeosCallbackJs)
+      target = target || this.pagesInstance
+      const rect = e.target.getBoundingClientRect()
+      const x = e.clientX - rect.left //x position within the element.
+      const y = e.clientY - rect.top //y position within the element.
+      const interpreter = this.interpreter
+      const oeosCallbackFunc = interpreter.getProperty(
+        interpreter.globalObject,
+        oeosCallbackJs
+      )
+      if (!oeosCallbackFunc) {
+        console.error(
+          'Invalid global oeos-click callback function: ',
+          oeosCallbackFunc
+        )
+        return
+      }
+      const event = this.buildEventObject({
+        target: target,
+        type: 'oeos-click',
+        value: {
+          x: x / e.target.clientWidth, // between 0 and 1, where clicked
+          y: y / e.target.clientHeight, // between 0 and 1, where clicked
+          value: value,
+        },
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
+      })
+      interpreter.queueFunction(oeosCallbackFunc, target, event)
+      interpreter.run()
+      return this.handleEventResult(event, e)
+    },
     dispatchEvent(eventObj, originatingEvent) {
       const interpreter = this.interpreter
       const target = eventObj.target
@@ -162,6 +194,9 @@ export default {
       const dispatchFunc = interpreter.getProperty(target, 'dispatchEvent')
       interpreter.queueFunction(dispatchFunc, target, event)
       interpreter.run()
+      return this.handleEventResult(event, originatingEvent)
+    },
+    handleEventResult(event, originatingEvent) {
       if (originatingEvent) {
         if (event._stopPropagation) {
           originatingEvent.stopPropagation()

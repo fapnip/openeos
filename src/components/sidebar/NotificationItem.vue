@@ -2,7 +2,7 @@
   <v-card
     style="background-color: rgba(30,30,30,0.50); min-width: 100px;  text-align: center; margin-bottom: 5px"
   >
-    <v-card-text class="oeos-nt pa-1 ma-0">
+    <v-card-text ref="labelHtml" class="oeos-nt pa-1 ma-0">
       <div v-if="title" class="oeos-nt-title">
         {{ filteredTitle }}
       </div>
@@ -31,6 +31,7 @@
 </template>
 
 <script>
+import oeosElementHandler from '../../util/oeosElementHandler'
 import markupFilter from '../../util/markupFilter'
 
 export default {
@@ -122,6 +123,11 @@ export default {
   mounted() {
     this.countdownResize()
     this.startTimer()
+    this.addHandlersToOeosHtml()
+  },
+
+  updated() {
+    this.addHandlersToOeosHtml()
   },
 
   beforeUnmount() {
@@ -129,6 +135,9 @@ export default {
   },
 
   methods: {
+    addHandlersToOeosHtml() {
+      oeosElementHandler(this, this.$refs.labelHtml)
+    },
     countdownResize() {
       if (this.$refs.countdown) {
         this.countdownSize = this.$refs.countdown.clientWidth

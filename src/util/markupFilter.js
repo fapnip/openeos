@@ -1,6 +1,12 @@
 import xss from 'xss'
 
 const filter = {
+  onIgnoreTagAttr: function(tag, name, value, isWhiteAttr) {
+    if (name.match(/^data-oeos-/)) {
+      // escape its value using built-in escapeAttrValue function
+      return name + '="' + xss.escapeAttrValue(value) + '"'
+    }
+  },
   whiteList: {
     br: [],
     b: [],
@@ -16,6 +22,7 @@ const filter = {
     whiteList: {
       color: true,
       display: true,
+      cursor: true,
       top: true,
       left: true,
       right: true,
@@ -23,7 +30,15 @@ const filter = {
       height: true,
       width: true,
       padding: true,
+      'padding-top': true,
+      'padding-left': true,
+      'padding-right': true,
+      'padding-bottom': true,
       margin: true,
+      'margin-top': true,
+      'margin-left': true,
+      'margin-right': true,
+      'margin-bottom': true,
       'max-width': true,
       'max-height': true,
       'min-width': true,
@@ -38,6 +53,10 @@ const filter = {
       'flex-flow': true,
       'flex-shrink': true,
       border: true,
+      'border-top': true,
+      'border-left': true,
+      'border-right': true,
+      'border-bottom': true,
       'border-width': true,
       'border-style': true,
       'border-color': true,

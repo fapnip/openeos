@@ -227,6 +227,7 @@ export default {
         vue.enablePage(pattern)
         return this
       })
+
       interpreter.setNativeFunctionPrototype(manager, 'disable', function(
         pattern
       ) {
