@@ -9,7 +9,10 @@ export default {
         const optProps = opt.properties
         let id = '__choice_' + ++idCounter
 
-        const interaction = interpreter.createObjectProto(proto)
+        const pseudoItem = interpreter.createObjectProto(proto)
+        const interaction = {}
+        interaction.pseudoItem = () => pseudoItem
+        pseudoItem._item = interaction
         interaction.id = id
         interaction.options = []
         this.$set(interaction, 'active', true)
@@ -64,7 +67,7 @@ export default {
         }
         this.$set(interaction, 'selectedOption', null)
         this.addBubble('choice', interaction)
-        return interaction
+        return pseudoItem
       }
       const manager = interpreter.createNativeFunction(constructor, true)
       interpreter.setProperty(
@@ -101,27 +104,27 @@ export default {
       }
 
       const getOptionProto = function(option) {
-        let opt = option._pseudoOption
+        let opt = option._pseudoOption && option._pseudoOption()
         if (!opt) {
           opt = interpreter.createObjectProto(optionProto)
           opt._index = option._index
-          option._pseudoOption = opt
+          option._pseudoOption = () => opt
           opt._choice = this
         }
         return opt
       }
 
       interpreter.setNativeFunctionPrototype(manager, 'get', function(i) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
-        return getOptionProto.call(this, option)
+        return getOptionProto.call(this._item, option)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
         if (arguments.length === 1) {
-          return this.active
+          return this._item.active
         }
-        this.active = !!v
+        this._item.active = !!v
         return this
       })
 
@@ -180,23 +183,21 @@ export default {
 
       const _remove = function(i) {
         if (arguments.length) {
-          const option = getOptionByIndex(this, i)
-          if (option instanceof vue.Interpreter.Throwable) return option
-          this.options.splice(i, 1)
+          this._item.options.splice(i, 1)
           return this
         } else {
-          vue.removeBubble(this)
+          vue.removeBubble(this._item)
         }
       }
 
       const _select = function(i) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         option.onSelect()
       }
 
       const _visible = function(i, v) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
           return option.visible
@@ -206,7 +207,7 @@ export default {
       }
 
       const _keep = function(i, v) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
           return option.keep
@@ -216,7 +217,7 @@ export default {
       }
 
       const _color = function(i, color) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
           return option.color
@@ -228,7 +229,7 @@ export default {
       }
 
       const _label = function(i, text) {
-        const option = getOptionByIndex(this, i)
+        const option = getOptionByIndex(this._item, i)
         if (option instanceof vue.Interpreter.Throwable) return option
         if (arguments.length === 1) {
           return option.label

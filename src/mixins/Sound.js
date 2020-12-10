@@ -81,7 +81,10 @@ export default {
         }
       }
 
-      item = interpreter.createObjectProto(PROTO)
+      const pseudoItem = interpreter.createObjectProto(PROTO)
+      pseudoItem._item = item
+      item = {}
+      item.pseudoItem = () => pseudoItem
       item.preloadKey = preloadKey
       item.id = options.id
       _setItem(item)
@@ -133,7 +136,7 @@ export default {
       })
       ;['play', 'end', 'pause'].forEach(type => {
         sound.on(type, e => {
-          this.dispatchEvent({ target: item, type }, e)
+          this.dispatchEvent({ target: pseudoItem, type }, e)
         })
       })
       if (preload) {
@@ -145,7 +148,7 @@ export default {
         _startItem(item)
       }
       console.log('Created sound item', item)
-      return item
+      return pseudoItem
     },
     purgePageSounds() {
       for (const k of Object.keys(this.sounds)) {
@@ -193,7 +196,8 @@ export default {
               'Given id must be undefined or a string'
             )
           }
-          return this.sounds[id]
+          const item = this.sounds[id]
+          return item && item.pseudoItem()
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
@@ -226,38 +230,38 @@ export default {
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'play', function() {
-        this.loopCount = this.loops
-        this.sound.play()
+        this._item.loopCount = this._item.loops
+        this._item.sound.play()
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
-        this.sound.pause()
+        this._item.sound.pause()
       })
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
-        this.sound.stop()
+        this._item.sound.stop()
       })
       interpreter.setNativeFunctionPrototype(manager, 'pan', function(pan) {
-        this.sound.pan(pan)
+        this._item.sound.pan(pan)
       })
       interpreter.setNativeFunctionPrototype(manager, 'mute', function(muted) {
-        this.sound.mute(muted === undefined ? true : muted)
+        this._item.sound.mute(muted === undefined ? true : muted)
       })
       interpreter.setNativeFunctionPrototype(manager, 'state', function() {
-        return this.sound.state()
+        return this._item.sound.state()
       })
       interpreter.setNativeFunctionPrototype(manager, 'playing', function() {
-        return this.sound.playing()
+        return this._item.sound.playing()
       })
       interpreter.setNativeFunctionPrototype(manager, 'duration', function() {
-        return this.sound.duration()
+        return this._item.sound.duration()
       })
       interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
-        return this.options.id
+        return this._item.options.id
       })
       interpreter.setNativeFunctionPrototype(manager, 'getVolume', function() {
-        return this.sound.volume()
+        return this._item.sound.volume()
       })
       interpreter.setNativeFunctionPrototype(manager, 'rate', function(rate) {
-        this.sound.rate(rate)
+        this._item.sound.rate(rate)
       })
       interpreter.setNativeFunctionPrototype(manager, 'seek', function(time) {
         time = Number(time)
@@ -273,7 +277,7 @@ export default {
             'time must be greater than or equal to 0'
           )
         }
-        this.sound.seek(time)
+        this._item.sound.seek(time)
       })
       interpreter.setNativeFunctionPrototype(manager, 'setVolume', function(
         volume
@@ -297,20 +301,20 @@ export default {
             'volume must be less than or equal to 1'
           )
         }
-        this.sound.volume(volume)
+        this._item.sound.volume(volume)
       })
       interpreter.setNativeFunctionPrototype(manager, 'fade', function(
         from,
         to,
         duration
       ) {
-        this.sound.fade(from, to, duration)
+        this._item.sound.fade(from, to, duration)
       })
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
-        this.sound.stop()
-        const pool = vue.getSoundPool(this.preloadKey)
-        pool.push(this) // Put sound back in pool for later re-use
-        delete vue.sounds[this.options.id]
+        this._item.sound.stop()
+        const pool = vue.getSoundPool(this._item.preloadKey)
+        pool.push(this._item) // Put sound back in pool for later re-use
+        delete vue.sounds[this._item.options.id]
       })
     },
   },

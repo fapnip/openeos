@@ -11,9 +11,10 @@ let lastGetPageId = null
 let skipNextBubbleClear = false
 let nextPageFuncs = []
 
+let pagesInstance = null
+
 export default {
   data: () => ({
-    pagesInstance: null,
     currentPageId: null,
     lastPageId: '',
     commandIndex: 0,
@@ -36,9 +37,12 @@ export default {
     },
   },
   methods: {
+    pagesInstance() {
+      return pagesInstance
+    },
     documentVisibilityChange(e) {
       this.dispatchEvent({
-        target: this.pagesInstance,
+        target: pagesInstance,
         type: 'visibilitychange', // Tab lost or gained focus
         timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
@@ -47,7 +51,7 @@ export default {
       return !disabledPages[pageId]
     },
     pageClick(e) {
-      if (!this.hasEventListeners(this.pagesInstance, 'click'))
+      if (!this.hasEventListeners(pagesInstance, 'click'))
         return this.clickLastSayBubble(e)
       e.stopPropagation()
       const rect = e.target.getBoundingClientRect()
@@ -55,7 +59,7 @@ export default {
       const y = e.clientY - rect.top //y position within the element.
       this.dispatchEvent(
         {
-          target: this.pagesInstance,
+          target: pagesInstance,
           type: 'click',
           value: {
             x: x / e.target.clientWidth, // between 0 and 1, where clicked
@@ -92,7 +96,7 @@ export default {
       const interpreter = this.interpreter
       try {
         this.dispatchEvent({
-          target: this.pagesInstance,
+          target: pagesInstance,
           type: 'change',
           value: {
             to: this.currentPageId,
@@ -113,7 +117,7 @@ export default {
     doNextPageFuncs() {
       let func = nextPageFuncs.shift()
       while (func) {
-        this.interpreter.queueFunction(func, this.pagesInstance)
+        this.interpreter.queueFunction(func, pagesInstance)
         func = nextPageFuncs.shift()
       }
     },
@@ -509,8 +513,8 @@ export default {
         }
       })
 
-      this.pagesInstance = interpreter.createObjectProto(proto)
-      interpreter.setProperty(globalObject, 'pages', this.pagesInstance)
+      pagesInstance = interpreter.createObjectProto(proto)
+      interpreter.setProperty(globalObject, 'pages', pagesInstance)
 
       // Add interpreted code
       interpreter.appendCode(pagesCode)

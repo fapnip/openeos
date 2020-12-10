@@ -38,7 +38,10 @@ export default {
         let id = optProps.id || '__nt_' + ++idCounter
         this.removeNotification(id)
 
-        const notification = interpreter.createObjectProto(proto)
+        const pseudoItem = interpreter.createObjectProto(proto)
+        const notification = {}
+        notification.pseudoItem = () => pseudoItem
+        pseudoItem._item = notification
         vue.$set(notification, 'title', optProps.title || '')
         vue.$set(notification, 'buttonLabel', optProps.buttonLabel || '')
         notification.id = id
@@ -63,7 +66,7 @@ export default {
           }
         }
         this.notifications.push(notification)
-        return notification
+        return pseudoItem
       }
 
       const manager = interpreter.createNativeFunction(constructor, true)
@@ -74,7 +77,8 @@ export default {
         manager,
         'get',
         interpreter.createNativeFunction(id => {
-          return this.getNotificationById(id)
+          const result = this.getNotificationById(id)
+          return result && result.pseudoItem()
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
@@ -91,20 +95,20 @@ export default {
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
-        return this.id
+        return this._item.id
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
-        vue.removeNotification(this.id)
+        vue.removeNotification(this._item.id)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'buttonLabel', function(
         val
       ) {
         if (!arguments.length) {
-          return this.buttonLabel
+          return this._item.buttonLabel
         }
-        this.buttonLabel = val
+        this._item.buttonLabel = val
         return this
       })
 
@@ -112,16 +116,16 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'setTitle', function(
         title
       ) {
-        this.title = title
+        this._item.title = title
         return this
       })
 
       // Getter / setter
       interpreter.setNativeFunctionPrototype(manager, 'title', function(val) {
         if (!arguments.length) {
-          return this.title
+          return this._item.title
         }
-        this.title = val
+        this._item.title = val
         return this
       })
     },

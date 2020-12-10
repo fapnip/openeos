@@ -154,7 +154,7 @@ export default {
     },
     handleOeosClick(e, oeosCallbackJs, value, target) {
       console.log('handleOeosClick', e, oeosCallbackJs)
-      target = target || this.pagesInstance
+      target = target || this.pagesInstance()
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.

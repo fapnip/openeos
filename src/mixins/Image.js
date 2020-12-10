@@ -55,12 +55,12 @@ export default {
     },
     imageError(e) {
       if (
-        !this.hasEventListeners(this.pagesInstance, 'image-error') &&
+        !this.hasEventListeners(this.pagesInstance(), 'image-error') &&
         !onNextImageError.length
       )
         return
       const payload = {
-        target: this.pagesInstance,
+        target: this.pagesInstance(),
         type: 'image-error',
         value: this.image,
         timeStamp: e.timeStamp + performance.timing.navigationStart,
@@ -71,12 +71,12 @@ export default {
     },
     imageLoad(e) {
       if (
-        !this.hasEventListeners(this.pagesInstance, 'image-load') &&
+        !this.hasEventListeners(this.pagesInstance(), 'image-load') &&
         !onNextImageLoad.length
       )
         return
       const payload = {
-        target: this.pagesInstance,
+        target: this.pagesInstance(),
         type: 'image-load',
         value: this.image,
         timeStamp: e.timeStamp + performance.timing.navigationStart,
@@ -91,13 +91,13 @@ export default {
       pageImageLoadCounter++
     },
     imageClick(e) {
-      if (!this.hasEventListeners(this.pagesInstance, 'image-click')) return
+      if (!this.hasEventListeners(this.pagesInstance(), 'image-click')) return
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
       this.dispatchEvent(
         {
-          target: this.pagesInstance,
+          target: this.pagesInstance(),
           type: 'image-click',
           value: {
             x: x / e.target.clientWidth, // between 0 and 1, where clicked

@@ -31,7 +31,10 @@ export default {
       const constructor = opt => {
         const optProps = opt.properties
         let id = '__say_' + ++idCounter
-        const interaction = interpreter.createObjectProto(proto)
+        const pseudoItem = interpreter.createObjectProto(proto)
+        const interaction = {}
+        interaction.pseudoItem = () => pseudoItem
+        pseudoItem._item = interaction
         this.$set(interaction, 'active', true)
         interaction.setInactive = () => {
           this.$set(interaction, 'active', false)
@@ -44,7 +47,7 @@ export default {
           if (typeof val !== 'object' || val === null) {
             vue.$set(interaction, k, val) // make reactive
           } else {
-            interaction[k] = val
+            // interaction[k] = val
           }
         }
         this.setReactive(interaction, ['label', 'color'])
@@ -62,7 +65,7 @@ export default {
         }
         interaction.duration = parseEosDuration(optProps.duration || '0s')
         this.addBubble('say', interaction)
-        return interaction
+        return pseudoItem
       }
 
       const manager = interpreter.createNativeFunction(constructor, true)
@@ -77,30 +80,30 @@ export default {
 
       interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
         if (arguments.length === 1) {
-          return this.active
+          return this._item.active
         }
-        this.active = !!v
+        this._item.active = !!v
         return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'label', function(val) {
         if (!arguments.length) {
-          return this.label
+          return this._item.label
         }
-        this.label = val
+        this._item.label = val
         return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'color', function(val) {
         if (!arguments.length) {
-          return this.color
+          return this._item.color
         }
-        vue.color = val
+        this._item.color = val
         return this
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
-        vue.removeBubble(this)
+        vue.removeBubble(this._item)
       })
     },
   },

@@ -8,7 +8,10 @@ export default {
       const constructor = opt => {
         const optProps = opt.properties
         let id = '__prompt_' + ++idCounter
-        const interaction = interpreter.createObjectProto(proto)
+        const pseudoItem = interpreter.createObjectProto(proto)
+        const interaction = {}
+        interaction.pseudoItem = () => pseudoItem
+        pseudoItem._item = interaction
         this.$set(interaction, 'active', true)
         this.$set(interaction, 'value', null)
         interaction.setInactive = () => {
@@ -34,7 +37,7 @@ export default {
           }
         }
         this.addBubble('prompt', interaction)
-        return interaction
+        return pseudoItem
       }
 
       const manager = interpreter.createNativeFunction(constructor, true)
@@ -48,7 +51,7 @@ export default {
       interpreter.setProperty(globalObject, 'Prompt', manager)
 
       interpreter.setNativeFunctionPrototype(manager, 'input', function(val) {
-        this.onInput(val)
+        this._item.onInput(val)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
