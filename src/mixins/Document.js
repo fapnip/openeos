@@ -23,6 +23,12 @@ export default {
           ...attr
         ) {
           const el = document[fnName](...attr)
+          if (el.nodeType === 'SCRIPT') {
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              "Sorry.  You can't make those."
+            )
+          }
           this.sanitizeHtml(el)
           return vue.getHTMLElementPseudo(el)
         })
