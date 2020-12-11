@@ -55,7 +55,7 @@ export default {
       }
 
       // DOMTokenList Using getter
-      ;['classList '].forEach(name => {
+      ;['classList'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
 
         proto.getter[name] = interpreter.createNativeFunction(function() {
