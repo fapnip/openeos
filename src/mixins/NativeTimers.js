@@ -18,7 +18,8 @@ function cancelAll(timers, fn) {
 
 export default {
   data: () => ({}),
-  beforeUnmount() {
+
+  beforeDestroy() {
     cancelAll(timeouts, t => {
       clearTimeout(t)
     })

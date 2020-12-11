@@ -106,6 +106,10 @@ export default {
     this.$emit('ready', this.$refs.rootElement)
   },
 
+  beforeDestroy() {
+    this.clearTimers()
+  },
+
   beforeUnmount() {
     this.clearTimers()
   },

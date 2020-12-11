@@ -1,6 +1,6 @@
 import { Howl, Howler } from 'howler'
 
-const soundPools = {}
+let soundPools = {}
 
 let PROTO
 
@@ -10,6 +10,22 @@ export default {
   data: () => ({
     sounds: {},
   }),
+
+  mounted() {
+    soundPools = {}
+  },
+
+  beforeDestroy() {
+    console.log('Unloading sounds')
+    const sounds = this.sounds
+    const keys = Object.keys(sounds)
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const key = keys[i]
+      sounds[key].sound.stop()
+      delete sounds[key]
+    }
+  },
+
   methods: {
     preloadSound(options, fromPageScript) {
       return this.createSoundItem(options, fromPageScript, true)
