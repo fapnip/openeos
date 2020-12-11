@@ -1,5 +1,8 @@
 let proto
 
+// Probably should change this to allowed tags, but for now..
+const blockedTags = { applet: true, script: true, link: true, iframe: true }
+
 export default {
   data: () => ({}),
   methods: {
@@ -23,14 +26,15 @@ export default {
           ...attr
         ) {
           const el = document[fnName](...attr)
-          if (el.nodeType === 'SCRIPT') {
+          if (blockedTags[el.tagName.toLowerCase()]) {
             return interpreter.createThrowable(
               interpreter.TYPE_ERROR,
-              "Sorry.  You can't make those."
+              "Sorry.  You can't make " + el.tagName + '.'
             )
           }
-          this.sanitizeHtml(el)
-          return vue.getHTMLElementPseudo(el)
+          console.log('Creating...', el)
+          console.dir(el)
+          return vue.getHTMLElementPseudo(vue.sanitizeHtml(el))
         })
       })
     },

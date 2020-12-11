@@ -115,7 +115,7 @@ export default {
           return this._o_el[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(html) {
-          if (this._o_el.nodeType === 'STYLE') {
+          if (this._o_el.tagName === 'STYLE') {
             html = this.sanitizeStyle(html)
           }
           this._o_el[name] = this.sanitizeHtml(html)
