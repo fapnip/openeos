@@ -23,6 +23,7 @@ export default {
           ...attr
         ) {
           const el = document[fnName](...attr)
+          this.sanitizeHtml(el)
           return vue.getHTMLElementPseudo(el)
         })
       })

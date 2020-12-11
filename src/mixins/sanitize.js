@@ -15,25 +15,22 @@ export default {
         }
 
         if (node.hasAttribute('src')) {
-          node.setAttribute(
-            'src',
-            this.locatorLookup(node.getAttribute('src')).href
-          )
+          node.setAttribute('src', this.sanitizeSrc(node.getAttribute('src')))
         }
 
         if (node.hasAttribute('srcset')) {
           const srcset = node.getAttribute('srcset').split(',')
           for (let i = 0, l = srcset.length; i < l; i++) {
-            srcset[i] = this.locatorLookup(srcset[i]).href
+            srcset[i] = this.sanitizeSrc(srcset[i])
           }
           node.setAttribute('srcset', srcset.join(','))
         }
 
         if (node.hasAttribute('href')) {
-          if (!node.getAttribute('href').match(allowedDomains)) {
-            console.error('Blocked invalid href: ' + node.getAttribute('href'))
-            node.setAttribute('href', '#invalid-href')
-          }
+          node.setAttribute(
+            'href',
+            this.sanitizeHref(node.getAttribute('href'))
+          )
         }
       }
     })
@@ -48,6 +45,16 @@ export default {
     })
   },
   methods: {
+    sanitizeHref(href) {
+      if (!href.match(allowedDomains)) {
+        console.error('Blocked invalid href: ' + href)
+        return '#invalid-href'
+      }
+      return href
+    },
+    sanitizeSrc(url) {
+      return this.locatorLookup(url).href
+    },
     sanitizeStyle(style) {
       if (style.match(/@import/i)) {
         console.error('@import not allowed in stylesheet', style)
@@ -59,9 +66,7 @@ export default {
       }
       let match
       while ((match = cssUrlMatcher.exec(style)) !== null) {
-        const locator = this.locatorLookup(match[2].trim())
-        const replacement = `url("${locator.href}")`
-        // console.error(`Invalid URL ${match[0]}`, style, match)
+        const replacement = `url("${this.sanitizeSrc(match[2].trim())}")`
         style = style.replaceAll(match[0], replacement)
       }
       return style

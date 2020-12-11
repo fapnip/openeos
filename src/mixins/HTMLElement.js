@@ -93,6 +93,57 @@ export default {
         })
       })
 
+      // href
+      ;['href'].forEach(name => {
+        interpreter.setProperty(proto, name, undefined)
+        proto.getter[name] = interpreter.createNativeFunction(function() {
+          return this._o_el[name]
+        })
+        proto.setter[name] = interpreter.createNativeFunction(function(href) {
+          this._o_el[name] = this.sanitizeSrc(href)
+        })
+      })
+
+      // html
+      ;['innerHtml', 'innerText', 'outerHtml', 'textContent'].forEach(name => {
+        if (this._isRoot && name.match(/^outerHtml/)) {
+          console.error(`Cannot perform ${name} on root node.`)
+          return
+        }
+        interpreter.setProperty(proto, name, undefined)
+        proto.getter[name] = interpreter.createNativeFunction(function() {
+          return this._o_el[name]
+        })
+        proto.setter[name] = interpreter.createNativeFunction(function(html) {
+          if (this._o_el.nodeType === 'STYLE') {
+            html = this.sanitizeStyle(html)
+          }
+          this._o_el[name] = this.sanitizeHtml(html)
+        })
+      })
+
+      // URL
+      ;['src'].forEach(name => {
+        interpreter.setProperty(proto, name, undefined)
+        proto.getter[name] = interpreter.createNativeFunction(function() {
+          return this._o_el[name]
+        })
+        proto.setter[name] = interpreter.createNativeFunction(function(src) {
+          this._o_el[name] = this.sanitizeSrc(src)
+        })
+      })
+
+      // Style
+      ;['style'].forEach(name => {
+        interpreter.setProperty(proto, name, undefined)
+        proto.getter[name] = interpreter.createNativeFunction(function() {
+          return this._o_el[name]
+        })
+        proto.setter[name] = interpreter.createNativeFunction(function(style) {
+          this._o_el[name] = this.sanitizeStyle(style)
+        })
+      })
+
       // native getter abstraction
       ;[
         'childElementCount',
