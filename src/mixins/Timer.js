@@ -27,7 +27,10 @@ export default {
         const optProps = opt.properties
         let timerId = '__timer_' + ++idCounter
         console.log('Creating timer')
-        const timer = interpreter.createObjectProto(proto)
+        const pseudoItem = interpreter.createObjectProto(proto)
+        const timer = {}
+        timer.pseudoItem = () => pseudoItem
+        pseudoItem._item = timer
         for (var i in optProps) {
           // Copy source props to our new timer
           const pseudoVal = optProps[i]
@@ -36,44 +39,55 @@ export default {
             timer[i] = interpreter.pseudoToNative(pseudoVal)
           } else if (typeof pseudoVal === 'object') {
             // Copy other objects as-is
-            timer[i] = pseudoVal
+            // timer[i] = pseudoVal
           } else {
             // Make other props reactive
             vue.$set(timer, i, pseudoVal)
           }
-          interpreter.setProperty(timer, i, pseudoVal)
+          // interpreter.setProperty(timer, i, pseudoVal)
         }
-        interpreter.setProperty(timer, 'id', timerId)
+        // interpreter.setProperty(timer, 'id', timerId)
         const duration = parseEosDuration(timer.duration)
         timer.duration = duration
         timer.timeLeft = duration
         timer.loop = 0
         timer.id = timerId
         timer.onTimeout = () => {
-          if (timer.properties.onTimeout) {
+          if (optProps.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(timer.properties.onTimeout, timer)
+            interpreter.queueFunction(optProps.onTimeout, timer)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
-          if (timer.properties.onContinue) {
-            interpreter.queueFunction(timer.properties.onContinue, timer)
+          if (optProps.onContinue) {
+            interpreter.queueFunction(optProps.onContinue, timer)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
         }
         timer.onLoop = () => {
-          if (timer.properties.onTimeout) {
+          if (optProps.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(timer.properties.onTimeout, timer)
+            interpreter.queueFunction(optProps.onTimeout, timer)
             interpreter.run()
           }
         }
         timer.onUpdate = ({ remaining, loop }) => {
           timer.loop = loop
           timer.remaining = remaining
+        }
+        timer.ready = el => {
+          timer._o_el = el
+          if (optProps.ready) {
+            interpreter.queueFunction(
+              optProps.ready,
+              pseudoItem,
+              this.getHTMLElementPseudo(el, true)
+            )
+            interpreter.run()
+          }
         }
         console.log('Adding timer', timer)
         vue.timers.push(timer)
@@ -97,10 +111,14 @@ export default {
           if (typeof id !== 'string') {
             throw new TypeError('id must be a string')
           }
-          return this.getTimerById(id)
+          return this.getTimerById(id.pseudoItem())
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
+
+      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+        return vue.getHTMLElementPseudo(this._item._o_el, true)
+      })
 
       interpreter.setProperty(
         manager,
@@ -112,11 +130,11 @@ export default {
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
-        vue.removeTimer(this.id)
+        vue.removeTimer(this._item.id)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
-        return this.id
+        return this._item.id
       })
 
       interpreter.setNativeFunctionPrototype(
@@ -128,11 +146,11 @@ export default {
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'getLoop', function() {
-        return this.loop
+        return this._item.loop
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'geLoops', function() {
-        return this.loops
+      interpreter.setNativeFunctionPrototype(manager, 'getLoops', function() {
+        return this._item.loops
       })
     },
   },

@@ -32,7 +32,18 @@ export default {
           interaction.setInactive()
           if (optProps.onInput) {
             this.$set(interaction, 'value', v)
-            interpreter.queueFunction(optProps.onInput, opt, v)
+            interpreter.queueFunction(optProps.onInput, pseudoItem, v)
+            interpreter.run()
+          }
+        }
+        interaction.ready = el => {
+          interaction._o_el = el
+          if (optProps.ready) {
+            interpreter.queueFunction(
+              optProps.ready,
+              pseudoItem,
+              this.getHTMLElementPseudo(el, true)
+            )
             interpreter.run()
           }
         }
@@ -49,6 +60,10 @@ export default {
       )
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Prompt', manager)
+
+      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+        return vue.getHTMLElementPseudo(this._item._o_el, true)
+      })
 
       interpreter.setNativeFunctionPrototype(manager, 'input', function(val) {
         this._item.onInput(val)

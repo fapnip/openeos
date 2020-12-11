@@ -66,7 +66,7 @@
                   :value="bubble.item"
                   :active="bubble.item.active"
                   :is-debug="isDebug"
-                  @oeos-click="handleOeosClick"
+                  @ready="bubble.item.ready"
                 ></say-bubble>
               </template>
               <template #choice>
@@ -74,6 +74,7 @@
                   :value="bubble.item"
                   :active="bubble.item.active"
                   :is-debug="isDebug"
+                  @ready="bubble.item.ready"
                 ></choice-bubble>
               </template>
               <template #prompt>
@@ -81,6 +82,7 @@
                   :value="bubble.item"
                   :active="bubble.item.active"
                   :is-debug="isDebug"
+                  @ready="bubble.item.ready"
                 ></prompt-bubble>
               </template>
             </vue-switch>
@@ -99,6 +101,7 @@
         :is-debug="isDebug"
         @timeout="timer.onTimeout"
         @loop="timer.onLoop"
+        @ready="timer.ready"
       >
       </countdown-timer>
     </div>
@@ -114,7 +117,7 @@
           style="margin-bottom: 5px;"
           @timeout="notification.onTimeout"
           @button-click="notification.onClick"
-          @oeos-click="handleOeosClick"
+          @ready="notification.ready"
         >
         </notification-item>
       </div>
@@ -140,6 +143,7 @@ const interpreter = new Interpreter('')
 interpreter.REGEXP_MODE = 1
 
 // Module Mixins
+import sanitize from '../mixins/sanitize'
 import Image from '../mixins/Image'
 import Background from '../mixins/Background'
 import Bubbles from '../mixins/Bubbles'
@@ -148,6 +152,9 @@ import Locator from '../mixins/Locator'
 import Preload from '../mixins/Preload'
 import Console from '../mixins/Console'
 import EventManager from '../mixins/EventManager'
+import DOMTokenList from '../mixins/DOMTokenList'
+import HTMLElement from '../mixins/HTMLElement'
+import Document from '../mixins/Document'
 import NativeTimers from '../mixins/NativeTimers'
 import PageManager from '../mixins/PageManager'
 import FileManager from '../mixins/FileManager'
@@ -201,6 +208,7 @@ export default {
     },
   },
   mixins: [
+    sanitize,
     Image,
     Background,
     Bubbles,
@@ -209,6 +217,9 @@ export default {
     Preload,
     Console,
     EventManager,
+    DOMTokenList,
+    HTMLElement,
+    Document,
     NativeTimers,
     PageManager,
     FileManager,
@@ -263,6 +274,9 @@ export default {
       // interpreter.appendCode(PromisePoly)
       interpreter.run()
       this.installEventManager(interpreter, globalObject)
+      this.installDOMTokenList(interpreter, globalObject)
+      this.installHTMLElement(interpreter, globalObject)
+      this.installDocument(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
       this.installImage(interpreter, globalObject)
       this.installFileManager(interpreter, globalObject)

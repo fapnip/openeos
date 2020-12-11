@@ -1,6 +1,7 @@
 <template>
   <v-row
     v-if="options[0] && selectedOption === null"
+    ref="rootElement"
     align="center"
     class="oeos-choices text-center"
   >
@@ -14,13 +15,14 @@
           class="custom-transform-class text-none mx-1"
           @click.stop="optionSelect(option)"
         >
-          <span v-html="markupFilter(option.label)"></span
+          <span v-html="option.label"></span
         ></v-btn>
       </v-expand-x-transition>
     </template>
   </v-row>
   <v-row
     v-else-if="selectedOption"
+    ref="rootElement"
     align="center"
     class="oeos-choices text-center"
   >
@@ -28,14 +30,17 @@
       <span v-html="selectedOption.label"></span
     ></v-btn>
   </v-row>
-  <v-row v-else align="center" class="oeos-choices text-center">
+  <v-row
+    v-else
+    ref="rootElement"
+    align="center"
+    class="oeos-choices text-center"
+  >
     <v-btn small disabled> <span> ... </span></v-btn>
   </v-row>
 </template>
 
 <script>
-import markupFilter from '../../util/markupFilter'
-
 export default {
   props: {
     value: {
@@ -71,10 +76,10 @@ export default {
       this.value.onContinue()
     }
     this.transition = 'expand-x-transition'
+    this.$emit('ready', this.$refs.rootElement)
   },
 
   methods: {
-    markupFilter: markupFilter,
     optionSelect(option) {
       if (!this.optionVisible(option)) return
       option.onSelect()

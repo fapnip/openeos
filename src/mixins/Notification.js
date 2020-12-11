@@ -42,8 +42,12 @@ export default {
         const notification = {}
         notification.pseudoItem = () => pseudoItem
         pseudoItem._item = notification
-        vue.$set(notification, 'title', optProps.title || '')
-        vue.$set(notification, 'buttonLabel', optProps.buttonLabel || '')
+        vue.$set(notification, 'title', this.sanitizeHtml(optProps.title || ''))
+        vue.$set(
+          notification,
+          'buttonLabel',
+          this.sanitizeHtml(optProps.buttonLabel || '')
+        )
         notification.id = id
 
         notification.timerDuration =
@@ -54,14 +58,25 @@ export default {
         notification.onTimeout = () => {
           if (optProps.onTimeout) {
             vue.removeNotification(notification.id)
-            interpreter.queueFunction(optProps.onTimeout, notification)
+            interpreter.queueFunction(optProps.onTimeout, pseudoItem)
             interpreter.run()
           }
         }
         notification.onClick = () => {
           if (optProps.onClick) {
-            interpreter.queueFunction(optProps.onClick, notification)
+            interpreter.queueFunction(optProps.onClick, pseudoItem)
             vue.removeNotification(notification.id)
+            interpreter.run()
+          }
+        }
+        notification.ready = el => {
+          notification._o_el = el
+          if (optProps.ready) {
+            interpreter.queueFunction(
+              optProps.ready,
+              pseudoItem,
+              this.getHTMLElementPseudo(el, true)
+            )
             interpreter.run()
           }
         }
@@ -94,6 +109,10 @@ export default {
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
 
+      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+        return vue.getHTMLElementPseudo(this._item._o_el, true)
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
         return this._item.id
       })
@@ -108,7 +127,7 @@ export default {
         if (!arguments.length) {
           return this._item.buttonLabel
         }
-        this._item.buttonLabel = val
+        this._item.buttonLabel = vue.sanitizeHtml(val)
         return this
       })
 
@@ -116,7 +135,7 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'setTitle', function(
         title
       ) {
-        this._item.title = title
+        this._item.title = vue.sanitizeHtml(title)
         return this
       })
 

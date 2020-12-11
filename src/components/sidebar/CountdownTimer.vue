@@ -1,7 +1,13 @@
 <template>
-  <div v-if="!isHidden" class="oeos-countdown" :style="cssVars">
+  <div
+    ref="rootElement"
+    v-show="!isHidden"
+    class="oeos-countdown"
+    :style="cssVars"
+  >
     <div class="oeos-countdown-number">{{ formattedTimeLeft }}</div>
     <svg
+      v-if="!isHidden"
       :class="{
         'oeos-countdown-line': showLine,
         spin: isSecret,
@@ -97,6 +103,7 @@ export default {
 
   mounted() {
     this.startTimer()
+    this.$emit('ready', this.$refs.rootElement)
   },
 
   beforeUnmount() {

@@ -1,5 +1,10 @@
 <template>
-  <v-card :color="value.color" @click.once="onClick" class="oeos-say-bubble">
+  <v-card
+    ref="rootElement"
+    :color="value.color"
+    @click.once="onClick"
+    class="oeos-say-bubble"
+  >
     <global-events
       v-if="active && allowSkip"
       @keydown.space.stop="onClick"
@@ -16,8 +21,6 @@
 </template>
 
 <script>
-import oeosElementHandler from '../../util/oeosElementHandler'
-import markupFilter from '../../util/markupFilter'
 import stripHtml from 'string-strip-html'
 import wordsCounter from 'word-counting'
 
@@ -94,7 +97,7 @@ export default {
       return this.value.align || 'center'
     },
     filteredLabel() {
-      return markupFilter(this.value.label)
+      return this.value.label
     },
     duration() {
       const mode = this.mode
@@ -117,11 +120,7 @@ export default {
         }, duration)
       }
     }
-    this.addHandlersToOeosHtml()
-  },
-
-  updated() {
-    this.addHandlersToOeosHtml()
+    this.$emit('ready', this.$refs.rootElement.$el)
   },
 
   beforeUnmount() {
@@ -129,9 +128,6 @@ export default {
   },
 
   methods: {
-    addHandlersToOeosHtml() {
-      oeosElementHandler(this, this.$refs.labelHtml)
-    },
     continue() {
       if (!this.active) return
       clearTimeout(timeout)

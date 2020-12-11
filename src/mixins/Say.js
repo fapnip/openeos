@@ -40,11 +40,12 @@ export default {
           this.$set(interaction, 'active', false)
         }
         interaction.id = id
-        interaction.options = []
+        console.log('Iterating:', opt, Object.keys(optProps))
         for (const k of Object.keys(optProps)) {
           const val = optProps[k]
-          if (val === undefined) continue
-          if (typeof val !== 'object' || val === null) {
+          if (k === 'label') {
+            vue.$set(interaction, k, this.sanitizeHtml(val)) // make reactive
+          } else if (typeof val !== 'object' || val === null) {
             vue.$set(interaction, k, val) // make reactive
           } else {
             // interaction[k] = val
@@ -59,7 +60,18 @@ export default {
           interaction.setInactive()
           if (optProps.onContinue) {
             console.log('Doing say onContinue', optProps.onContinue)
-            interpreter.queueFunction(optProps.onContinue, opt)
+            interpreter.queueFunction(optProps.onContinue, pseudoItem)
+            interpreter.run()
+          }
+        }
+        interaction.ready = el => {
+          interaction._o_el = el
+          if (optProps.ready) {
+            interpreter.queueFunction(
+              optProps.ready,
+              pseudoItem,
+              this.getHTMLElementPseudo(el, true)
+            )
             interpreter.run()
           }
         }
@@ -78,6 +90,10 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'Say', manager)
 
+      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+        return vue.getHTMLElementPseudo(this._item._o_el, true)
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'active', function(v) {
         if (arguments.length === 1) {
           return this._item.active
@@ -90,7 +106,7 @@ export default {
         if (!arguments.length) {
           return this._item.label
         }
-        this._item.label = val
+        this._item.label = vue.sanitizeHtml(val)
         return this
       })
 

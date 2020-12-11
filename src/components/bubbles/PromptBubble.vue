@@ -1,5 +1,5 @@
 <template>
-  <v-row :align="align">
+  <v-row ref="rootElement" :align="align">
     <v-text-field
       v-if="active"
       v-model="inputValue"
@@ -42,6 +42,10 @@ export default {
     return {
       inputValue: null,
     }
+  },
+
+  mounted() {
+    this.$emit('ready', this.$refs.rootElement)
   },
 
   computed: {

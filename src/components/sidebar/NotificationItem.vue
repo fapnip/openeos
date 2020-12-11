@@ -1,5 +1,6 @@
 <template>
   <v-card
+    ref="rootElement"
     style="background-color: rgba(30,30,30,0.50); min-width: 100px;  text-align: center; margin-bottom: 5px"
   >
     <v-card-text ref="labelHtml" class="oeos-nt pa-1 ma-0">
@@ -31,9 +32,6 @@
 </template>
 
 <script>
-import oeosElementHandler from '../../util/oeosElementHandler'
-import markupFilter from '../../util/markupFilter'
-
 export default {
   props: {
     duration: {
@@ -95,10 +93,10 @@ export default {
       return Math.floor(2 * Math.PI * this.lineRadius)
     },
     filteredButtonLabel() {
-      return markupFilter(this.buttonLabel)
+      return this.buttonLabel
     },
     filteredTitle() {
-      return markupFilter(this.title)
+      return this.title
     },
     formattedTimeLeft() {
       const timeLeft = this.timeLeft / 1000
@@ -123,11 +121,7 @@ export default {
   mounted() {
     this.countdownResize()
     this.startTimer()
-    this.addHandlersToOeosHtml()
-  },
-
-  updated() {
-    this.addHandlersToOeosHtml()
+    this.$emit('ready', this.$refs.rootElement.$el)
   },
 
   beforeUnmount() {
@@ -135,9 +129,6 @@ export default {
   },
 
   methods: {
-    addHandlersToOeosHtml() {
-      oeosElementHandler(this, this.$refs.labelHtml)
-    },
     countdownResize() {
       if (this.$refs.countdown) {
         this.countdownSize = this.$refs.countdown.clientWidth

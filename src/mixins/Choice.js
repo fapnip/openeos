@@ -23,7 +23,7 @@ export default {
 
         const _doComplete = option => {
           if (optProps.onComplete) {
-            interpreter.queueFunction(optProps.onComplete, interaction, option)
+            interpreter.queueFunction(optProps.onComplete, pseudoItem, option)
             interpreter.run()
           }
         }
@@ -32,9 +32,10 @@ export default {
         const options = []
 
         for (const k of Object.keys(origOptions)) {
-          const option = interpreter.pseudoToNative(origOptions[k])
-          option._index = parseInt(k, 10)
           const o = origOptions[k].properties
+          const option = interpreter.pseudoToNative(origOptions[k])
+          option.label = this.sanitizeHtml(o.label)
+          option._index = parseInt(k, 10)
           if (!Object.prototype.hasOwnProperty.call(o, 'visible'))
             option.visible = true
           this.setReactive(option, ['label', 'visible', 'color', 'keep'])
@@ -59,10 +60,21 @@ export default {
             interaction.setInactive()
             if (optProps.onContinue) {
               console.log('Doing choice onContinue')
-              interpreter.queueFunction(optProps.onContinue, interaction)
+              interpreter.queueFunction(optProps.onContinue, pseudoItem)
               interpreter.run()
             }
             _doComplete()
+          }
+        }
+        interaction.ready = el => {
+          interaction._o_el = el
+          if (optProps.ready) {
+            interpreter.queueFunction(
+              optProps.ready,
+              pseudoItem,
+              this.getHTMLElementPseudo(el, true)
+            )
+            interpreter.run()
           }
         }
         this.$set(interaction, 'selectedOption', null)
@@ -113,6 +125,10 @@ export default {
         }
         return opt
       }
+
+      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+        return vue.getHTMLElementPseudo(this._item._o_el, true)
+      })
 
       interpreter.setNativeFunctionPrototype(manager, 'get', function(i) {
         const option = getOptionByIndex(this._item, i)

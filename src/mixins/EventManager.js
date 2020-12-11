@@ -14,11 +14,41 @@ function getTypeListeners(target, type) {
   return typeListeners
 }
 
+const cloneableProperties = {
+  isTrusted: true,
+  eventPhase: true,
+  altKey: true,
+  button: true,
+  buttons: true,
+  clientX: true,
+  clientY: true,
+  ctrlKey: true,
+  metaKey: true,
+  movementX: true,
+  movementY: true,
+  offsetX: true,
+  pageX: true,
+  pageY: true,
+  screenX: true,
+  screenY: true,
+  shiftKey: true,
+  animationName: true,
+  elapsedTime: true,
+  pseudoElement: true,
+  code: true,
+  isComposing: true,
+  key: true,
+  location: true,
+  repeat: true,
+}
+
 export default {
   data: () => ({}),
   methods: {
     hasEventListeners(target, type) {
-      return getTypeListeners(target, type).size > 0
+      return (
+        getTypeListeners(target, type).size > 0 || target['__evt_on' + name]
+      )
     },
     installEventManager(interpreter, globalObject) {
       const NONENUMERABLE_DESCRIPTOR = this.Interpreter.NONENUMERABLE_DESCRIPTOR
@@ -59,6 +89,7 @@ export default {
         eventFunc,
         'preventDefault',
         function() {
+          this._defaultPrevented = true
           interpreter.setProperty(this, 'defaultPrevented ', true)
         }
       )
@@ -84,9 +115,18 @@ export default {
         const type = interpreter.getProperty(event, 'type')
         const listeners = getTypeListeners(_this, type).entries()
 
+        const onFunc = _this['__evt_on' + type]
+        let didOn = !onFunc
+
         const callChain = listeners => {
-          const listener = listeners.next()
-          if (!listener.done && !event._stopImmediatePropagation) {
+          let listener
+          if (!didOn) {
+            listener = [onFunc, {}]
+            didOn = true
+          } else {
+            listener = listeners.next()
+          }
+          if (listener && !listener.done && !event._stopImmediatePropagation) {
             const listenerFunc = listener.value[0]
             const listenerOpts = listener.value[1]
             return interpreter
@@ -103,7 +143,7 @@ export default {
                 return callChain(listeners)
               })
           }
-          return !interpreter.getProperty(event, 'defaultPrevented')
+          return !event._defaultPrevented
         }
         return callChain(listeners)
       }
@@ -152,37 +192,40 @@ export default {
       interpreter.setProperty(event, 'timeStamp', timeStamp)
       return event
     },
-    handleOeosClick(e, oeosCallbackJs, value, target) {
-      console.log('handleOeosClick', e, oeosCallbackJs)
-      target = target || this.pagesInstance()
+    buildElementEvent(target, e) {
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
       const interpreter = this.interpreter
-      const oeosCallbackFunc = interpreter.getProperty(
-        interpreter.globalObject,
-        oeosCallbackJs
+      const eventFunc = interpreter.globalObject.properties['Event'] // TODO: build real event classes
+      const event = interpreter.createObjectProto(
+        eventFunc.properties['prototype']
       )
-      if (!oeosCallbackFunc) {
-        console.error(
-          'Invalid global oeos-click callback function: ',
-          oeosCallbackFunc
-        )
-        return
+      for (const [key, value] of Object.entries(e)) {
+        const cloneMode = cloneableProperties[key]
+        if (cloneMode === true) {
+          interpreter.setProperty(event, key, value)
+        } else if (cloneMode === 1) {
+          interpreter.setProperty(event, key, interpreter.nativeToPseudo(value))
+        }
       }
-      const event = this.buildEventObject({
-        target: target,
-        type: 'oeos-click',
-        value: {
+      interpreter.setProperty(event, 'type', e.type)
+      interpreter.setProperty(event, 'cancelable', false)
+      interpreter.setProperty(event, 'target', target)
+      interpreter.setProperty(
+        event,
+        'value',
+        interpreter.nativeToPseudo({
           x: x / e.target.clientWidth, // between 0 and 1, where clicked
           y: y / e.target.clientHeight, // between 0 and 1, where clicked
-          value: value,
-        },
-        timeStamp: e.timeStamp + performance.timing.navigationStart,
-      })
-      interpreter.queueFunction(oeosCallbackFunc, target, event)
-      interpreter.run()
-      return this.handleEventResult(event, e)
+        })
+      )
+      interpreter.setProperty(
+        event,
+        'timeStamp',
+        e.timeStamp + performance.timing.navigationStart
+      )
+      return event
     },
     dispatchEvent(eventObj, originatingEvent) {
       const interpreter = this.interpreter
@@ -203,6 +246,9 @@ export default {
         }
         if (event._stopImmediatePropagation) {
           originatingEvent.stopImmediatePropagation()
+        }
+        if (event._defaultPrevented) {
+          originatingEvent.preventDefault()
         }
       }
       return event
