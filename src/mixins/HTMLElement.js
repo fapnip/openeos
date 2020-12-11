@@ -84,8 +84,7 @@ export default {
         'parentNode',
       ].forEach(name => {
         if (this._isRoot && name.match(/^parent/)) {
-          console.error(`Cannot perform ${name} on root node.`)
-          return
+          return null
         }
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
