@@ -46,7 +46,7 @@ export default {
       proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'HTMLElement', manager)
 
-      const _getHTMLElementPseudo = els => {
+      const _getHTMLElementsPseudo = els => {
         const result = []
         for (const el of els) {
           result.push(this.getHTMLElementPseudo(el))
@@ -68,7 +68,7 @@ export default {
         interpreter.setProperty(proto, name, undefined)
 
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return _getHTMLElementPseudo(this._o_el[name])
+          return _getHTMLElementsPseudo(this._o_el[name])
         })
       })
 
@@ -83,7 +83,7 @@ export default {
         'parentElement',
         'parentNode',
       ].forEach(name => {
-        if (this._isRoot && name.match(/^parent/)) {
+        if (this._isRoot && name.match(/(^parent|Sibling$)/)) {
           return null
         }
         interpreter.setProperty(proto, name, undefined)
@@ -197,7 +197,7 @@ export default {
         'querySelectorAll',
       ].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(opt) {
-          return _getHTMLElementPseudo(this._o_el[fnName](opt))
+          return _getHTMLElementsPseudo(this._o_el[fnName](opt))
         })
       })
 
