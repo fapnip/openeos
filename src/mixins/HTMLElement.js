@@ -115,6 +115,11 @@ export default {
           return this._o_el[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(html) {
+          if (this._o_el.tagName === 'SCRIPT') {
+            console.error('Modification of SCRIPT node blocked.')
+            return
+            // html = this.sanitizeStyle(html)
+          }
           if (this._o_el.tagName === 'STYLE') {
             html = this.sanitizeStyle(html)
           }
