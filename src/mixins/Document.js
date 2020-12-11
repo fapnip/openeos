@@ -32,8 +32,8 @@ export default {
               "Sorry.  You can't make " + el.tagName + '.'
             )
           }
-          console.log('Creating...', el)
-          console.dir(el)
+          // console.log('Creating...', el)
+          // console.dir(el)
           return vue.getHTMLElementPseudo(vue.sanitizeHtml(el))
         })
       })
