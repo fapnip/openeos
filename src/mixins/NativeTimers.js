@@ -7,8 +7,29 @@ let intervalCounter = 0
 const frames = {}
 let frameCounter = 0
 
+function cancelAll(timers, fn) {
+  const keys = Object.keys(timers)
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const key = keys[i]
+    fn(timers[key])
+    delete timers[key]
+  }
+}
+
 export default {
   data: () => ({}),
+  beforeUnmount() {
+    cancelAll(timeouts, t => {
+      clearTimeout(t)
+    })
+    cancelAll(intervals, t => {
+      clearInterval(t)
+    })
+    cancelAll(frames, t => {
+      cancelAnimationFrame(t)
+    })
+  },
+
   methods: {
     installNativeTimers(interpreter, globalObject) {
       const runFunction = (fn, _this) => {
