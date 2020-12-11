@@ -6,18 +6,18 @@ export default {
   methods: {
     getHTMLElementPseudo(el, isRoot) {
       if (!el) return
-      let oeoselement = elements.get(el)
-      if (!oeoselement) {
-        oeoselement = this.interpreter.createObjectProto(proto)
-        oeoselement._o_el = el
-        elements.set(el, oeoselement)
-        oeoselement._isRoot = isRoot
+      let pseudo = elements.get(el)
+      if (!pseudo) {
+        pseudo = this.interpreter.createObjectProto(proto)
+        pseudo._o_el = el
+        elements.set(el, pseudo)
+        pseudo._isRoot = isRoot
         // Hook event dispatch
         el.__o_dispatchEvent = el.__o_dispatchEvent || el.dispatchEvent
         el.dispatchEvent = function(e) {
-          if (this.hasEventListeners(oeoselement, e.type)) {
+          if (this.hasEventListeners(pseudo, e.type)) {
             // Dispatch pseudo events, if any
-            const pseudoEvent = this.buildElementEvent(oeoselement, e)
+            const pseudoEvent = this.buildElementEvent(pseudo, e)
             this.dispatchEvent(pseudoEvent, e)
             if (pseudoEvent._stopImmediatePropagation) {
               // Stop Immediate?
@@ -28,7 +28,7 @@ export default {
           return el.__o_dispatchEvent.call(this, e)
         }
       }
-      return oeoselement
+      return pseudo
     },
     installHTMLElement(interpreter, globalObject) {
       const vue = this
