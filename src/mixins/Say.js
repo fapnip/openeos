@@ -12,7 +12,7 @@ function getWaitMode(interpreter, opt) {
         case 'prompt':
           return 'instant'
         case 'say':
-          return 'autoplay'
+          return 'pause'
         case 'timer':
           return nextCommand.isAsync ? 'instant' : 'pause'
         default:
