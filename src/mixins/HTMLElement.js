@@ -141,7 +141,7 @@ export default {
       ;['style'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return this._o_el[name]
+          return vue.getCSSStyleDeclarationPseudo(this._o_el[name])
         })
         proto.setter[name] = interpreter.createNativeFunction(function(style) {
           this._o_el[name] = this.sanitizeStyle(style)

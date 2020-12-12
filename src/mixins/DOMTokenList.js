@@ -7,13 +7,13 @@ export default {
     getDOMTokenListProto() {
       return proto
     },
-    getDOMTokenListPseudo(tl) {
-      if (!tl) return
-      let pseudo = elements.get(tl)
+    getDOMTokenListPseudo(native) {
+      if (!native) return
+      let pseudo = elements.get(native)
       if (!pseudo) {
         pseudo = this.interpreter.createObjectProto(proto)
-        pseudo._o_tl = tl
-        elements.set(tl, pseudo)
+        pseudo._o_tl = native
+        elements.set(native, pseudo)
       }
       return pseudo
     },

@@ -151,9 +151,6 @@ import Script from '../mixins/Script'
 import Locator from '../mixins/Locator'
 import Preload from '../mixins/Preload'
 import Console from '../mixins/Console'
-import EventManager from '../mixins/EventManager'
-import DOMTokenList from '../mixins/DOMTokenList'
-import HTMLElement from '../mixins/HTMLElement'
 import Document from '../mixins/Document'
 import NativeTimers from '../mixins/NativeTimers'
 import PageManager from '../mixins/PageManager'
@@ -216,9 +213,6 @@ export default {
     Locator,
     Preload,
     Console,
-    EventManager,
-    DOMTokenList,
-    HTMLElement,
     Document,
     NativeTimers,
     PageManager,
@@ -273,9 +267,7 @@ export default {
       this.installNativeTimers(interpreter, globalObject)
       // interpreter.appendCode(PromisePoly)
       interpreter.run()
-      this.installEventManager(interpreter, globalObject)
-      this.installDOMTokenList(interpreter, globalObject)
-      this.installHTMLElement(interpreter, globalObject)
+
       this.installDocument(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
       this.installImage(interpreter, globalObject)

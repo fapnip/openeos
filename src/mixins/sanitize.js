@@ -11,14 +11,11 @@ export default {
           const att = atts[i]
           if (att.name.match(/^(style)$/i)) {
             att.value = this.sanitizeStyle(att.value)
-          }
-          if (att.name.match(/^(src)$/i)) {
+          } else if (att.name.match(/^(src)$/i)) {
             att.value = this.sanitizeSrc(att.value)
-          }
-          if (att.name.match(/^(srcset)$/i)) {
+          } else if (att.name.match(/^(srcset)$/i)) {
             att.value = this.sanitizeSrcSet(att.value)
-          }
-          if (
+          } else if (
             att.name.match(
               /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap)$/i
             )
