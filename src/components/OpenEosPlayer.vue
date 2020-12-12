@@ -481,12 +481,15 @@ export default {
 .oeos-blink-button {
   position: absolute;
   right: 5px;
-  bottom: 3px;
+  bottom: 4px;
 }
 .oeos-start-button {
   text-align: center;
   margin-left: auto;
   margin-right: auto;
+}
+.oeos-text-standard {
+  font-size: 1rem;
 }
 
 @keyframes fadeinout {

@@ -10,7 +10,6 @@
         <v-btn
           v-show="optionVisible(option)"
           :key="option.label + ':' + i"
-          small
           :color="option.color"
           class="custom-transform-class text-none mx-1"
           @click.stop="optionSelect(option)"
@@ -26,7 +25,7 @@
     align="center"
     class="oeos-choices text-center"
   >
-    <v-btn class="custom-transform-class text-none" small disabled>
+    <v-btn class="custom-transform-class text-none" disabled>
       <span v-html="selectedOption.label"></span
     ></v-btn>
   </v-row>
@@ -36,7 +35,7 @@
     align="center"
     class="oeos-choices text-center"
   >
-    <v-btn small disabled> <span> ... </span></v-btn>
+    <v-btn disabled> <span> ... </span></v-btn>
   </v-row>
 </template>
 
