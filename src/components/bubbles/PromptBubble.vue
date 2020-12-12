@@ -12,7 +12,7 @@
       @keydown.enter="onInput"
     ></v-text-field>
     <v-row v-else-if="enteredValue" align="center">
-      <v-btn small disabled>
+      <v-btn class="custom-transform-class text-none" disabled>
         <span>{{ enteredValue }}</span></v-btn
       >
     </v-row>
