@@ -34,9 +34,12 @@ function compileCommandsToArray(commands) {
   const script = []
   commands = commands.slice()
   for (let i = 0; i < commands.length; i++) {
+    const nextIsPromptVal = `_nextIsPrompt = ${JSON.stringify(
+      nextIsPrompt(commands, i)
+    )} || ${!commands[i + 1] ? `_nextIsPrompt` : `false`};`
     const command = compileCommand(commands[i], i, commands)
     if (typeof command === 'string' && command !== '') {
-      script.push(`function(continueFns){${command}}`)
+      script.push(`function(continueFns){${nextIsPromptVal} ${command}}`)
     }
   }
   return `[${script.join(`,`)}]`
@@ -50,6 +53,15 @@ function compileCommand(command, index, commands) {
     throw new TypeError('Unknown command: ' + commandType)
   }
   return cfn(command[commandType], index, commands)
+}
+
+const interactiveCommands = { choice: true, prompt: true, timer: true }
+
+function nextIsPrompt(cl, i) {
+  const nextCommand = cl[i + 1] || { none: {} }
+  const nextCommandType = Object.keys(nextCommand)[0]
+  const nextCommandObj = nextCommand[nextCommandType]
+  return interactiveCommands[nextCommandType] && !nextCommandObj.isAsync
 }
 
 const commandList = {
@@ -74,13 +86,9 @@ const commandList = {
   return false;
   `,
   say: (c, i, cl) => {
-    const nextCommand = cl[i + 1] || { none: {} }
-    const nextCommandType = Object.keys(nextCommand)[0]
-    const nextCommandObj = nextCommand[nextCommandType]
     return `
     var peekNext = {
-      type: ${JSON.stringify(nextCommandType)},
-      isAsync: ${JSON.stringify(nextCommandObj.isAsync)},
+      isPrompt: _nextIsPrompt,
     };
     var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
     new Say({

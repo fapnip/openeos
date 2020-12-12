@@ -4,19 +4,10 @@ let idCounter = 0
 
 function getWaitMode(interpreter, opt) {
   const nativeOpt = interpreter.pseudoToNative(opt)
-  const nextCommand = nativeOpt.nextCommand || { type: 'none' }
+  const nextCommand = nativeOpt.nextCommand || { isPrompt: false }
   switch (nativeOpt.mode || 'auto') {
     case 'auto':
-      switch (nextCommand.type) {
-        case 'timer':
-        case 'choice':
-        case 'prompt':
-          return 'instant'
-        case 'say':
-          return 'pause'
-        default:
-          return 'pause'
-      }
+      return nextCommand.isPrompt ? 'instant' : 'pause'
     default:
       return nativeOpt.mode || 'instant'
   }

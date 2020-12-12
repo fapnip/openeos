@@ -4,6 +4,8 @@
 var _navId = pages._getNavId()
 // eslint-disable-next-line no-unused-vars
 var _globalEval = eval
+// eslint-disable-next-line no-unused-vars
+var _nextIsPrompt = false
 
 // eslint-disable-next-line no-unused-vars
 var _doCommandFns = function(commandFns, continueFns, continueFns2) {
