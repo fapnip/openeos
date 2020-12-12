@@ -82,9 +82,9 @@ export default {
     },
     formattedTimeLeft() {
       if (this.isSecret) return '?'
-      const timeLeft = this.timeLeft / 1000
+      const timeLeft = Math.ceil(this.timeLeft / 1000)
       const minutes = Math.floor(timeLeft / 60)
-      let seconds = Math.ceil(timeLeft % 60)
+      let seconds = Math.floor(timeLeft % 60)
       if (seconds < 0) seconds = 0
       if (minutes < 1) {
         return seconds
