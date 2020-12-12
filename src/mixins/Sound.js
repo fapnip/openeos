@@ -72,6 +72,7 @@ export default {
       function _startItem(item) {
         if (!isNaN(volume)) item.sound.volume(volume)
         if (!item.sound.playing()) item.sound.play()
+        item._playing = true
       }
 
       item = this.sounds[options.id]
@@ -102,7 +103,9 @@ export default {
       pseudoItem._item = item
       item.pseudoItem = () => pseudoItem
       item.preloadKey = preloadKey
+      item.file = file
       item.id = options.id
+      this.$set(item, '_playing', false)
       _setItem(item)
 
       let sound
@@ -111,6 +114,7 @@ export default {
         if (!item.preloaded) {
           item.preloaded = true
           if (preload) {
+            item._playing = false
             sound.stop()
             this.doAfterPreload(true)
           }
@@ -144,9 +148,11 @@ export default {
         if (item.loop && item.loops > 1) {
           item.loopCount--
           if (!item.loopCount) {
+            item._playing = false
             sound.stop()
           }
         } else if (!item.loop || item.loops === 1) {
+          item._playing = false
           sound.stop()
         }
       })
@@ -171,6 +177,7 @@ export default {
         const item = this.sounds[k]
         if (!item.options.background) {
           item.sound.stop()
+          item._playing = false
           if (item.options.fromPageScript) {
             const pool = this.getSoundPool(item.preloadKey)
             pool.push(item) // Put sound back in pool for later re-use
@@ -248,12 +255,15 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'play', function() {
         this._item.loopCount = this._item.loops
         this._item.sound.play()
+        this._item._playing = true
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
         this._item.sound.pause()
+        this._item._playing = false
       })
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
         this._item.sound.stop()
+        this._item._playing = false
       })
       interpreter.setNativeFunctionPrototype(manager, 'pan', function(pan) {
         this._item.sound.pan(pan)
@@ -328,6 +338,7 @@ export default {
       })
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
         this._item.sound.stop()
+        this._item._playing = false
         const pool = vue.getSoundPool(this._item.preloadKey)
         pool.push(this._item) // Put sound back in pool for later re-use
         delete vue.sounds[this._item.options.id]

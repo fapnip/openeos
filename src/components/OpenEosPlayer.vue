@@ -134,6 +134,15 @@
         <v-icon>mdi-arrow-down-bold</v-icon>
       </v-btn>
     </v-fab-transition>
+    <div id="oeos-active-sounds">
+      <template v-for="(sound, i) in sounds">
+        <data
+          v-if="sound._playing"
+          :key="sound.id + ':' + i"
+          :value="sound.file.locator"
+        ></data>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -336,6 +345,9 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
+}
+#oeos-active-sounds {
+  display: none;
 }
 .oeos-start-title {
   text-align: center;
