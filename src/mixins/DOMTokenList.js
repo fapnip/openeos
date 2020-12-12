@@ -51,7 +51,48 @@ export default {
         })
       })
 
-      // TODO: implement iterable for entries, values, keys, etc.
+      // Return pseudo val from native function
+      ;['toString'].forEach(fnName => {
+        interpreter.setNativeFunctionPrototype(manager, fnName, function() {
+          return this._o_tl.value
+        })
+      })
+
+      // Foreach..
+      interpreter.setNativeFunctionPrototype(manager, 'forEach', function(
+        func,
+        funcThis
+      ) {
+        let i = 0
+        const arr = Array.from(this._o_tl.values())
+        const l = arr.length
+        const pseudoArr = interpreter.nativeToPseudo(arr)
+        const _doForEach = () => {
+          if (i >= l) return
+          return interpreter
+            .callFunction(
+              func,
+              funcThis || this,
+              interpreter.nativeToPseudo(arr[i]),
+              i,
+              pseudoArr
+            )
+            .then(() => {
+              i++
+              return _doForEach()
+            })
+        }
+        return _doForEach()
+      })
+
+      // Return pseudo val from native function
+      ;['values', 'keys'].forEach(fnName => {
+        interpreter.setNativeFunctionPrototype(manager, fnName, function() {
+          return interpreter.nativeToPseudo(Array.from(this._o_tl[fnName]()))
+        })
+      })
+
+      // TODO: entries, add next to JS Interpreter's Array implementation
     },
   },
 }

@@ -163,6 +163,9 @@ export default {
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_el[name]
         })
+        proto.setter[name] = interpreter.createNativeFunction(function() {
+          // read only
+        })
       })
 
       // native getter & setter abstraction
@@ -180,7 +183,7 @@ export default {
       ;['classList'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return interpreter.nativeToPseudo(this._o_el[name])
+          return this.getDOMTokenListPseudo(this._o_el[name])
         })
       })
 
