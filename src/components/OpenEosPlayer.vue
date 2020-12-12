@@ -134,14 +134,14 @@
         <v-icon>mdi-arrow-down-bold</v-icon>
       </v-btn>
     </v-fab-transition>
-    <div id="oeos-active-sounds">
-      <template v-for="(sound, i) in sounds">
-        <data
-          v-if="sound._playing"
-          :key="sound.id + ':' + i"
-          :value="sound.file.locator"
-        ></data>
-      </template>
+    <div id="oeos-sounds">
+      <data
+        v-for="(sound, i) in sounds"
+        :class="{ 'is-active': sound._playing }"
+        :key="sound.id + ':' + i"
+        :value="sound.file.locator"
+        >{{ sound.file.href }}</data
+      >
     </div>
   </div>
 </template>
