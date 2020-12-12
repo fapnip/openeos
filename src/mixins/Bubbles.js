@@ -116,7 +116,7 @@ export default {
             this.scrolling = true
             this.$scrollTo(lastItem, {
               container: oeosBottom,
-              duration: 500,
+              duration: 800,
               onDone: () => {
                 this.scrolling = false
               },
