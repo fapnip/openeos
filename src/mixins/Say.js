@@ -8,13 +8,12 @@ function getWaitMode(interpreter, opt) {
   switch (nativeOpt.mode || 'auto') {
     case 'auto':
       switch (nextCommand.type) {
+        case 'timer':
         case 'choice':
         case 'prompt':
           return 'instant'
         case 'say':
           return 'pause'
-        case 'timer':
-          return nextCommand.isAsync ? 'instant' : 'pause'
         default:
           return 'pause'
       }
