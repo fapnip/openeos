@@ -86,7 +86,7 @@ export default {
       const minutes = Math.floor(timeLeft / 60)
       let seconds = Math.ceil(timeLeft % 60)
       if (seconds < 0) seconds = 0
-      if (this.duration / 1000 < 60) {
+      if (minutes < 1) {
         return seconds
       }
 
