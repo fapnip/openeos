@@ -7,30 +7,24 @@ export default {
   mounted() {
     DOMPurify.addHook('beforeSanitizeAttributes', (node, data, config) => {
       if (node instanceof Element) {
-        if (node.hasAttribute('style')) {
-          node.setAttribute(
-            'style',
-            this.sanitizeStyle(node.getAttribute('style'))
-          )
-        }
-
-        if (node.hasAttribute('src')) {
-          node.setAttribute('src', this.sanitizeSrc(node.getAttribute('src')))
-        }
-
-        if (node.hasAttribute('srcset')) {
-          const srcset = node.getAttribute('srcset').split(',')
-          for (let i = 0, l = srcset.length; i < l; i++) {
-            srcset[i] = this.sanitizeSrc(srcset[i])
+        for (let i = 0, atts = node.attributes, n = atts.length; i < n; i++) {
+          const att = atts[i]
+          if (att.name.match(/^(style)$/i)) {
+            att.value = this.sanitizeStyle(att.value)
           }
-          node.setAttribute('srcset', srcset.join(','))
-        }
-
-        if (node.hasAttribute('href')) {
-          node.setAttribute(
-            'href',
-            this.sanitizeHref(node.getAttribute('href'))
-          )
+          if (att.name.match(/^(src)$/i)) {
+            att.value = this.sanitizeSrc(att.value)
+          }
+          if (att.name.match(/^(srcset)$/i)) {
+            att.value = this.sanitizeSrcSet(att.value)
+          }
+          if (
+            att.name.match(
+              /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap)$/i
+            )
+          ) {
+            att.value = this.sanitizeHref(att.value)
+          }
         }
       }
     })
@@ -54,6 +48,14 @@ export default {
     },
     sanitizeSrc(url) {
       return this.locatorLookup(url).href
+    },
+    sanitizeSrcSet(url) {
+      // TODO: update to work with all srcsets
+      const srcset = url.split(',')
+      for (let i = 0, l = srcset.length; i < l; i++) {
+        srcset[i] = this.sanitizeSrc(srcset[i])
+      }
+      return srcset.join(',')
     },
     sanitizeStyle(style) {
       if (style.match(/@import/i)) {

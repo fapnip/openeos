@@ -217,6 +217,8 @@ export default {
         'scroll',
         'scrollBy',
         'scrollTo',
+        'getAttribute',
+        'hasAttribute',
       ].forEach(name => {
         interpreter.setNativeFunctionPrototype(manager, name, function(
           ...attr
@@ -247,6 +249,38 @@ export default {
           return interpreter.nativeToPseudo(
             this._el[fnName](oeoselement && oeoselement._o_el)
           )
+        })
+      })
+
+      // Act with value and element passed
+      ;['setAttribute'].forEach(fnName => {
+        interpreter.setNativeFunctionPrototype(manager, fnName, function(
+          attributeName,
+          value
+        ) {
+          attributeName = attributeName.trim().toLowerCase()
+          if (attributeName.match(/^(src|background)$/) === 'src') {
+            value = this.sanitizeSrc(value)
+          }
+          if (attributeName === 'srcset') {
+            value = this.sanitizeSrcSet(value)
+          }
+          if (attributeName === 'style') {
+            value = this.sanitizeStyle(value)
+          }
+          if (
+            attributeName.match(
+              /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap)$/
+            )
+          ) {
+            value = this.sanitizeHref(value)
+          }
+          if (attributeName.match(/^on/)) {
+            return
+          }
+          const result = this._o_el[fnName](interpreter.pseudoToNative(value))
+          vue.sanitizeHtml(this._o_el)
+          return interpreter.nativeToPseudo(result)
         })
       })
 
