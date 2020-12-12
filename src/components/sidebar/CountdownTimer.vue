@@ -40,7 +40,7 @@ export default {
     },
     strokeWidth: {
       type: Number,
-      default: 9,
+      default: 8,
     },
     color: {
       type: String,
