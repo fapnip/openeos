@@ -5,7 +5,15 @@
     class="oeos-countdown"
     :style="cssVars"
   >
-    <div class="oeos-countdown-number">{{ formattedTimeLeft }}</div>
+    <svg
+      v-if="!isHidden"
+      :class="{
+        'oeos-countdown-bg': showLine,
+        spin: isSecret,
+      }"
+    >
+      <circle :r="bgRadius" :cx="size / 2" :cy="size / 2"></circle>
+    </svg>
     <svg
       v-if="!isHidden"
       :class="{
@@ -15,6 +23,7 @@
     >
       <circle :r="lineRadius" :cx="size / 2" :cy="size / 2"></circle>
     </svg>
+    <div class="oeos-countdown-number">{{ formattedTimeLeft }}</div>
   </div>
 </template>
 
@@ -27,11 +36,19 @@ export default {
     },
     size: {
       type: Number,
-      default: 100,
+      default: 120,
     },
     strokeWidth: {
       type: Number,
-      default: 7,
+      default: 9,
+    },
+    color: {
+      type: String,
+      default: 'rgba(255, 0, 0, 0.753)',
+    },
+    background: {
+      type: String,
+      default: 'rgba(0, 0, 0, 0.25)',
     },
     loops: {
       type: Number,
@@ -72,10 +89,15 @@ export default {
         '--cd-width': this.size + 'px',
         '--cd-stroke-width': this.strokeWidth + 'px',
         '--cd-stroke-time': this.duration + 'ms',
+        '--cd-stroke-color': this.color,
+        '--cd-bg-color': this.background,
       }
     },
-    lineRadius() {
+    bgRadius() {
       return Math.floor(this.size / 2 - this.strokeWidth)
+    },
+    lineRadius() {
+      return this.bgRadius * 0.85
     },
     dasharray() {
       return Math.floor(2 * Math.PI * this.lineRadius)
@@ -169,11 +191,12 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .oeos-countdown {
   position: relative;
   margin: auto;
-  margin-top: 10px;
+  margin-top: 20px;
+  margin-right: 20px;
   height: var(--cd-width);
   width: var(--cd-width);
   text-align: center;
@@ -185,6 +208,7 @@ export default {
   line-height: var(--cd-width);
 }
 
+.oeos-countdown-bg,
 .oeos-countdown-line {
   position: absolute;
   top: 0;
@@ -192,6 +216,13 @@ export default {
   width: var(--cd-width);
   height: var(--cd-width);
   transform: rotateY(-180deg) rotateZ(-90deg);
+}
+.oeos-countdown-bg circle {
+  // stroke-dasharray: var(--cd-dasharray);
+  // stroke-dashoffset: 0px;
+  // stroke-linecap: round;
+  // stroke-width: var(--cd-stroke-width);
+  fill: var(--cd-bg-color);
 }
 
 .oeos-countdown-line.spin {
@@ -203,7 +234,7 @@ export default {
   stroke-dashoffset: 0px;
   stroke-linecap: round;
   stroke-width: var(--cd-stroke-width);
-  stroke: red;
+  stroke: var(--cd-stroke-color);
   fill: none;
 }
 
