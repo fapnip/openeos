@@ -69,6 +69,7 @@ export default {
       const result = {
         'px-7': true,
         'py-1': true,
+        'grey--text text--lighten-2': true,
       }
       result[`text-${this.align}`] = true
       return result
@@ -146,5 +147,7 @@ export default {
 <style>
 .oeos-say-bubble {
   transition: background-color 0.25s ease;
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 110%;
 }
 </style>

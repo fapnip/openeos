@@ -4,6 +4,7 @@ import vuetify from './plugins/vuetify'
 import '@mdi/font/css/materialdesignicons.css'
 import VueScrollTo from 'vue-scrollto'
 import GlobalEvents from 'vue-global-events'
+import 'typeface-noto-sans'
 
 Vue.config.productionTip = false
 

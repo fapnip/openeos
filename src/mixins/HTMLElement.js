@@ -152,12 +152,8 @@ export default {
       ;[
         'childElementCount',
         'scrollHeight',
-        'scrollLeft',
-        'scrollTop',
         'scrollWidth ',
         'tagName',
-        'id',
-        'className',
         'clientHeight',
         'clientLeft',
         'clientTop',
@@ -170,7 +166,7 @@ export default {
       })
 
       // native getter & setter abstraction
-      ;['className'].forEach(name => {
+      ;['className', 'id', 'scrollLeft', 'scrollTop'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_el[name]

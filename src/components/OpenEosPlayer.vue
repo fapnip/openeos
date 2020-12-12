@@ -472,11 +472,11 @@ export default {
   margin-left: auto;
 }
 .oeos-say-item {
-  max-width: 90%;
+  max-width: 95%;
 }
 .oeos-choice-item {
   margin-bottom: 0px;
-  max-width: 90%;
+  max-width: 95%;
 }
 .oeos-choice-item .v-btn {
   margin-bottom: 6px;
