@@ -17,7 +17,9 @@
       >
     </v-row>
     <v-row v-else align="center">
-      <v-btn small disabled> <span> ... </span></v-btn>
+      <v-btn class="custom-transform-class text-none" disabled>
+        <span> ... </span></v-btn
+      >
     </v-row>
   </v-row>
 </template>
