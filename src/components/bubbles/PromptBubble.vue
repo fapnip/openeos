@@ -7,6 +7,7 @@
       autofocus
       solo
       dense
+      hide-details="auto"
       append-icon="mdi-arrow-right-drop-circle"
       @click:append="onInput"
       @keydown.enter="onInput"
