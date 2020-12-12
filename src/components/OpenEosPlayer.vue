@@ -409,6 +409,9 @@ export default {
   mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   overflow-anchor: none;
 }
+html {
+  overflow: hidden;
+}
 .oeos-bottom::-webkit-scrollbar {
   /* WebKit */
   width: 0;
