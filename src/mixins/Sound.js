@@ -80,7 +80,7 @@ export default {
       if (item) {
         _setItem(item)
         if (!preload) _startItem(item)
-        return item
+        return item.pseudoItem()
       }
 
       const pool = this.getSoundPool(preloadKey)
@@ -93,13 +93,13 @@ export default {
           _setItem(item)
           _startItem(item)
           this.sounds[options.id] = item
-          return item
+          return item.pseudoItem()
         }
       }
 
       const pseudoItem = interpreter.createObjectProto(PROTO)
-      pseudoItem._item = item
       item = {}
+      pseudoItem._item = item
       item.pseudoItem = () => pseudoItem
       item.preloadKey = preloadKey
       item.id = options.id
