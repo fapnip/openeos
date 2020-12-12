@@ -492,7 +492,11 @@ html {
   margin-right: auto;
 }
 .oeos-text-standard {
-  font-size: 1rem;
+  font-size: 1.1rem;
+}
+.theme--dark.v-card > .v-card__text,
+.theme--dark.v-card .v-card__subtitle {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @keyframes fadeinout {

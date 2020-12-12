@@ -1,7 +1,7 @@
 <template>
   <v-card
     ref="rootElement"
-    :color="value.color"
+    :color="value.color || 'black'"
     @click.once="onClick"
     class="oeos-say-bubble"
   >
