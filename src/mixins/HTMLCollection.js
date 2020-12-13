@@ -4,57 +4,42 @@ let proto
 export default {
   data: () => ({}),
   methods: {
-    getDOMTokenListProto() {
+    getHTMLCollectionProto() {
       return proto
     },
-    getDOMTokenListPseudo(native) {
+    getHTMLCollectionPseudo(native) {
       if (!native) return
       let pseudo = elements.get(native)
       if (!pseudo) {
         pseudo = this.interpreter.createObjectProto(proto)
-        pseudo._o_tl = native
+        pseudo._o_el = native
         elements.set(native, pseudo)
       }
       return pseudo
     },
-    installDOMTokenList(interpreter, globalObject) {
-      // const vue = this
+    installHTMLCollection(interpreter, globalObject) {
+      const vue = this
       const constructor = opt => {
         return interpreter.createObjectProto(proto)
       }
       const manager = interpreter.createNativeFunction(constructor, true)
       proto = manager.properties['prototype']
-      interpreter.setProperty(globalObject, 'DOMTokenList', manager)
+      interpreter.setProperty(globalObject, 'HTMLCollection', manager)
 
-      // Values Using getter
-      ;['length', 'value'].forEach(name => {
+      // length
+      ;['length'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return this._o_tl[name]
+          return this._o_el[name]
         })
       })
 
       // Return pseudo val from native function
-      ;[
-        'item',
-        'contains',
-        'add',
-        'remove',
-        'replace',
-        'supports',
-        'toggle',
-      ].forEach(fnName => {
+      ;['item', 'namedItem'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
           ...attr
         ) {
-          return interpreter.nativeToPseudo(this._o_tl[fnName](...attr))
-        })
-      })
-
-      // Return pseudo val from native function
-      ;['toString'].forEach(fnName => {
-        interpreter.setNativeFunctionPrototype(manager, fnName, function() {
-          return this._o_tl.value
+          return vue.getHTMLElementPseudo(this._o_el[fnName](...attr))
         })
       })
 
@@ -64,19 +49,23 @@ export default {
         funcThis
       ) {
         const pseudoArr = interpreter.nativeToPseudo([])
-        const l = this._o_tl.length
+        const l = this._o_el.length
         let i
         for (i = 0; i < l; i++) {
-          pseudoArr.properties[i] = interpreter.nativeToPseudo(
-            this._o_tl.item(i)
-          )
+          pseudoArr.properties[i] = vue.getHTMLElementPseudo(this._o_el.item(i))
           i++
         }
         i = 0
         const _doForEach = () => {
           if (i >= l) return
           return interpreter
-            .callFunction(func, funcThis || this, pseudoArr[i], i, pseudoArr)
+            .callFunction(
+              func,
+              funcThis || this,
+              pseudoArr.properties[i],
+              i,
+              pseudoArr
+            )
             .then(() => {
               i++
               return _doForEach()
@@ -85,14 +74,13 @@ export default {
         return _doForEach()
       })
 
-      // Return pseudo val from native function
-      ;['values', 'keys'].forEach(fnName => {
-        interpreter.setNativeFunctionPrototype(manager, fnName, function() {
-          return interpreter.nativeToPseudo(Array.from(this._o_tl[fnName]()))
+      // Hack to get item via brackets.  Limited to 1000 elements.  Work-around due to interpreter's lack of Proxy
+      for (let i = 0; i < 1000; i++) {
+        interpreter.setProperty(proto, i, undefined)
+        proto.getter[i] = interpreter.createNativeFunction(function() {
+          return vue.getHTMLElementPseudo(this._o_el[i])
         })
-      })
-
-      // TODO: entries, add next to JS Interpreter's Array implementation
+      }
     },
   },
 }

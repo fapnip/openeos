@@ -12,21 +12,7 @@ export default {
         pseudo._o_el = el
         elements.set(el, pseudo)
         pseudo._isRoot = isRoot
-        // Hook event dispatch
-        el.__o_dispatchEvent = el.__o_dispatchEvent || el.dispatchEvent
-        el.dispatchEvent = function(e) {
-          if (this.hasEventListeners(pseudo, e.type)) {
-            // Dispatch pseudo events, if any
-            const pseudoEvent = this.buildElementEvent(pseudo, e)
-            this.dispatchEvent(pseudoEvent, e)
-            if (pseudoEvent._stopImmediatePropagation) {
-              // Stop Immediate?
-              return !pseudoEvent._defaultPrevented
-            }
-          }
-          // Continue on with original native dispatch
-          return el.__o_dispatchEvent.call(this, e)
-        }
+        pseudo._hookNative = true
       }
       return pseudo
     },
@@ -46,16 +32,6 @@ export default {
       proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'HTMLElement', manager)
 
-      const _getHTMLElementsPseudo = els => {
-        const result = interpreter.nativeToPseudo([])
-        let i = 0
-        for (const el of els) {
-          result.properties[i] = this.getHTMLElementPseudo(el)
-          i++
-        }
-        return result
-      }
-
       // DOMTokenList Using getter
       ;['classList'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
@@ -70,7 +46,7 @@ export default {
         interpreter.setProperty(proto, name, undefined)
 
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return _getHTMLElementsPseudo(this._o_el[name])
+          return vue.getHTMLCollectionPseudo(this._o_el[name])
         })
       })
 
@@ -101,13 +77,13 @@ export default {
           return this._o_el[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(href) {
-          this._o_el[name] = this.sanitizeSrc(href)
+          this._o_el[name] = vue.sanitizeSrc(href)
         })
       })
 
       // html
-      ;['innerHtml', 'innerText', 'outerHtml', 'textContent'].forEach(name => {
-        if (this._isRoot && name.match(/^outerHtml/)) {
+      ;['innerHTML', 'innerText', 'outerHTML', 'textContent'].forEach(name => {
+        if (this._isRoot && name.match(/^outer/)) {
           console.error(`Cannot perform ${name} on root node.`)
           return
         }
@@ -119,12 +95,12 @@ export default {
           if (this._o_el.tagName === 'SCRIPT') {
             console.error('Modification of SCRIPT node blocked.')
             return
-            // html = this.sanitizeStyle(html)
           }
           if (this._o_el.tagName === 'STYLE') {
-            html = this.sanitizeStyle(html)
+            html = vue.sanitizeStyle(html)
           }
-          this._o_el[name] = this.sanitizeHtml(html)
+          this._o_el[name] = vue.sanitizeHtml(html)
+          console.log('Set', name, this._o_el[name])
         })
       })
 
@@ -135,7 +111,7 @@ export default {
           return this._o_el[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(src) {
-          this._o_el[name] = this.sanitizeSrc(src)
+          this._o_el[name] = vue.sanitizeSrc(src)
         })
       })
 
@@ -146,7 +122,7 @@ export default {
           return vue.getCSSStyleDeclarationPseudo(this._o_el[name])
         })
         proto.setter[name] = interpreter.createNativeFunction(function(style) {
-          this._o_el[name] = this.sanitizeStyle(style)
+          this._o_el[name] = vue.sanitizeStyle(style)
         })
       })
 
@@ -185,7 +161,7 @@ export default {
       ;['classList'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
-          return this.getDOMTokenListPseudo(this._o_el[name])
+          return vue.getDOMTokenListPseudo(this._o_el[name])
         })
       })
 
@@ -200,7 +176,7 @@ export default {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
           ...attr
         ) {
-          return _getHTMLElementsPseudo(this._o_el[fnName](...attr))
+          return vue.getHTMLCollectionPseudo(this._o_el[fnName](...attr))
         })
       })
 
@@ -219,7 +195,6 @@ export default {
       ;[
         'getBoundingClientRect',
         'getClientRects',
-        'remove',
         'matches',
         'scroll',
         'scrollBy',
@@ -230,10 +205,6 @@ export default {
         interpreter.setNativeFunctionPrototype(manager, name, function(
           ...attr
         ) {
-          if (this._isRoot && name.match(/^remove/)) {
-            console.error(`Cannot perform ${name} on root node.`)
-            return
-          }
           return interpreter.nativeToPseudo(this._o_el[name](...attr))
         })
       })
@@ -241,21 +212,31 @@ export default {
       // Act with element passed
       ;[
         'appendChild',
+        'remove',
         'removeChild',
         'replaceChild',
         'insertBefore',
-        'contains',
       ].forEach(fnName => {
-        if (this._isRoot && name.match(/^insertBefore/)) {
-          console.error(`Cannot perform ${name} on root node.`)
+        if (this._isRoot && fnName.match(/^(insertBefore|remove)/)) {
+          console.error(`Cannot perform ${fnName} on root node.`)
           return
         }
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
-          oeoselement
+          pseudoEl
         ) {
-          return interpreter.nativeToPseudo(
-            this._el[fnName](oeoselement && oeoselement._o_el)
-          )
+          console.log('Doing:', fnName, this)
+          if (pseudoEl)
+            return vue.getHTMLElementPseudo(this._o_el[fnName](pseudoEl._o_el))
+          return vue.getHTMLElementPseudo(this._o_el[fnName]())
+        })
+      })
+
+      // Act with element passed
+      ;['contains'].forEach(fnName => {
+        interpreter.setNativeFunctionPrototype(manager, fnName, function(
+          pseudoEl
+        ) {
+          return this._o_el[fnName](pseudoEl._o_el)
         })
       })
 
@@ -267,20 +248,20 @@ export default {
         ) {
           attributeName = attributeName.trim().toLowerCase()
           if (attributeName.match(/^(src|background)$/) === 'src') {
-            value = this.sanitizeSrc(value)
+            value = vue.sanitizeSrc(value)
           }
           if (attributeName === 'srcset') {
-            value = this.sanitizeSrcSet(value)
+            value = vue.sanitizeSrcSet(value)
           }
           if (attributeName === 'style') {
-            value = this.sanitizeStyle(value)
+            value = vue.sanitizeStyle(value)
           }
           if (
             attributeName.match(
               /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap)$/
             )
           ) {
-            value = this.sanitizeHref(value)
+            value = vue.sanitizeHref(value)
           }
           if (attributeName.match(/^on/)) {
             return
@@ -295,11 +276,9 @@ export default {
       ;['insertAdjacentElement'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
           val,
-          oeoselement
+          pseudoEl
         ) {
-          return interpreter.nativeToPseudo(
-            this._o_el[fnName](val, oeoselement && oeoselement._o_el)
-          )
+          this._o_el[fnName](val, pseudoEl && pseudoEl._o_el)
         })
       })
 
@@ -313,29 +292,38 @@ export default {
         'mouseup',
         'mouseenter',
         'mouseleave',
-        'mousemove',
+        // 'mousemove',
         'mouseout',
         'mouseover',
-        'mouseup',
-        'scroll',
-        'select',
-        'transitioncancel',
-        'transitionend',
-        'transitionstart',
-        'transitionrun',
-        'blur',
-        'focus',
+        // 'mouseup',
+        // 'scroll',
+        // 'select',
+        // 'transitioncancel',
+        // 'transitionend',
+        // 'transitionstart',
+        // 'transitionrun',
+        // 'blur',
+        // 'focus',
       ].forEach(name => {
         interpreter.setProperty(proto, 'on' + name, undefined)
-        proto.getter[name] = interpreter.createNativeFunction(function() {
-          return this['__evt_on' + name]
-        })
-        proto.setter[name] = interpreter.createNativeFunction(function(func) {
+        proto.getter['on' + name] = interpreter.createNativeFunction(
+          function() {
+            return this['__evt_on' + name]
+          }
+        )
+        proto.setter['on' + name] = interpreter.createNativeFunction(function(
+          func
+        ) {
           if (!func || !func.class === 'Function') {
             this['__evt_on' + name] = undefined
-            return
+          } else {
+            this['__evt_on' + name] = { value: [func, {}] }
           }
-          this['__evt_on' + name] = func
+          const addEventListenerFunc = interpreter.getProperty(
+            this,
+            'addEventListener'
+          )
+          return interpreter.callFunction(addEventListenerFunc, this, name)
         })
       })
     },

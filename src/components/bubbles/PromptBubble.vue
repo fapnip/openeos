@@ -4,6 +4,7 @@
       v-if="active"
       v-model="inputValue"
       ref="input"
+      class="oeos-clickable"
       autofocus
       solo
       dense
@@ -18,7 +19,7 @@
       >
     </v-row>
     <v-row v-else align="center">
-      <v-btn class="custom-transform-class text-none" disabled>
+      <v-btn class="oeos-clickable custom-transform-class text-none" disabled>
         <span> ... </span></v-btn
       >
     </v-row>

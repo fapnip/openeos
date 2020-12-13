@@ -28,14 +28,23 @@
       }"
     >
       <div class="oeos-image">
-        <img
-          ref="mainImage"
-          :src="image && image.href"
-          crossOrigin="anonymous"
-          @click="imageClick"
-          @load="imageLoad"
-          @error="imageError"
-        />
+        <div class="oeos-wrapper">
+          <img
+            ref="mainImage"
+            :src="image && image.href"
+            crossOrigin="anonymous"
+            class="oeos-clickable"
+            @click="imageClick"
+            @load="imageLoad"
+            @error="imageError"
+          />
+          <overlay-item
+            v-for="overlay in imageOverlays"
+            :key="overlay.id"
+            :id="overlay.id"
+            @ready="overlay.ready"
+          ></overlay-item>
+        </div>
       </div>
     </div>
     <div
@@ -143,6 +152,12 @@
         >{{ sound.file.href }}</data
       >
     </div>
+    <overlay-item
+      v-for="overlay in pageOverlays"
+      :key="overlay.id"
+      :id="overlay.id"
+      @ready="overlay.ready"
+    ></overlay-item>
   </div>
 </template>
 
@@ -150,6 +165,7 @@
 import Interpreter from '../interpreter'
 const interpreter = new Interpreter('')
 interpreter.REGEXP_MODE = 1
+import extractStyles from '../util/extractStyles'
 
 // Module Mixins
 import sanitize from '../mixins/sanitize'
@@ -163,6 +179,7 @@ import Console from '../mixins/Console'
 import Document from '../mixins/Document'
 import NativeTimers from '../mixins/NativeTimers'
 import PageManager from '../mixins/PageManager'
+import Overlay from '../mixins/Overlay'
 import FileManager from '../mixins/FileManager'
 import Timer from '../mixins/Timer'
 import Say from '../mixins/Say'
@@ -175,6 +192,7 @@ import Storage from '../mixins/Storage'
 // Components
 import Loading from './common/Loading'
 import VueSwitch from './common/VueSwitch'
+import OverlayItem from './common/OverlayItem'
 import CountdownTimer from './sidebar/CountdownTimer'
 import NotificationItem from './sidebar/NotificationItem'
 import SayBubble from './bubbles/SayBubble'
@@ -189,6 +207,7 @@ export default {
   components: {
     Loading,
     VueSwitch,
+    OverlayItem,
     CountdownTimer,
     NotificationItem,
     SayBubble,
@@ -225,6 +244,7 @@ export default {
     Document,
     NativeTimers,
     PageManager,
+    Overlay,
     FileManager,
     Timer,
     Say,
@@ -279,6 +299,7 @@ export default {
 
       this.installDocument(interpreter, globalObject)
       this.installPageManager(interpreter, globalObject)
+      this.installOverlay(interpreter, globalObject)
       this.installImage(interpreter, globalObject)
       this.installFileManager(interpreter, globalObject)
       this.installTimer(interpreter, globalObject)
@@ -302,6 +323,8 @@ export default {
         interpreter.globalObject
       )
       this.setScript(this.script)
+      const style = extractStyles(this.getInitScript())
+      this.addStyles(Object.keys(style.styles))
       interpreter.run()
       this.loadingText = 'Loading Script...'
       interpreter.appendCode(this.getInitScript())
@@ -420,6 +443,10 @@ export default {
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   overflow-anchor: none;
+  pointer-events: none;
+}
+.oeos-clickable {
+  pointer-events: auto;
 }
 html {
   overflow: hidden;
@@ -442,6 +469,16 @@ html {
   box-sizing: border-box;
   user-select: none;
   /* padding: 5px; */
+}
+.oeos-image .oeos-wrapper {
+  position: relative;
+  display: block;
+  object-fit: contain;
+  object-position: 50% 50%;
+  height: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  user-select: none;
 }
 .oeos-image img {
   display: block;

@@ -39,6 +39,7 @@ export default {
         pageScript = pageCompiler(page)
         pageScripts[pageId] = pageScript
         console.log(`/* Page Script: ${pageId} */`, pageScript.script)
+        this.addStyles(Object.keys(pageScript.styles))
       }
       return pageScript
     },

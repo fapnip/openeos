@@ -4,17 +4,20 @@
  */
 import pageCompilerUtil from '!!raw-loader!../interpreter/code/pageCompilerUtil.js'
 import { decodeHTML } from 'entities'
+import extractStyles from './extractStyles'
 
 const parser = new DOMParser()
 
 let images = {}
 let sounds = []
 let targets = {}
+let styles = {}
 
 export default function pageCompiler(page) {
   images = {}
   sounds = []
   targets = {}
+  styles = {}
   return {
     script: `
     if (!pages._getNavQueued()) (function(continueFns){
@@ -23,9 +26,10 @@ export default function pageCompiler(page) {
       _doCommandFns(${compileCommandsToArray(page)}, continueFns, []);
     })([])
     `,
-    images: images,
-    sounds: sounds,
-    targets: targets,
+    images,
+    sounds,
+    targets,
+    styles,
   }
 }
 
@@ -81,10 +85,14 @@ const commandList = {
     return true;
     `
   },
-  eval: c => `
-  ${isolate(c.script)}
-  return false;
-  `,
+  eval: c => {
+    const style = extractStyles(c.script)
+    Object.assign(styles, style.styles)
+    return `
+    ${isolate(c.script)}
+    return false;
+    `
+  },
   say: (c, i, cl) => {
     return `
     var peekNext = {

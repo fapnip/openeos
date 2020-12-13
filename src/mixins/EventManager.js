@@ -47,12 +47,12 @@ export default {
   methods: {
     hasEventListeners(target, type) {
       return (
-        getTypeListeners(target, type).size > 0 || target['__evt_on' + name]
+        getTypeListeners(target, type).size > 0 || target['__evt_on' + type]
       )
     },
     installEventManager(interpreter, globalObject) {
       const NONENUMERABLE_DESCRIPTOR = this.Interpreter.NONENUMERABLE_DESCRIPTOR
-
+      const vue = this
       eventTarget = interpreter.createNativeFunction(() => {}, true)
       const eventTargetProto = interpreter.getProperty(eventTarget, 'prototype')
       interpreter.setProperty(globalObject, 'EventTarget', eventTarget)
@@ -96,12 +96,37 @@ export default {
 
       function addEventListener(type, listener, options) {
         const listeners = getTypeListeners(this, type)
-        listeners.set(listener, options || {})
+        const _this = this
+        if (listener) listeners.set(listener, options || {})
+        if (this._hookNative && this._o_el) {
+          const nativeFnType = '_hookNativeFn_' + type
+          if (!this[nativeFnType]) {
+            this[nativeFnType] = e => {
+              const pseudoEvent = vue.buildElementEvent(_this, e)
+              if (vue.hasEventListeners(_this, e.type)) {
+                // Dispatch pseudo events, if any
+                console.log('Dispatching event', pseudoEvent, e)
+                vue.dispatchPseudoEvent(pseudoEvent, _this, e)
+              }
+            }
+          }
+          if (vue.hasEventListeners(this, type)) {
+            this._o_el.addEventListener(type, this[nativeFnType])
+          } else {
+            this._o_el.removeEventListener(type, this[nativeFnType])
+          }
+        }
       }
 
       function removeEventListener(type, listener) {
         const listeners = getTypeListeners(this, type)
         listeners.delete(listener)
+        if (this._hookNative && this._o_el) {
+          const nativeFnType = '_hookNativeFn_' + type
+          if (this[nativeFnType] && !vue.hasEventListeners(this, type)) {
+            this._o_el.removeEventListener(type, this[nativeFnType])
+          }
+        }
       }
 
       function dispatchEvent(event) {
@@ -121,7 +146,7 @@ export default {
         const callChain = listeners => {
           let listener
           if (!didOn) {
-            listener = [onFunc, {}]
+            listener = onFunc
             didOn = true
           } else {
             listener = listeners.next()
@@ -129,6 +154,7 @@ export default {
           if (listener && !listener.done && !event._stopImmediatePropagation) {
             const listenerFunc = listener.value[0]
             const listenerOpts = listener.value[1]
+            console.log('Calling', listenerFunc)
             return interpreter
               .callFunction(listenerFunc, _this, event)
               .then(() => {
@@ -231,13 +257,18 @@ export default {
       const interpreter = this.interpreter
       const target = eventObj.target
       if (!interpreter.isa(target, eventTarget)) {
+        console.log('Bad Target', target, eventObj)
         throw new TypeError('tried to dispatch an event on a non-EventTarget')
       }
       const event = this.buildEventObject(eventObj)
+      return this.dispatchPseudoEvent(event, target, originatingEvent)
+    },
+    dispatchPseudoEvent(pseudoEvent, target, originatingEvent) {
+      const interpreter = this.interpreter
       const dispatchFunc = interpreter.getProperty(target, 'dispatchEvent')
-      interpreter.queueFunction(dispatchFunc, target, event)
+      interpreter.queueFunction(dispatchFunc, target, pseudoEvent)
       interpreter.run()
-      return this.handleEventResult(event, originatingEvent)
+      return this.handleEventResult(pseudoEvent, originatingEvent)
     },
     handleEventResult(event, originatingEvent) {
       if (originatingEvent) {

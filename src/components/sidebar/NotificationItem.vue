@@ -3,7 +3,10 @@
     ref="rootElement"
     style="background-color: rgba(30,30,30,0.50); min-width: 100px;  text-align: center; margin-bottom: 5px"
   >
-    <v-card-text ref="labelHtml" class="oeos-text-standard oeos-nt pa-1 ma-0">
+    <v-card-text
+      ref="labelHtml"
+      class="oeos-clickable oeos-text-standard oeos-nt pa-1 ma-0"
+    >
       <div v-if="title" class="oeos-nt-title" v-html="filteredTitle"></div>
       <div v-if="buttonLabel" class="oeos-nt-button">
         <v-btn

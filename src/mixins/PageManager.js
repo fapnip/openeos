@@ -10,6 +10,7 @@ const preloadedPage = {}
 let lastGetPageId = null
 let skipNextBubbleClear = false
 let nextPageFuncs = []
+let nextImageFuncs = []
 
 let pagesInstance = null
 
@@ -363,10 +364,28 @@ export default {
         onLoadFunc,
         onErrorFunc
       ) {
-        vue.addImageOnLoad(onLoadFunc)
-        vue.addImageOnError(onErrorFunc)
-        vue.setImage(_prepLocator(locator))
-        return this
+        const _doImageFunc = () => {
+          const func = nextImageFuncs.shift()
+          if (func) {
+            return interpreter
+              .callFunction(func, this, locator)
+              .then(() => _doImageFunc())
+              .catch(e => {
+                console.log(
+                  'Error in onNextImage call',
+                  interpreter.getProperty(e, 'message')
+                )
+                return _doImageFunc()
+              })
+          } else {
+            // Done
+            vue.addImageOnLoad(onLoadFunc)
+            vue.addImageOnError(onErrorFunc)
+            vue.setImage(_prepLocator(locator))
+            return this
+          }
+        }
+        return _doImageFunc()
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'hideImage', function(v) {
@@ -376,6 +395,28 @@ export default {
         vue.hideImage = !!v
         return this
       })
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'addOnNextImage',
+        function(func) {
+          if (func) nextImageFuncs.push(func)
+          return this
+        }
+      )
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'removeOnNextImage',
+        function(func) {
+          let index = nextImageFuncs.findIndex(i => i === func)
+          while (index > -1) {
+            nextPageFuncs.splice(index, 1)
+            index = nextImageFuncs.findIndex(i => i === func)
+          }
+          return this
+        }
+      )
 
       interpreter.setNativeFunctionPrototype(
         manager,

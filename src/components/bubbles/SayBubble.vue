@@ -3,7 +3,7 @@
     ref="rootElement"
     :color="value.color || 'black'"
     @click.once="onClick"
-    class="oeos-say-bubble"
+    class="oeos-say-bubble oeos-clickable"
   >
     <global-events
       v-if="active && allowSkip"

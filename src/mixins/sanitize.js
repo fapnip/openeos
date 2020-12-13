@@ -17,7 +17,7 @@ export default {
             att.value = this.sanitizeSrcSet(att.value)
           } else if (
             att.name.match(
-              /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap)$/i
+              /^(href|action|data|cite|profile|classid|codebase|formaction|manifest|poster|archive|longdesc|usemap|xlink:href)$/i
             )
           ) {
             att.value = this.sanitizeHref(att.value)
