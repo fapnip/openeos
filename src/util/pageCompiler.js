@@ -35,7 +35,7 @@ function compileCommandsToArray(commands) {
   commands = commands.slice()
   for (let i = 0; i < commands.length; i++) {
     const nextIsPromptVal = commands[i + 1]
-      ? `_nextIsPrompt = ${JSON.stringify(nextIsPrompt(commands, i))}`
+      ? `_nextIsPrompt = ${JSON.stringify(nextIsPrompt(commands, i))};`
       : ''
     const command = compileCommand(commands[i], i, commands)
     if (typeof command === 'string' && command !== '') {
