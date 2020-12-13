@@ -18,7 +18,7 @@ export default {
       return pseudo
     },
     installCSSStyleDeclaration(interpreter, globalObject) {
-      // const vue = this
+      const vue = this
       const constructor = opt => {
         return interpreter.createObjectProto(proto)
       }
@@ -26,8 +26,8 @@ export default {
       proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'CSSStyleDeclaration', manager)
 
-      // length
-      ;['length'].forEach(name => {
+      // length/value
+      ;['length', 'value'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_sd[name]
@@ -41,7 +41,7 @@ export default {
           return this._o_sd[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(style) {
-          this._o_sd[name] = this.sanitizeStyle(style)
+          this._o_sd[name] = vue.sanitizeStyle(style)
         })
       })
 
@@ -65,7 +65,6 @@ export default {
           return interpreter.nativeToPseudo(this._o_sd[fnName](...attr))
         })
       })
-
       // Set value
       ;['setProperty'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
@@ -74,15 +73,44 @@ export default {
           priority
         ) {
           try {
-            this._o_sd[fnName](
-              propertyName,
-              this.sanitizeStyle(value),
-              priority
-            )
+            this._o_sd[fnName](propertyName, vue.sanitizeStyle(value), priority)
           } catch (e) {
             return interpreter.createThrowable(interpreter.ERROR, e.toString())
           }
         })
+      })
+
+      // Since interpreter doesn't support Proxies, we'll need to create a getter/setter for every style name
+      const allStyles = window.getComputedStyle(
+        document.getElementsByTagName('body')[0],
+        null
+      )
+
+      // Override hasOwnProperty
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'hasOwnProperty',
+        function(prop) {
+          return allStyles[prop]
+            ? Object.hasOwnProperty.call(this._o_sd, prop)
+            : Object.hasOwnProperty.call(this.properties, prop)
+        }
+      )
+
+      // Implement getters/setters from all styles
+      Object.keys(allStyles).forEach(name => {
+        if (name.match(/^[a-z]/) && !proto.properties[name]) {
+          interpreter.setProperty(proto, name, undefined)
+          proto.getter[name] = interpreter.createNativeFunction(function() {
+            return this._o_sd[name]
+          })
+          proto.setter[name] = interpreter.createNativeFunction(function(
+            style
+          ) {
+            console.log('Setting Type', name, style, this._o_sd)
+            this._o_sd[name] = vue.sanitizeStyle(style)
+          })
+        }
       })
     },
   },

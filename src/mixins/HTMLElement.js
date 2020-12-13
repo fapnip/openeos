@@ -47,9 +47,11 @@ export default {
       interpreter.setProperty(globalObject, 'HTMLElement', manager)
 
       const _getHTMLElementsPseudo = els => {
-        const result = []
+        const result = interpreter.nativeToPseudo([])
+        let i = 0
         for (const el of els) {
-          result.push(this.getHTMLElementPseudo(el))
+          result.properties[i] = this.getHTMLElementPseudo(el)
+          i++
         }
         return result
       }
@@ -195,8 +197,10 @@ export default {
         'getElementsByTagNameNS',
         'querySelectorAll',
       ].forEach(fnName => {
-        interpreter.setNativeFunctionPrototype(manager, fnName, function(opt) {
-          return _getHTMLElementsPseudo(this._o_el[fnName](opt))
+        interpreter.setNativeFunctionPrototype(manager, fnName, function(
+          ...attr
+        ) {
+          return _getHTMLElementsPseudo(this._o_el[fnName](...attr))
         })
       })
 
