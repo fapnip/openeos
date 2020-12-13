@@ -264,6 +264,16 @@ export default {
     initScript() {
       return this.script.init || ''
     },
+    Interpreter: {
+      get() {
+        return Interpreter
+      },
+    },
+    interpreter: {
+      get() {
+        return interpreter
+      },
+    },
   },
   // beforeMount() {
   //   this.script = testJson
@@ -311,9 +321,6 @@ export default {
       this.installStorage(interpreter, globalObject)
     },
     initInterpreter() {
-      this.Interpreter = Interpreter
-
-      this.interpreter = interpreter
       this.installInterpreterModules(interpreter, interpreter.globalObject)
       interpreter.run()
       this.debug(
