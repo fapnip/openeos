@@ -107,7 +107,6 @@ export default {
           proto.setter[name] = interpreter.createNativeFunction(function(
             style
           ) {
-            console.log('Setting Type', name, style, this._o_sd)
             this._o_sd[name] = vue.sanitizeStyle(style)
           })
         }
