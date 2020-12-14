@@ -90,6 +90,14 @@ export default {
     doSetScrollToBottom(e) {
       this.bubbleHeight = e.clientHeight
       let isAtBottom = e.scrollHeight - e.scrollTop - e.clientHeight < 1
+      // console.log(
+      //   'Check scroll to bottom:',
+      //   isAtBottom,
+      //   e.scrollHeight - e.scrollTop - e.clientHeight,
+      //   e.scrollHeight,
+      //   e.scrollTop,
+      //   e.clientHeight
+      // )
       if (isScrolled) clearTimeout(isScrolled)
       isScrolled = false
       if (!isAtBottom && this.scrolledToBottom) {
@@ -118,6 +126,7 @@ export default {
               container: oeosBottom,
               duration: 800,
               onDone: () => {
+                this.checkBubbleScroll()
                 this.scrolling = false
               },
               onCancel: () => {
@@ -125,6 +134,7 @@ export default {
               },
               // easing: 'ease-in',
               lazy: false,
+              force: true,
             })
           }
         }

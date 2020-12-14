@@ -99,7 +99,10 @@
             </vue-switch>
           </div>
         </v-row>
-        <div ref="lastItem"></div>
+        <v-row
+          ref="lastItem"
+          class="oeos-bubble-end text-center pa-0 ma-0"
+        ></v-row>
       </v-container>
     </div>
     <div class="oeos-right">
@@ -516,7 +519,6 @@ html {
   margin-bottom: 6px;
   user-select: none;
 }
-
 .oeos-bubble p {
   margin-bottom: 0px;
   user-select: text;
@@ -530,6 +532,10 @@ html {
 }
 .oeos-bubble.oeos-align-right {
   margin-left: auto;
+}
+.oeos-bubble-end {
+  display: block;
+  height: 1px;
 }
 .oeos-say-item {
   max-width: 95%;
