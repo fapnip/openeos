@@ -1,6 +1,6 @@
-import EventManager from './EventManager'
+import EventManager from '../EventManager'
 import DOMTokenList from './DOMTokenList'
-import HTMLElement from './HTMLElement'
+import HTMLElement from '../HTMLElement'
 import HTMLCollection from './HTMLCollection'
 import CSSStyleDeclaration from './CSSStyleDeclaration'
 let proto
