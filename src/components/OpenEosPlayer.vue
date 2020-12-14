@@ -570,6 +570,19 @@ html {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.oeos-main .v-btn.v-size--default {
+  height: auto;
+  min-height: 64px;
+}
+
+.oeos-main .v-btn.v-size--default .v-btn__content {
+  max-width: 100%;
+}
+
+.oeos-main .v-btn.v-size--default .v-btn__content > span {
+  white-space: normal;
+}
+
 @keyframes fadeinout {
   0%,
   100% {
@@ -580,6 +593,7 @@ html {
   }
 }
 
+/* Use styles from EOS buttons for teases that used these classes */
 .Button_root__28K_E {
   background: #111
     linear-gradient(180deg, hsla(0, 0%, 100%, 0.15), hsla(0, 0%, 100%, 0))
