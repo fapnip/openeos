@@ -61,6 +61,7 @@ export default {
         imtOverlay.style.width = Math.ceil(width) + 'px'
         imtOverlay.style.height = Math.ceil(height) + 'px'
       }
+      this.scrollToBottom()
     },
     pageImageLoadCounter() {
       return pageImageLoadCounter
