@@ -572,7 +572,7 @@ html {
 
 .oeos-main .v-btn.v-size--default {
   height: auto;
-  min-height: 64px;
+  min-height: 36px;
 }
 
 .oeos-main .v-btn.v-size--default .v-btn__content {
