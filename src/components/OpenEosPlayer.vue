@@ -10,7 +10,7 @@
       >
     </div>
   </div>
-  <div v-else class="oeos-main" v-resize="scrollToBottom" @click="pageClick">
+  <div v-else :class="mainClass" v-resize="scrollToBottom" @click="pageClick">
     <div
       v-if="currentBackgroundColor"
       class="oeos-background"
@@ -28,24 +28,27 @@
       }"
     >
       <div class="oeos-image">
-        <div class="oeos-wrapper">
-          <img
-            ref="mainImage"
-            :src="image && image.href"
-            crossOrigin="anonymous"
-            class="oeos-clickable"
-            @click="imageClick"
-            @load="imageLoad"
-            @error="imageError"
-          />
-          <overlay-item
-            v-for="overlay in imageOverlays"
-            :key="overlay.id"
-            :id="overlay.id"
-            @ready="overlay.ready"
-          ></overlay-item>
-        </div>
+        <img
+          ref="mainImage"
+          :src="image && image.href"
+          crossOrigin="anonymous"
+          class="oeos-clickable"
+          @click="imageClick"
+          @load="imageLoad"
+          @loadstart="imageResize"
+          @progress="imageResize"
+          @error="imageError"
+        />
       </div>
+      <div class="oeos-image-overlays" ref="imageOverlays">
+        <overlay-item
+          v-for="overlay in imageOverlays"
+          :key="overlay.id"
+          :id="overlay.id"
+          @ready="overlay.ready"
+        ></overlay-item>
+      </div>
+      <resize-observer @notify="imageResize" />
     </div>
     <div
       v-show="!hideBubbles"
@@ -274,6 +277,13 @@ export default {
         return interpreter
       },
     },
+    mainClass() {
+      return {
+        'oeos-main': true,
+        'allow-backdrop': this.hasBackdropFilter,
+        'no-backdrop': !this.hasBackdropFilter,
+      }
+    },
   },
   // beforeMount() {
   //   this.script = testJson
@@ -467,35 +477,36 @@ html {
   top: 70%;
 }
 .oeos-image {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  height: 100%;
-  box-sizing: border-box;
-  user-select: none;
-  /* padding: 5px; */
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
-.oeos-image .oeos-wrapper {
-  position: relative;
-  display: block;
-  object-fit: contain;
-  object-position: 50% 50%;
+.oeos-image-overlays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
   height: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  user-select: none;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 .oeos-image img {
   display: block;
-  object-fit: contain;
-  object-position: 50% 50%;
-  height: 100%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  min-width: 0;
   box-sizing: border-box;
-  filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
   user-select: none;
+  filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
 }
 .oeos-scroll-button {
   position: absolute;

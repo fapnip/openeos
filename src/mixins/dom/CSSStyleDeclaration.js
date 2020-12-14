@@ -1,9 +1,15 @@
 const elements = new WeakMap()
 let proto
+const cssProperties = {}
 
 export default {
-  data: () => ({}),
+  data: () => ({
+    hasBackdropFilter: false,
+  }),
   methods: {
+    hasCssProperty(prop) {
+      return cssProperties[prop]
+    },
     getCSSStyleDeclarationProto() {
       return proto
     },
@@ -97,9 +103,22 @@ export default {
         }
       )
 
+      // console.log('Style hooks', Object.keys(allStyles), allStyles)
+
       // Implement getters/setters from all styles
-      Object.keys(allStyles).forEach(name => {
-        if (name.match(/^[a-z]/) && !proto.properties[name]) {
+      for (const name in allStyles) {
+        if (
+          name.match(/^[a-z]/) &&
+          name.match(/^[a-z]+$/i) &&
+          !Object.hasOwnProperty.call(proto.properties, name) &&
+          typeof allStyles[name] === 'string'
+        ) {
+          // console.log('Adding style hook for', name)
+          if (name.match(/backdropFilter$/i)) {
+            // console.log('Adding backdropFilter hook for', name)
+            vue.hasBackdropFilter = true
+          }
+          cssProperties[name] = true
           interpreter.setProperty(proto, name, undefined)
           proto.getter[name] = interpreter.createNativeFunction(function() {
             return this._o_sd[name]
@@ -110,7 +129,7 @@ export default {
             this._o_sd[name] = vue.sanitizeStyle(style)
           })
         }
-      })
+      }
     },
   },
 }

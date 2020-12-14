@@ -42,6 +42,26 @@ export default {
     })
   },
   methods: {
+    imageResize() {
+      const img = this.$refs.mainImage
+      const imtOverlay = this.$refs.imageOverlays
+      if (img && imtOverlay) {
+        let width = img.clientWidth
+        let height = img.clientHeight
+        const naturalHeight = img.naturalHeight
+        const naturalWidth = img.naturalWidth
+        const xScale = width / naturalWidth
+        const yScale = height / naturalHeight
+        if (xScale === 1) {
+          width = naturalWidth * yScale
+        }
+        if (yScale === 1) {
+          height = naturalWidth * xScale
+        }
+        imtOverlay.style.width = Math.ceil(width) + 'px'
+        imtOverlay.style.height = Math.ceil(height) + 'px'
+      }
+    },
     pageImageLoadCounter() {
       return pageImageLoadCounter
     },
@@ -54,6 +74,7 @@ export default {
       if (func) onNextImageError.push(func)
     },
     imageError(e) {
+      this.imageResize()
       if (
         !this.hasEventListeners(this.pagesInstance(), 'image-error') &&
         !onNextImageError.length
@@ -70,6 +91,7 @@ export default {
       this.dispatchEvent(payload, e)
     },
     imageLoad(e) {
+      this.imageResize()
       if (
         !this.hasEventListeners(this.pagesInstance(), 'image-load') &&
         !onNextImageLoad.length

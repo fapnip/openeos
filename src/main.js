@@ -1,13 +1,16 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
+import 'vue-resize/dist/vue-resize.css'
 import '@mdi/font/css/materialdesignicons.css'
 import VueScrollTo from 'vue-scrollto'
 import GlobalEvents from 'vue-global-events'
 import 'typeface-noto-sans'
+import VueResize from 'vue-resize'
 
 Vue.config.productionTip = false
 
+Vue.use(VueResize)
 Vue.use(VueScrollTo)
 Vue.component('GlobalEvents', GlobalEvents)
 

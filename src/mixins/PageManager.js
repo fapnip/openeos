@@ -337,6 +337,10 @@ export default {
         return this
       })
 
+      interpreter.setNativeFunctionPrototype(manager, 'hasCssProperty', val => {
+        return !!vue.hasCssProperty(val)
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'getImage', () => {
         return interpreter.nativeToPseudo(this.image)
       })
