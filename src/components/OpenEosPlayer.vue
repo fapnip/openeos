@@ -33,14 +33,13 @@
           :src="image && image.href"
           crossOrigin="anonymous"
           class="oeos-clickable"
-          @click="imageClick"
           @load="imageLoad"
           @loadstart="imageResize"
           @progress="imageResize"
           @error="imageError"
         />
       </div>
-      <div class="oeos-image-overlays" ref="imageOverlays">
+      <div class="oeos-image-overlays" ref="imageOverlays" @click="imageClick">
         <overlay-item
           v-for="overlay in imageOverlays"
           :key="overlay.id"
@@ -491,7 +490,6 @@ html {
   height: 100%;
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
-  pointer-events: none;
 }
 .oeos-image img {
   display: block;
