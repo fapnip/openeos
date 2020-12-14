@@ -403,7 +403,6 @@ export default {
   /* background-image: url(/static/media/navy.70005832.png); */
   transition: background-color 0.3s ease;
   background-repeat: repeat;
-  background-size: 520px;
 }
 .oeos-background:before {
   content: '';
