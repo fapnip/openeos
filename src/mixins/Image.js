@@ -55,8 +55,8 @@ export default {
         if (xScale === 1) {
           width = naturalWidth * yScale
         }
-        if (yScale === 1) {
-          height = naturalWidth * xScale
+        if (yScale === 1 || xScale < yScale) {
+          height = naturalHeight * xScale
         }
         imtOverlay.style.width = Math.ceil(width) + 'px'
         imtOverlay.style.height = Math.ceil(height) + 'px'
