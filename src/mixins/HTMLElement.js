@@ -292,19 +292,23 @@ export default {
         'mouseup',
         'mouseenter',
         'mouseleave',
-        // 'mousemove',
+        'mousemove',
         'mouseout',
         'mouseover',
-        // 'mouseup',
-        // 'scroll',
-        // 'select',
-        // 'transitioncancel',
-        // 'transitionend',
-        // 'transitionstart',
-        // 'transitionrun',
-        // 'blur',
-        // 'focus',
+        'touchcancel',
+        'touchend',
+        'touchmove',
+        'touchstart',
+        'scroll',
+        'select',
+        'transitioncancel',
+        'transitionend',
+        'transitionstart',
+        'transitionrun',
+        'blur',
+        'focus',
       ].forEach(name => {
+        // console.log('Adding event hook', name)
         interpreter.setProperty(proto, 'on' + name, undefined)
         proto.getter['on' + name] = interpreter.createNativeFunction(
           function() {
