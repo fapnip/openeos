@@ -1,5 +1,3 @@
-import backgroundImage from '../assets/bg-texture.png'
-
 import Vibrant from 'node-vibrant/lib/browser.js'
 import Pipeline from 'node-vibrant/lib/pipeline/index.js'
 
@@ -21,7 +19,7 @@ export default {
     selectedBackgroundTexture() {
       return (
         this.currentBackgroundColor &&
-        (this.backgroundTexture || backgroundImage)
+        (this.backgroundTexture || `${process.env.BASE_URL}bg-texture.png`)
       )
     },
   },
