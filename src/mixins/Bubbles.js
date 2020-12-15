@@ -121,6 +121,7 @@ export default {
           (oeosBottom.scrollTop + oeosBottom.clientHeight)
         if (oeosBottom && lastItem) {
           if (srollpx > 0) {
+            console.log('Scrolling to bottom')
             this.scrolling = true
             this.$scrollTo(lastItem, {
               container: oeosBottom,

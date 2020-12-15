@@ -24,7 +24,6 @@
       v-show="image && !hideImage"
       :class="{
         'oeos-top': true,
-        'oeos-full': fullScreenImage,
       }"
     >
       <div class="oeos-image">
@@ -163,6 +162,12 @@
       @ready="overlay.ready"
     ></overlay-item>
     <loading v-if="loading">{{ loadingText }}</loading>
+    <v-progress-linear
+      :active="showPreloading"
+      absolute
+      indeterminate
+      color="primary"
+    ></v-progress-linear>
   </div>
 </template>
 
@@ -284,6 +289,7 @@ export default {
         'oeos-main': true,
         'allow-backdrop': this.hasBackdropFilter,
         'no-backdrop': !this.hasBackdropFilter,
+        'oeos-image-full': this.fullScreenImage,
       }
     },
   },
@@ -432,7 +438,7 @@ export default {
   left: 0;
   right: 0;
 }
-.oeos-top.oeos-full {
+.oeos-image-full .oeos-top {
   height: 100%;
 }
 .oeos-right {
@@ -461,6 +467,8 @@ export default {
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   mask-image: linear-gradient(180deg, transparent 0, #000 10%);
   overflow-anchor: none;
+}
+.oeos-image-full .oeos-bottom {
   pointer-events: none;
 }
 .oeos-clickable {

@@ -3,9 +3,13 @@ const afterPreload = []
 const preloadedImages = {}
 let waitingPreloads = 0
 let startupSounds = []
+let indicatorTimeout
 
 export default {
-  data: () => ({}),
+  data: () => ({
+    showPreloading: false,
+  }),
+  computed: {},
   methods: {
     popStartupSounds() {
       const result = startupSounds
@@ -18,6 +22,15 @@ export default {
     incrementPreload(href) {
       this.debug('Queuing preload:', href)
       waitingPreloads++
+      if (!indicatorTimeout) {
+        indicatorTimeout = setTimeout(() => {
+          if (this.hasWaitingPreloads()) {
+            this.showPreloading = true
+          } else {
+            indicatorTimeout = false
+          }
+        }, 1000)
+      }
     },
     doAfterPreload(wait, isError) {
       if (!wait) return
@@ -29,6 +42,9 @@ export default {
       if (waitingPreloads === 0) {
         this.debug('Finished preload')
       }
+      clearTimeout(indicatorTimeout)
+      indicatorTimeout = false
+      this.showPreloading = false
       waitingPreloads = 0
       // console.log('Finished preload.')
       let fn = afterPreload.shift()
