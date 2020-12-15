@@ -61,11 +61,11 @@ export default {
         'parentElement',
         'parentNode',
       ].forEach(name => {
-        if (this._isRoot && name.match(/(^parent|Sibling$)/)) {
-          return null
-        }
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
+          if (this._isRoot && name.match(/(^parent|Sibling$)/)) {
+            return null
+          }
           return vue.getHTMLElementPseudo(this._o_el[name])
         })
       })
@@ -83,15 +83,15 @@ export default {
 
       // html
       ;['innerHTML', 'innerText', 'outerHTML', 'textContent'].forEach(name => {
-        if (this._isRoot && name.match(/^outer/)) {
-          console.error(`Cannot perform ${name} on root node.`)
-          return
-        }
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_el[name]
         })
         proto.setter[name] = interpreter.createNativeFunction(function(html) {
+          if (this._isRoot && name.match(/^outer/)) {
+            console.error(`Cannot perform ${name} on root node.`)
+            return
+          }
           if (this._o_el.tagName === 'SCRIPT') {
             console.error('Modification of SCRIPT node blocked.')
             return
@@ -136,6 +136,7 @@ export default {
         'clientLeft',
         'clientTop',
         'clientWidth ',
+        'className',
       ].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
@@ -147,7 +148,7 @@ export default {
       })
 
       // native getter & setter abstraction
-      ;['className', 'id', 'scrollLeft', 'scrollTop'].forEach(name => {
+      ;['id', 'scrollLeft', 'scrollTop'].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_el[name]
@@ -182,11 +183,11 @@ export default {
 
       // By Element
       ;['querySelector', 'closest', 'cloneNode'].forEach(fnName => {
-        if (this._isRoot && name.match(/^cloneNode/)) {
-          console.error(`Cannot perform ${name} on root node.`)
-          return
-        }
         interpreter.setNativeFunctionPrototype(manager, fnName, function(opt) {
+          if (this._isRoot && name.match(/^cloneNode/)) {
+            console.error(`Cannot perform ${name} on root node.`)
+            return
+          }
           return vue.getHTMLElementPseudo(this._o_el[fnName](opt))
         })
       })
@@ -217,16 +218,21 @@ export default {
         'replaceChild',
         'insertBefore',
       ].forEach(fnName => {
-        if (this._isRoot && fnName.match(/^(insertBefore|remove)/)) {
-          console.error(`Cannot perform ${fnName} on root node.`)
-          return
-        }
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
           pseudoEl
         ) {
+          if (this._isRoot && fnName.match(/^(insertBefore|remove)/)) {
+            console.error(`Cannot perform ${fnName} on root node.`)
+            return
+          }
           console.log('Doing:', fnName, this)
-          if (pseudoEl)
+          if (pseudoEl) {
+            if (pseudoEl._o_el && pseudoEl._o_el._isRoot) {
+              console.error(`Cannot move root node.`)
+              return
+            }
             return vue.getHTMLElementPseudo(this._o_el[fnName](pseudoEl._o_el))
+          }
           return vue.getHTMLElementPseudo(this._o_el[fnName]())
         })
       })
@@ -278,6 +284,10 @@ export default {
           val,
           pseudoEl
         ) {
+          if (this._isRoot) {
+            console.error(`Cannot perform ${fnName} on root node.`)
+            return
+          }
           this._o_el[fnName](val, pseudoEl && pseudoEl._o_el)
         })
       })
