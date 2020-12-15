@@ -149,10 +149,12 @@ export default {
       this.beforePageChange()
       if (this.hasWaitingPreloads()) {
         this.addAfterPreload(() => {
+          this.debug(`Preload complete: running '${pageId}' page`)
           this.doNextPageFuncs()
           interpreter.appendCode(pageCode)
           if (!noRun) interpreter.run()
         })
+        this.debug(`Deferring run of '${pageId}' page until preload complete`)
       } else {
         this.doNextPageFuncs()
         interpreter.appendCode(pageCode)

@@ -4,7 +4,7 @@ const extensionMap = {
 }
 
 export const FIX_POLLUTION = encodeURIComponent(
-  '__oeos:' + window.location.hostname
+  '_oeos:' + window.location.hostname
 )
 
 export const extToType = Object.entries(extensionMap).reduce((a, e) => {

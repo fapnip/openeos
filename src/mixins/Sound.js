@@ -110,6 +110,10 @@ export default {
 
       let sound
 
+      if (typeof preload === 'function') {
+        this.addAfterPreload(preload)
+      }
+
       const doPreload = e => {
         if (!item.preloaded) {
           item.preloaded = true
@@ -123,7 +127,7 @@ export default {
 
       try {
         if (preload) {
-          this.incrementPreload()
+          this.incrementPreload(file.href)
         }
         sound = new Howl({
           src: [file.href],
@@ -189,9 +193,19 @@ export default {
     installSound(interpreter, globalObject) {
       const vue = this
       const constructor = (opt, fromPageScript) => {
+        const optProps = opt.properties
+        delete optProps.preload
+        let preload
+        if (optProps.preload && optProps.preload.class === 'Function') {
+          const preloadFunc = optProps.preload
+          preload = () => {
+            interpreter.queueFunction(preloadFunc, this)
+            interpreter.run()
+          }
+        }
         const options = interpreter.pseudoToNative(opt)
         try {
-          const item = this.createSoundItem(options, fromPageScript)
+          const item = this.createSoundItem(options, fromPageScript, preload)
           // console.log('Playing sound item from constructor', item)
           return item
         } catch (e) {

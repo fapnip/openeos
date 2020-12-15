@@ -15,16 +15,21 @@ export default {
     hasWaitingPreloads() {
       return !!waitingPreloads
     },
-    incrementPreload() {
+    incrementPreload(href) {
+      this.debug('Queuing preload:', href)
       waitingPreloads++
     },
     doAfterPreload(wait, isError) {
       if (!wait) return
       waitingPreloads--
-      if (waitingPreloads) {
-        // console.warn('Waiting for preload...', waitingPreloads)
+      if (waitingPreloads > 0) {
+        this.debug('Waiting for preload...', waitingPreloads)
         return
       }
+      if (waitingPreloads === 0) {
+        this.debug('Finished preload')
+      }
+      waitingPreloads = 0
       // console.log('Finished preload.')
       let fn = afterPreload.shift()
       while (fn) {
@@ -53,14 +58,22 @@ export default {
         }
         preload.onerror = e => {
           _onPreload()
-          if (typeof onError === 'function') onError(e)
+          if (typeof onError === 'function') {
+            onError(e)
+          } else {
+            console.error('Preload error:', file && file.error, e)
+          }
         }
         preload.src = file.href
         // if (file.noReferrer) preload.referrerPolicy = 'no-referrer'
-        if (wait) this.incrementPreload()
+        if (wait) this.incrementPreload(file.href)
         // console.log('Preloading', file)
       } else {
-        onError((file && file.error) || 'Invalid locator')
+        if (typeof onError === 'function') {
+          onError((file && file.error) || 'Invalid locator')
+        } else {
+          console.error('Preload error:', file && file.error)
+        }
       }
     },
     preloadImage(locator, wait, onLoad, onError) {
@@ -89,23 +102,20 @@ export default {
         console.warn(`Linked pageId "${patten}" in ${parentPageId} not found.`)
         return
       }
-      console.log('Preloading Page:', pageId)
+      this.debug('Preloading Page:', pageId)
       const pageScript = this.getPageScript(pageId)
       if (!noImagePreload) {
         for (const locator of Object.keys(pageScript.images)) {
           this.preloadImage(locator, wait)
         }
       } else {
-        console.log('Skipping image preload on:', pageId)
+        this.debug('Skipping image preload on:', pageId)
       }
       // Preload all sounds on tease start
       if (!this.started) startupSounds.push(...pageScript.sounds)
     },
     addAfterPreload(fn) {
       afterPreload.push(fn)
-    },
-    shiftAfterPreload(fn) {
-      afterPreload.unshift(fn)
     },
   },
 }

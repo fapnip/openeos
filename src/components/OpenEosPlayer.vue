@@ -1,5 +1,5 @@
 <template>
-  <loading v-if="loading">{{ loadingText }}</loading>
+  <loading v-if="loading && !started">{{ loadingText }}</loading>
   <div v-else-if="!started" class="oeos-main" @click="runTease">
     <global-events @keydown.space="runTease" @keydown.enter="runTease" />
     <div class="oeos-start-title">{{ title }}</div>
@@ -31,7 +31,6 @@
         <img
           ref="mainImage"
           :src="image && image.href"
-          crossOrigin="anonymous"
           class="oeos-clickable"
           @load="imageLoad"
           @loadstart="imageResize"
@@ -163,6 +162,7 @@
       :id="overlay.id"
       @ready="overlay.ready"
     ></overlay-item>
+    <loading v-if="loading">{{ loadingText }}</loading>
   </div>
 </template>
 
@@ -344,34 +344,33 @@ export default {
       this.setScript(this.script)
       const style = extractStyles(this.getInitScript())
       this.addStyles(Object.keys(style.styles))
-      interpreter.run()
-      this.loadingText = 'Loading Script...'
-      interpreter.appendCode(this.getInitScript())
-      interpreter.run()
-      this.debug('Loaded Init Script')
       this.debug('Precompiling all page scripts...')
+      this.preloadPage('start', 'script load', true)
       this.preloadPageScriptsAndSounds()
-      this.showPage('start', true)
       this.loading = false
     },
     runTease() {
-      const sounds = this.popStartupSounds()
-      if (sounds.length) {
-        // We have sounds to pre-load
-        this.loading = true
-        this.loadingText = 'Prebuffering audio...'
-        this.shiftAfterPreload(() => {
-          this.loading = false
-          this.started = true
-          this.interpreter.run()
-        })
-        for (const soundOption of sounds) {
-          this.preloadSound(soundOption, true)
-        }
-      } else {
-        this.started = true
-        this.interpreter.run()
+      this.addAfterPreload(() => {
+        console.log('Running start')
+        this.loading = false
+        this.showPage('start')
+        interpreter.run()
         this.scrollToBottom()
+      })
+      this.loading = true
+      this.started = true
+      this.loadingText = 'Prebuffering media...'
+      const sounds = this.popStartupSounds()
+      for (const soundOption of sounds) {
+        this.preloadSound(soundOption, true)
+      }
+      interpreter.appendCode(this.getInitScript())
+      interpreter.run()
+      this.debug('Loaded Init Script and started media preload')
+      this.interpreter.run()
+      if (!this.hasWaitingPreloads()) {
+        console.log('Nothing to preload...')
+        this.doAfterPreload(true)
       }
     },
   },
