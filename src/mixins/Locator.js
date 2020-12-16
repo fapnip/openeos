@@ -45,12 +45,13 @@ const supportedHosts = [
   'https://www.mboxdrive.com/',
   'https://media*.vocaroo.com/', // https://vocaroo.com/
   'https://thumbs*.redgifs.com/', // https://redgifs.com/
+  'https://thumbs*.gfycat.com/',
   'https://i.ibb.co', // imgbb.com
   'https://media.milovana.com',
   'https://iili.io', // Freeimage.host
 ]
 // TODO: break this out to multiple lines
-const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
+const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
 
 export default {
   data: () => ({}),
