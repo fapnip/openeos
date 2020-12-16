@@ -1,8 +1,8 @@
 let idCounter = 0
 const overlayTypes = {
   image: 'image',
+  video: 'video',
   page: 'page',
-  bubble: 'bubble',
 }
 const overlays = {}
 
@@ -10,7 +10,7 @@ export default {
   data: () => ({
     pageOverlays: {},
     imageOverlays: {},
-    bubbleOverlays: {},
+    videoOverlays: {},
   }),
   methods: {
     installOverlay(interpreter, globalObject) {

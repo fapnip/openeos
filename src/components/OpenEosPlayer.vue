@@ -1,173 +1,215 @@
 <template>
-  <loading v-if="loading && !started">{{ loadingText }}</loading>
-  <div v-else-if="!started" class="oeos-main" @click="runTease">
-    <global-events @keydown.space="runTease" @keydown.enter="runTease" />
-    <div class="oeos-start-title">{{ title }}</div>
-    <div v-if="author" class="oeos-start-author">by {{ author }}</div>
-    <div class="oeos-start-button">
-      <v-btn icon small
-        ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
+  <div class="oeos-outer">
+    <div :class="mainClass" v-resize="scrollToBottom" @click="pageClick">
+      <div
+        v-if="currentBackgroundColor"
+        class="oeos-background"
+        :style="{
+          backgroundImage:
+            selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
+          backgroundColor: currentBackgroundColor,
+        }"
+      ></div>
+      <div
+        v-show="(hideVideo || !hasVideo) && image && !hideImage"
+        :class="{
+          'oeos-top': true,
+        }"
       >
-    </div>
-  </div>
-  <div v-else :class="mainClass" v-resize="scrollToBottom" @click="pageClick">
-    <div
-      v-if="currentBackgroundColor"
-      class="oeos-background"
-      :style="{
-        backgroundImage:
-          selectedBackgroundTexture && `url(${selectedBackgroundTexture})`,
-        backgroundColor: currentBackgroundColor,
-      }"
-    ></div>
-    <div
-      v-show="image && !hideImage"
-      :class="{
-        'oeos-top': true,
-      }"
-    >
-      <div class="oeos-image">
-        <img
-          ref="mainImage"
-          :src="image && image.href"
-          class="oeos-clickable"
-          @load="imageLoad"
-          @loadstart="imageResize"
-          @progress="imageResize"
-          @error="imageError"
-        />
-      </div>
-      <div class="oeos-image-overlays" ref="imageOverlays" @click="imageClick">
-        <overlay-item
-          v-for="overlay in imageOverlays"
-          :key="overlay.id"
-          :id="overlay.id"
-          @ready="overlay.ready"
-        ></overlay-item>
-      </div>
-      <resize-observer @notify="imageResize" />
-    </div>
-    <div
-      v-show="!hideBubbles"
-      :class="{
-        'oeos-bottom': true,
-        'has-image': !!image,
-      }"
-      v-scroll.self="checkBubbleScroll"
-      ref="oeosBottom"
-    >
-      <v-container fill-height class="pa-0">
-        <v-row
-          :style="{ height: bubbleHeight + 'px' }"
-          class="text-center pa-0 ma-0"
+        <div class="oeos-image">
+          <img
+            ref="mainImage"
+            :src="image && image.href"
+            class="oeos-clickable"
+            crossorigin="anonymous"
+            @load="imageLoad"
+            @loadstart="imageResize"
+            @progress="imageResize"
+            @error="imageError"
+          />
+        </div>
+        <div
+          class="oeos-image-overlays"
+          ref="imageOverlays"
+          @click="imageClick"
         >
-        </v-row>
-        <v-row
-          v-for="bubble in bubbles"
-          :key="bubble.id"
-          class="text-center pa-0 ma-0"
-        >
-          <div :class="bubbleClass(bubble)">
-            <vue-switch :value="bubble.type">
-              <template #say>
-                <say-bubble
-                  :ref="'say_' + bubble.id"
-                  :value="bubble.item"
-                  :active="bubble.item.active"
-                  :is-debug="isDebug"
-                  @ready="bubble.item.ready"
-                ></say-bubble>
-              </template>
-              <template #choice>
-                <choice-bubble
-                  :value="bubble.item"
-                  :active="bubble.item.active"
-                  :is-debug="isDebug"
-                  @ready="bubble.item.ready"
-                ></choice-bubble>
-              </template>
-              <template #prompt>
-                <prompt-bubble
-                  :value="bubble.item"
-                  :active="bubble.item.active"
-                  :is-debug="isDebug"
-                  @ready="bubble.item.ready"
-                ></prompt-bubble>
-              </template>
-            </vue-switch>
-          </div>
-        </v-row>
-        <v-row
-          ref="lastItem"
-          class="oeos-bubble-end text-center pa-0 ma-0"
-        ></v-row>
-      </v-container>
-    </div>
-    <div class="oeos-right">
-      <countdown-timer
-        v-for="(timer, i) in timers"
-        :key="timer.id + ':' + i"
-        :duration="timer.duration"
-        :loops="timer.loops"
-        :type="timer.style"
-        :is-debug="isDebug"
-        @timeout="timer.onTimeout"
-        @loop="timer.onLoop"
-        @ready="timer.ready"
+          <overlay-item
+            v-for="overlay in imageOverlays"
+            :key="overlay.id"
+            :id="overlay.id"
+            @ready="overlay.ready"
+          ></overlay-item>
+        </div>
+        <resize-observer @notify="imageResize" />
+      </div>
+      <div
+        v-show="!hideVideo && hasVideo"
+        :class="{
+          'oeos-top': true,
+        }"
       >
-      </countdown-timer>
-    </div>
-    <div class="oeos-notifications">
-      <div class="oeos-notification-list">
-        <notification-item
-          v-for="(notification, i) in notifications"
-          :key="notification.id + ':' + i"
-          :duration="notification.timerDuration"
-          :title="notification.title"
-          :buttonLabel="notification.buttonLabel"
+        <div class="oeos-video" ref="videoElements">
+          <!-- <video
+            :ref="'video' + video.id"
+            :src="video.file.href"
+            class="oeos-clickable"
+            controls="true"
+            autostart="true"
+            preload="auto"
+            muted="true"
+            @play="video.play"
+            @error="video.error"
+          ></video> -->
+        </div>
+        <div
+          class="oeos-video-overlays"
+          ref="videoOverlays"
+          @click="videoClick"
+        >
+          <overlay-item
+            v-for="overlay in videoOverlays"
+            :key="overlay.id"
+            :id="overlay.id"
+            @ready="overlay.ready"
+          ></overlay-item>
+        </div>
+        <resize-observer @notify="imageResize" />
+      </div>
+      <div
+        v-show="!hideBubbles"
+        :class="{
+          'oeos-bottom': true,
+          'has-image': (!hideVideo && hasVideo) || (image && !hideImage),
+        }"
+        v-scroll.self="checkBubbleScroll"
+        ref="oeosBottom"
+      >
+        <v-container fill-height class="pa-0">
+          <v-row
+            :style="{ height: bubbleHeight + 'px' }"
+            class="text-center pa-0 ma-0"
+          >
+          </v-row>
+          <v-row
+            v-for="bubble in bubbles"
+            :key="bubble.id"
+            class="text-center pa-0 ma-0"
+          >
+            <div :class="bubbleClass(bubble)">
+              <vue-switch :value="bubble.type">
+                <template #say>
+                  <say-bubble
+                    :ref="'say_' + bubble.id"
+                    :value="bubble.item"
+                    :active="bubble.item.active"
+                    :is-debug="isDebug"
+                    @ready="bubble.item.ready"
+                  ></say-bubble>
+                </template>
+                <template #choice>
+                  <choice-bubble
+                    :value="bubble.item"
+                    :active="bubble.item.active"
+                    :is-debug="isDebug"
+                    @ready="bubble.item.ready"
+                  ></choice-bubble>
+                </template>
+                <template #prompt>
+                  <prompt-bubble
+                    :value="bubble.item"
+                    :active="bubble.item.active"
+                    :is-debug="isDebug"
+                    @ready="bubble.item.ready"
+                  ></prompt-bubble>
+                </template>
+              </vue-switch>
+            </div>
+          </v-row>
+          <v-row
+            ref="lastItem"
+            class="oeos-bubble-end text-center pa-0 ma-0"
+          ></v-row>
+        </v-container>
+      </div>
+      <div class="oeos-right">
+        <countdown-timer
+          v-for="(timer, i) in timers"
+          :key="timer.id + ':' + i"
+          :duration="timer.duration"
+          :loops="timer.loops"
+          :type="timer.style"
           :is-debug="isDebug"
-          style="margin-bottom: 5px;"
-          @timeout="notification.onTimeout"
-          @button-click="notification.onClick"
-          @ready="notification.ready"
+          @timeout="timer.onTimeout"
+          @loop="timer.onLoop"
+          @ready="timer.ready"
         >
-        </notification-item>
+        </countdown-timer>
+      </div>
+      <div class="oeos-notifications">
+        <div class="oeos-notification-list">
+          <notification-item
+            v-for="(notification, i) in notifications"
+            :key="notification.id + ':' + i"
+            :duration="notification.timerDuration"
+            :title="notification.title"
+            :buttonLabel="notification.buttonLabel"
+            :is-debug="isDebug"
+            style="margin-bottom: 5px;"
+            @timeout="notification.onTimeout"
+            @button-click="notification.onClick"
+            @ready="notification.ready"
+          >
+          </notification-item>
+        </div>
+      </div>
+      <v-fab-transition>
+        <v-btn
+          v-show="!scrolling && !scrolledToBottom"
+          class="oeos-scroll-button"
+          fab
+          dark
+          x-small
+          @click="scrollToBottom"
+        >
+          <v-icon>mdi-arrow-down-bold</v-icon>
+        </v-btn>
+      </v-fab-transition>
+      <div id="oeos-sounds">
+        <data
+          v-for="(sound, i) in sounds"
+          :class="{ 'is-active': sound._playing }"
+          :key="sound.id + ':' + i"
+          :value="sound.file.locator"
+          >{{ sound.file.href }}</data
+        >
+      </div>
+      <overlay-item
+        v-for="overlay in pageOverlays"
+        :key="overlay.id"
+        :id="overlay.id"
+        @ready="overlay.ready"
+      ></overlay-item>
+      <loading v-if="loading">{{ loadingText }}</loading>
+      <v-progress-linear
+        :active="showPreloading"
+        absolute
+        indeterminate
+        color="primary"
+        style="top:0;"
+      ></v-progress-linear>
+    </div>
+
+    <loading v-if="loading && !started">{{ loadingText }}</loading>
+    <div v-else-if="!started" class="oeos-start-prompt" @click.stop="runTease">
+      <global-events @keydown.space="runTease" @keydown.enter="runTease" />
+      <div class="oeos-start-title">{{ title }}</div>
+      <div v-if="author" class="oeos-start-author">by {{ author }}</div>
+      <div class="oeos-start-button">
+        <v-btn icon small
+          ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
+        >
       </div>
     </div>
-    <v-fab-transition>
-      <v-btn
-        v-show="!scrolling && !scrolledToBottom"
-        class="oeos-scroll-button"
-        fab
-        dark
-        x-small
-        @click="scrollToBottom"
-      >
-        <v-icon>mdi-arrow-down-bold</v-icon>
-      </v-btn>
-    </v-fab-transition>
-    <div id="oeos-sounds">
-      <data
-        v-for="(sound, i) in sounds"
-        :class="{ 'is-active': sound._playing }"
-        :key="sound.id + ':' + i"
-        :value="sound.file.locator"
-        >{{ sound.file.href }}</data
-      >
-    </div>
-    <overlay-item
-      v-for="overlay in pageOverlays"
-      :key="overlay.id"
-      :id="overlay.id"
-      @ready="overlay.ready"
-    ></overlay-item>
-    <loading v-if="loading">{{ loadingText }}</loading>
-    <v-progress-linear
-      :active="showPreloading"
-      absolute
-      indeterminate
-      color="primary"
-    ></v-progress-linear>
   </div>
 </template>
 
@@ -197,6 +239,7 @@ import Choice from '../mixins/Choice'
 import Prompt from '../mixins/Prompt'
 import Notification from '../mixins/Notification'
 import Sound from '../mixins/Sound'
+import Video from '../mixins/Video'
 import Storage from '../mixins/Storage'
 
 // Components
@@ -262,6 +305,7 @@ export default {
     Prompt,
     Notification,
     Sound,
+    Video,
     Storage,
   ],
   data: () => ({
@@ -336,6 +380,7 @@ export default {
       this.installPrompt(interpreter, globalObject)
       this.installNotification(interpreter, globalObject)
       this.installSound(interpreter, globalObject)
+      this.installVideo(interpreter, globalObject)
       this.installStorage(interpreter, globalObject)
     },
     initInterpreter() {
@@ -370,6 +415,10 @@ export default {
       for (const soundOption of sounds) {
         this.preloadSound(soundOption, true)
       }
+      const videos = this.popStartupVideos()
+      for (const videoOption of videos) {
+        this.preloadVideo(videoOption, true)
+      }
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script and started media preload')
@@ -383,6 +432,8 @@ export default {
 }
 </script>
 <style>
+.oeos-start-prompt,
+.oeos-outer,
 .oeos-main {
   /* height: 100%;
   width: 100%;
@@ -492,6 +543,7 @@ html {
   left: 0;
   right: 0;
 }
+.oeos-video-overlays,
 .oeos-image-overlays {
   position: absolute;
   left: 50%;
@@ -500,6 +552,9 @@ html {
   height: 100%;
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
+}
+.oeos-video-overlays {
+  pointer-events: none;
 }
 .oeos-image img {
   display: block;
@@ -515,6 +570,31 @@ html {
   box-sizing: border-box;
   user-select: none;
   filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
+}
+.oeos-video {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.oeos-video video {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  min-width: 0;
+  box-sizing: border-box;
+  user-select: none;
+  filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
+}
+.oeos-video video.oeos-show {
+  display: block;
 }
 .oeos-scroll-button {
   position: absolute;

@@ -10,12 +10,14 @@ const parser = new DOMParser()
 
 let images = {}
 let sounds = []
+let videos = []
 let targets = {}
 let styles = {}
 
 export default function pageCompiler(page) {
   images = {}
   sounds = []
+  videos = []
   targets = {}
   styles = {}
   return {
@@ -28,6 +30,7 @@ export default function pageCompiler(page) {
     `,
     images,
     sounds,
+    videos,
     targets,
     styles,
   }
@@ -200,7 +203,14 @@ const commandList = {
     return true;
     `
   },
-  'audio.play': c => {
+  'audio.play': (c, i, cl) => {
+    if (
+      c.locator &&
+      c.locator.match(/^(file:|gallery:).*\+\(\|(oeos-video):(.+)\)$/)
+    ) {
+      // We're a video command masked in an audio command
+      return commandList['video.play'](c, i, cl)
+    }
     sounds.push(c)
     return `
     new Sound({
@@ -209,6 +219,32 @@ const commandList = {
       loops: ${JSON.stringify(c.loops)},
       volume: ${JSON.stringify(c.volume)},
       background: ${JSON.stringify(c.background)}
+    }, true)
+    return false;
+    `
+  },
+  'video.play': (c, i, cl) => {
+    const isAsync = !!c.background
+    videos.push(c)
+    return `${
+      isAsync
+        ? ``
+        : `
+    var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
+    `
+    }
+    new Video({
+      locator: ${JSON.stringify(c.locator)},
+      id: ${JSON.stringify(c.id)},
+      loops: ${JSON.stringify(c.loops)},
+      volume: ${JSON.stringify(c.volume)},
+      background: ${JSON.stringify(c.background)},
+      onContinue: ${
+        isAsync
+          ? `null`
+          : `function() {
+        _doCommandFns(nextCmdFns, continueFns, []);}`
+      }
     }, true)
     return false;
     `

@@ -1,7 +1,7 @@
 const styleSheetMatcher = /\/\*--oeos-stylesheet([\s\S]+?)\*\//
 
 export default function(script) {
-  console.log('Extracting styles from', script)
+  // console.log('Extracting styles from', script)
   if (!script)
     return {
       styles: {},

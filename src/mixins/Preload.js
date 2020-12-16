@@ -3,14 +3,21 @@ const afterPreload = []
 const preloadedImages = {}
 let waitingPreloads = 0
 let startupSounds = []
+let startupVideos = []
 let indicatorTimeout
 
 export default {
   data: () => ({
     showPreloading: false,
+    startupVideos: [],
   }),
   computed: {},
   methods: {
+    popStartupVideos() {
+      const result = startupVideos
+      startupVideos = []
+      return result
+    },
     popStartupSounds() {
       const result = startupSounds
       startupSounds = []
@@ -128,7 +135,10 @@ export default {
         this.debug('Skipping image preload on:', pageId)
       }
       // Preload all sounds on tease start
-      if (!this.started) startupSounds.push(...pageScript.sounds)
+      if (!this.started || this.loading) {
+        startupSounds.push(...pageScript.sounds)
+        startupVideos.push(...pageScript.videos)
+      }
     },
     addAfterPreload(fn) {
       afterPreload.push(fn)

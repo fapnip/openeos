@@ -28,7 +28,11 @@ export default {
 
   methods: {
     preloadSound(options, fromPageScript) {
-      return this.createSoundItem(options, fromPageScript, true)
+      try {
+        return this.createSoundItem(options, fromPageScript, true)
+      } catch (e) {
+        console.error(e)
+      }
     },
     getSoundPool(preloadKey) {
       let pool = soundPools[preloadKey]
