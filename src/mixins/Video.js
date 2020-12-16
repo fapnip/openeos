@@ -152,11 +152,11 @@ export default {
 
       item.show = val => {
         if (val) {
-          console.error('Showing', video)
+          // console.error('Showing', video)
           item.video.classList.add('oeos-show')
           item._show = true
         } else {
-          console.error('Hiding', video)
+          // console.error('Hiding', video)
           item.video.classList.remove('oeos-show')
           item._show = false
         }
@@ -381,7 +381,7 @@ export default {
         return this._item.video.volume
       })
       interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
-        return vue.getHTMLElementPseudo(this._item.video)
+        return vue.getHTMLElementPseudo(this._item.video, true)
       })
       interpreter.setNativeFunctionPrototype(manager, 'rate', function(rate) {
         if (!arguments.length) {

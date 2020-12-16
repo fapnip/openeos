@@ -137,6 +137,15 @@ export default {
         'clientTop',
         'clientWidth ',
         'className',
+        'videoHeight',
+        'videoWidth',
+        'buffered',
+        'duration',
+        'controlsList',
+        'ended',
+        'paused',
+        'played',
+        'seeking',
       ].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
@@ -147,8 +156,30 @@ export default {
         })
       })
 
+      // native getter abstraction
+      ;['played', 'seekable', 'error'].forEach(name => {
+        if (Object.hasOwnProperty.call(proto.properties, name)) return
+        interpreter.setProperty(proto, name, undefined)
+        proto.getter[name] = interpreter.createNativeFunction(function() {
+          return interpreter.nativeToPseudo(this._o_el[name])
+        })
+        proto.setter[name] = interpreter.createNativeFunction(function() {
+          // read only
+        })
+      })
+
       // native getter & setter abstraction
-      ;['id', 'scrollLeft', 'scrollTop'].forEach(name => {
+      ;[
+        'id',
+        'scrollLeft',
+        'scrollTop',
+        'width',
+        'height',
+        'controls',
+        'currentTime',
+        'playbackRate',
+        'volume',
+      ].forEach(name => {
         interpreter.setProperty(proto, name, undefined)
         proto.getter[name] = interpreter.createNativeFunction(function() {
           return this._o_el[name]
@@ -207,6 +238,15 @@ export default {
           ...attr
         ) {
           return interpreter.nativeToPseudo(this._o_el[name](...attr))
+        })
+      })
+
+      // Call native function
+      ;['pause', 'play'].forEach(name => {
+        interpreter.setNativeFunctionPrototype(manager, name, function(
+          ...attr
+        ) {
+          this._o_el[name](...attr)
         })
       })
 
@@ -318,6 +358,7 @@ export default {
         'blur',
         'focus',
       ].forEach(name => {
+        if (Object.hasOwnProperty.call(proto.properties, name)) return
         // console.log('Adding event hook', name)
         interpreter.setProperty(proto, 'on' + name, undefined)
         proto.getter['on' + name] = interpreter.createNativeFunction(
