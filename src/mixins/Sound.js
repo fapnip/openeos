@@ -199,7 +199,7 @@ export default {
       const constructor = (opt, fromPageScript) => {
         const optProps = opt.properties
         delete optProps.preload
-        let preload
+        let preload = optProps.preload === true
         if (optProps.preload && optProps.preload.class === 'Function') {
           const preloadFunc = optProps.preload
           preload = () => {

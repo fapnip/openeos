@@ -266,7 +266,7 @@ export default {
       const constructor = (opt, fromPageScript) => {
         const optProps = opt.properties
         const preloadFunc = optProps.preload
-        let preload
+        let preload = optProps.preload === true
         if (preloadFunc && preloadFunc.class === 'Function') {
           delete optProps.preload
           preload = () => {
@@ -355,6 +355,12 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
         this._item.video.pause()
         this._item._playing = false
+      })
+      interpreter.setNativeFunctionPrototype(manager, 'show', function(v) {
+        if (!arguments.length) {
+          return this._item._show
+        }
+        this._item.show(v)
       })
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
         this._item.stop()
