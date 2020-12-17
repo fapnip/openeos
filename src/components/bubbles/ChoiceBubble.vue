@@ -11,7 +11,7 @@
           v-show="optionVisible(option)"
           :key="option.label + ':' + i"
           :color="option.color"
-          class="oeos-clickable custom-transform-class text-none mx-1"
+          class="oeos-clickable custom-transform-class text-none mx-1 px-2"
           @click.stop="optionSelect(option)"
         >
           <span v-html="option.label"></span

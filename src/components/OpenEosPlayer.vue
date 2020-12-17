@@ -659,7 +659,7 @@ html {
   margin-right: auto;
 }
 .oeos-text-standard {
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 .theme--dark.v-card > .v-card__text,
 .theme--dark.v-card .v-card__subtitle {
@@ -669,6 +669,10 @@ html {
 .oeos-main .v-btn.v-size--default {
   height: auto;
   min-height: 36px;
+  font-size: 1.1rem;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: normal;
+  font-weight: bold;
 }
 
 .oeos-main .v-btn.v-size--default .v-btn__content {
