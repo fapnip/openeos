@@ -26,18 +26,21 @@ export default {
     hasWaitingPreloads() {
       return !!waitingPreloads
     },
-    incrementPreload(href) {
-      this.debug('Queuing preload:', href)
-      waitingPreloads++
+    checkPreloadIndicator() {
       if (!indicatorTimeout) {
         indicatorTimeout = setTimeout(() => {
-          if (this.hasWaitingPreloads()) {
+          if (this.hasWaitingPreloads() && afterPreload.length) {
             this.showPreloading = true
           } else {
             indicatorTimeout = false
           }
         }, 1000)
       }
+    },
+    incrementPreload(href) {
+      this.debug('Queuing preload:', href)
+      waitingPreloads++
+      this.checkPreloadIndicator()
     },
     doAfterPreload(wait, isError) {
       if (!wait) return
@@ -142,6 +145,7 @@ export default {
     },
     addAfterPreload(fn) {
       afterPreload.push(fn)
+      this.checkPreloadIndicator()
     },
   },
 }

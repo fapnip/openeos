@@ -191,7 +191,7 @@
       ></overlay-item>
       <loading v-if="loading">{{ loadingText }}</loading>
       <v-progress-linear
-        :active="showPreloading"
+        :active="showPreloading && waitingForPageChange"
         absolute
         indeterminate
         color="primary"
@@ -199,8 +199,12 @@
       ></v-progress-linear>
     </div>
 
-    <loading v-if="loading && !started">{{ loadingText }}</loading>
-    <div v-else-if="!started" class="oeos-start-prompt" @click.stop="runTease">
+    <loading v-show="loading && !started">{{ loadingText }}</loading>
+    <div
+      v-if="!started && !loading"
+      class="oeos-start-prompt"
+      @click.stop="runTease"
+    >
       <global-events @keydown.space="runTease" @keydown.enter="runTease" />
       <div class="oeos-start-title">{{ title }}</div>
       <div v-if="author" class="oeos-start-author">by {{ author }}</div>
