@@ -652,7 +652,7 @@ html {
 .oeos-blink-button {
   position: absolute;
   right: 5px;
-  bottom: 4px;
+  bottom: 7px;
 }
 .oeos-start-button {
   text-align: center;
