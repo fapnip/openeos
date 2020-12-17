@@ -63,7 +63,7 @@ export default {
 
       let item
 
-      function _setItem(item) {
+      const _setItem = () => {
         // console.log('Setting sound item', item, options)
         item.controls = options.controls
         item.onContinue = options.onContinue
@@ -75,7 +75,7 @@ export default {
         item._show = false
       }
 
-      function _startItem(item) {
+      const _startItem = () => {
         if (!isNaN(volume)) item.video.volume = volume
         // if (!item.playing()) item.play()
         item.play()
@@ -86,11 +86,19 @@ export default {
 
       // See if we were already loaded, and use that
       if (item) {
-        this.debug('Using preloaded video', item)
-        _setItem(item)
-        if (!preload) _startItem(item)
+        this.debug(
+          `Using preloaded video for ${preload ? 'preload' : 'display'}`,
+          item
+        )
+        _setItem()
+        if (!preload) {
+          _startItem()
+        }
+
         return item.pseudoItem()
       }
+
+      // console.warn('Creating new video', file.href, preload)
 
       const pseudoItem = interpreter.createObjectProto(PROTO)
       item = {}
@@ -158,11 +166,13 @@ export default {
         } else {
           // console.error('Hiding', video)
           item.video.classList.remove('oeos-show')
+          item.video.pause()
           item._show = false
         }
       }
 
       item.play = () => {
+        // console.error(`Playing video ${file.href}`)
         this.videoShow(item)
         item.video.play()
         item._playing = true
@@ -172,7 +182,7 @@ export default {
       item.preloader = e => {
         // If we're pre-loading, stop the video playback and restart
         if (item._preloading) {
-          console.warn('Stopping after preload')
+          // console.warn('Stopping after preload')
           item.stop()
           this.videoHide(item)
           video.muted = false
@@ -209,6 +219,8 @@ export default {
           item._playing = false
           item.video.pause()
           item.doContinue()
+        } else {
+          item.doContinue()
         }
       }
 
@@ -242,7 +254,7 @@ export default {
 
       // Use new
       this.videos[options.id] = item
-      _startItem(item)
+      if (!preload) _startItem(item)
 
       console.log('Created video item', item)
       return pseudoItem
