@@ -65,7 +65,7 @@ export default {
 
       const _setItem = () => {
         // console.log('Setting sound item', item, options)
-        item.controls = options.controls
+        // item.controls = options.controls
         item.onContinue = options.onContinue
         item.loops = options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
@@ -142,7 +142,7 @@ export default {
                 'Video not launched from user interaction.  Unable to auto-play or preload:',
                 file.locator
               )
-              video.controls = true
+              // video.controls = true
               item.needsInteraction = true
               item.preloader() // pretend that we preloaded
             })
@@ -185,6 +185,9 @@ export default {
           // console.warn('Stopping after preload')
           item.stop()
           this.videoHide(item)
+          video.controls = false
+          video.removeAttribute('controls')
+          // video.autoplay = true
           video.muted = false
           this.doAfterPreload(true)
           item._preloading = false
@@ -240,8 +243,7 @@ export default {
       const video = document.createElement('video')
       item.video = video
       video.classList.add('oeos-clickable')
-      // video.controls = false
-      // video.setAttribute('controls', 'true')
+      video.setAttribute('controls', 'true')
       video.preload = 'metadata'
       video.autoplay = false // We'll do this later
       video.muted = true

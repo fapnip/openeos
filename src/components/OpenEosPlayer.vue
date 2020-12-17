@@ -595,11 +595,24 @@ html {
   min-width: 0;
   box-sizing: border-box;
   user-select: none;
+  pointer-events: none;
   filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
 }
-.oeos-video video::-webkit-media-controls {
+/* hide video controls on safari iOS */
+.oeos-video *::-webkit-media-controls-timeline,
+.oeos-video *::-webkit-media-controls-container,
+.oeos-video *::-webkit-media-controls-container,
+.oeos-video *::-webkit-media-controls-start-playback-button,
+.oeos-video *::-webkit-media-controls-play-button,
+.oeos-video *::-webkit-media-controls-panel,
+.oeos-video *::-webkit-media-controls {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  -webkit-appearance: none !important;
+  z-index: -200 !important;
 }
+
 .oeos-video video.oeos-show {
   display: block;
 }
