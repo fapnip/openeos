@@ -10,8 +10,9 @@
       <div v-if="title" class="oeos-nt-title" v-html="filteredTitle"></div>
       <div v-if="buttonLabel" class="oeos-nt-button">
         <v-btn
-          class="custom-transform-class text-none"
+          class="custom-transform-class text-none px-2"
           @click.stop="onClick"
+          small
           v-html="filteredButtonLabel"
         ></v-btn>
       </div>

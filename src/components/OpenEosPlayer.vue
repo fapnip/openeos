@@ -612,11 +612,12 @@ html {
   opacity: 0.8;
 }
 .oeos-bubble {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   user-select: none;
 }
 .oeos-bubble p {
   margin-bottom: 0px;
+  padding: 3px;
   user-select: text;
 }
 .oeos-bubble.oeos-align-center {
@@ -670,6 +671,15 @@ html {
   height: auto;
   min-height: 36px;
   font-size: 1.1rem;
+  font-family: 'Noto Sans', sans-serif;
+  letter-spacing: normal;
+  font-weight: bold;
+}
+
+.oeos-main .v-btn.v-size--small {
+  height: auto;
+  min-height: 26px;
+  font-size: 1rem;
   font-family: 'Noto Sans', sans-serif;
   letter-spacing: normal;
   font-weight: bold;
