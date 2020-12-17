@@ -200,18 +200,19 @@ export default {
         const optProps = opt.properties
         delete optProps.preload
         let preload = optProps.preload === true
+        let pseudoItem
         if (optProps.preload && optProps.preload.class === 'Function') {
           const preloadFunc = optProps.preload
           preload = () => {
-            interpreter.queueFunction(preloadFunc, this)
+            interpreter.queueFunction(preloadFunc, pseudoItem)
             interpreter.run()
           }
         }
         const options = interpreter.pseudoToNative(opt)
         try {
-          const item = this.createSoundItem(options, fromPageScript, preload)
+          pseudoItem = this.createSoundItem(options, fromPageScript, preload)
           // console.log('Playing sound item from constructor', item)
-          return item
+          return pseudoItem
         } catch (e) {
           return interpreter.createThrowable(interpreter.ERROR, e.toString())
         }
