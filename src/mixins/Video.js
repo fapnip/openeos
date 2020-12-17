@@ -230,7 +230,9 @@ export default {
       }
 
       if (typeof preload === 'function') {
-        this.addAfterPreload(preload)
+        this.addAfterPreload(() => {
+          preload()
+        })
       }
 
       item._preloading = true
@@ -279,10 +281,11 @@ export default {
         const optProps = opt.properties
         const preloadFunc = optProps.preload
         let preload = optProps.preload === true
+        let pseudoItem
         if (preloadFunc && preloadFunc.class === 'Function') {
           delete optProps.preload
           preload = () => {
-            interpreter.queueFunction(preloadFunc, this)
+            interpreter.queueFunction(preloadFunc, pseudoItem)
             interpreter.run()
           }
         }
@@ -291,16 +294,16 @@ export default {
         if (onContinueFunc && onContinueFunc.class === 'Function') {
           delete optProps.onContinue
           onContinue = () => {
-            interpreter.queueFunction(onContinueFunc, this)
+            interpreter.queueFunction(onContinueFunc, pseudoItem)
             interpreter.run()
           }
         }
         const options = interpreter.pseudoToNative(opt)
         options.onContinue = onContinue
         try {
-          const item = this.createVideoItem(options, fromPageScript, preload)
-          // console.log('Playing sound item from constructor', item)
-          return item
+          pseudoItem = this.createVideoItem(options, fromPageScript, preload)
+          // console.log('Playing video item from constructor', pseudoItem)
+          return pseudoItem
         } catch (e) {
           return interpreter.createThrowable(interpreter.ERROR, e.toString())
         }
