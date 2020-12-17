@@ -153,8 +153,8 @@ export default {
 
       item.stop = () => {
         this.videoHide(item)
-        video.pause()
         this.$nextTick(() => {
+          video.pause()
           video.currentTime = 0
           item._playing = false
         })
@@ -168,7 +168,7 @@ export default {
         } else {
           // console.error('Hiding', video)
           item.video.classList.remove('oeos-show')
-          item.video.pause()
+          this.$nextTick(() => item.video.pause())
           item._show = false
         }
       }
