@@ -597,6 +597,9 @@ html {
   user-select: none;
   filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.3));
 }
+.oeos-video video::-webkit-media-controls {
+  display: none !important;
+}
 .oeos-video video.oeos-show {
   display: block;
 }

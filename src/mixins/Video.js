@@ -240,7 +240,8 @@ export default {
       const video = document.createElement('video')
       item.video = video
       video.classList.add('oeos-clickable')
-      video.controls = false
+      // video.controls = false
+      // video.setAttribute('controls', 'true')
       video.preload = 'metadata'
       video.autoplay = false // We'll do this later
       video.muted = true
@@ -253,6 +254,7 @@ export default {
       console.log('refs', this.$refs)
 
       this.$refs.videoElements.appendChild(video)
+      // video.removeAttribute('controls')
 
       // Use new
       this.videos[options.id] = item
