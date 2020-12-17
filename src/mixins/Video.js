@@ -25,15 +25,6 @@ export default {
         if (yScale === 1 || xScale < yScale) {
           height = naturalHeight * xScale
         }
-        console.log(
-          'Video Overlay',
-          video.clientWidth,
-          video.clientHeight,
-          width,
-          height,
-          naturalWidth,
-          naturalHeight
-        )
         vidOverlay.style.width = Math.ceil(width) + 'px'
         vidOverlay.style.height = Math.ceil(height) + 'px'
       }
