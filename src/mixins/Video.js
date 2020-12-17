@@ -168,11 +168,12 @@ export default {
         }
       }
 
-      const _showOnPlay = () => {
+      const _showOnPlay = e => {
         if (item._show) {
           item.show(true)
           this.videoShow(item)
           video.removeEventListener('play', _showOnPlay)
+          this.dispatchEvent({ target: pseudoItem, type: 'play-start' }, e)
         }
       }
 
