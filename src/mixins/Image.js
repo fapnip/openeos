@@ -76,6 +76,7 @@ export default {
     },
     imageError(e) {
       this.imageResize()
+      this.videoHideAll()
       if (
         !this.hasEventListeners(this.pagesInstance(), 'image-error') &&
         !onNextImageError.length
@@ -93,6 +94,7 @@ export default {
     },
     imageLoad(e) {
       this.imageResize()
+      this.videoHideAll()
       if (
         !this.hasEventListeners(this.pagesInstance(), 'image-load') &&
         !onNextImageLoad.length
