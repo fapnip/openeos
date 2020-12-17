@@ -148,5 +148,6 @@ export default {
 .oeos-say-bubble {
   transition: background-color 0.25s ease;
   font-family: 'Noto Sans', sans-serif;
+  border-radius: 12px !important;
 }
 </style>
