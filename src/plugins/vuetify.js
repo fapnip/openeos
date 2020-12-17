@@ -17,6 +17,7 @@ export default new Vuetify({
       dark: {
         primary: '#773435',
         background: '#000000',
+        anchor: '#83afff',
       },
     },
   },
