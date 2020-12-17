@@ -79,7 +79,6 @@ export default {
         if (!isNaN(volume)) item.video.volume = volume
         // if (!item.playing()) item.play()
         item.play()
-        item._playing = true
       }
 
       item = this.videos[options.id]
@@ -115,12 +114,8 @@ export default {
       }
 
       item.playing = () => {
-        return !!(
-          video.currentTime > 0 &&
-          !video.paused &&
-          !video.ended &&
-          video.readyState > 2
-        )
+        // console.warn('Is playing?', video.paused, video.ended, video.readyState)
+        return !!(!video.paused && !video.ended && video.readyState > 2)
       }
 
       item.loadedmetadata = e => {
@@ -173,12 +168,25 @@ export default {
         }
       }
 
+      const _showOnPlay = () => {
+        if (item._show) {
+          item.show(true)
+          this.videoShow(item)
+          video.removeEventListener('play', _showOnPlay)
+        }
+      }
+
       item.play = () => {
         // console.error(`Playing video ${file.href}`)
-        item.video.play()
-        item._playing = true
+        item._show = true
         item._didContinue = false
-        this.$nextTick(() => this.videoShow(item))
+        item._playing = true
+        if (!item.playing()) {
+          video.addEventListener('play', _showOnPlay)
+          item.video.play()
+        } else {
+          _showOnPlay()
+        }
       }
 
       item.preloader = e => {
