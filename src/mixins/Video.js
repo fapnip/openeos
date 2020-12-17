@@ -8,7 +8,56 @@ export default {
   }),
 
   methods: {
-    videoClick() {},
+    videoResize() {
+      const item = this.hasVideo
+      const video = item && item.video
+      const vidOverlay = this.$refs.videoOverlays
+      if (video && vidOverlay) {
+        let width = video.clientWidth
+        let height = video.clientHeight
+        const naturalHeight = video.videoHeight
+        const naturalWidth = video.videoWidth
+        const xScale = width / naturalWidth
+        const yScale = height / naturalHeight
+        if (xScale === 1) {
+          width = naturalWidth * yScale
+        }
+        if (yScale === 1 || xScale < yScale) {
+          height = naturalHeight * xScale
+        }
+        console.log(
+          'Video Overlay',
+          video.clientWidth,
+          video.clientHeight,
+          width,
+          height,
+          naturalWidth,
+          naturalHeight
+        )
+        vidOverlay.style.width = Math.ceil(width) + 'px'
+        vidOverlay.style.height = Math.ceil(height) + 'px'
+      }
+    },
+    videoClick(e) {
+      const item = this.hasVideo
+      const pseudoItem = item && item.pseudoItem()
+      if (!pseudoItem || !this.hasEventListeners(pseudoItem, 'click')) return
+      const rect = e.target.getBoundingClientRect()
+      const x = e.clientX - rect.left //x position within the element.
+      const y = e.clientY - rect.top //y position within the element.
+      this.dispatchEvent(
+        {
+          target: pseudoItem,
+          type: 'click',
+          value: {
+            x: x / e.target.clientWidth, // between 0 and 1, where clicked
+            y: y / e.target.clientHeight, // between 0 and 1, where clicked
+          },
+          timeStamp: e.timeStamp + performance.timing.navigationStart,
+        },
+        e
+      )
+    },
     videoShow(item) {
       let hasVideo = false
       for (const video of Object.values(this.videos)) {
@@ -172,6 +221,7 @@ export default {
         if (item._show) {
           item.show(true)
           this.videoShow(item)
+          this.$nextTick(() => this.videoResize())
           video.removeEventListener('play', _showOnPlay)
           this.dispatchEvent({ target: pseudoItem, type: 'play-start' }, e)
         }

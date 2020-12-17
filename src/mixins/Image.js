@@ -43,23 +43,27 @@ export default {
   },
   methods: {
     imageResize() {
-      const img = this.$refs.mainImage
-      const imtOverlay = this.$refs.imageOverlays
-      if (img && imtOverlay) {
-        let width = img.clientWidth
-        let height = img.clientHeight
-        const naturalHeight = img.naturalHeight
-        const naturalWidth = img.naturalWidth
-        const xScale = width / naturalWidth
-        const yScale = height / naturalHeight
-        if (xScale === 1) {
-          width = naturalWidth * yScale
+      if (!this.hideVideo && this.hasVideo) {
+        this.videoResize()
+      } else {
+        const img = this.$refs.mainImage
+        const imgOverlay = this.$refs.imageOverlays
+        if (img && imgOverlay) {
+          let width = img.clientWidth
+          let height = img.clientHeight
+          const naturalHeight = img.naturalHeight
+          const naturalWidth = img.naturalWidth
+          const xScale = width / naturalWidth
+          const yScale = height / naturalHeight
+          if (xScale === 1) {
+            width = naturalWidth * yScale
+          }
+          if (yScale === 1 || xScale < yScale) {
+            height = naturalHeight * xScale
+          }
+          imgOverlay.style.width = Math.ceil(width) + 'px'
+          imgOverlay.style.height = Math.ceil(height) + 'px'
         }
-        if (yScale === 1 || xScale < yScale) {
-          height = naturalHeight * xScale
-        }
-        imtOverlay.style.width = Math.ceil(width) + 'px'
-        imtOverlay.style.height = Math.ceil(height) + 'px'
       }
       this.scrollToBottom()
     },

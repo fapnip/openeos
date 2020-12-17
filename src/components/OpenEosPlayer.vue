@@ -546,9 +546,6 @@ html {
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
-.oeos-video-overlays {
-  pointer-events: none;
-}
 .oeos-image img {
   display: block;
   position: absolute;
