@@ -34,6 +34,13 @@ export default {
       }
       return node
     })
+    DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+      // set all elements owning target to target=_blank
+      if ('target' in node) {
+        node.setAttribute('target', '_blank')
+        node.setAttribute('rel', 'noopener')
+      }
+    })
   },
   methods: {
     sanitizeHref(href) {
@@ -75,6 +82,7 @@ export default {
       const result = DOMPurify.sanitize(html, {
         // FORCE_BODY: false,
         IN_PLACE: true,
+        ADD_ATTR: ['target'],
       })
       return result
     },
