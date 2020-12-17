@@ -13,7 +13,7 @@ export default {
       let hasVideo = false
       for (const video of Object.values(this.videos)) {
         video.show(video === item)
-        if (video._show) hasVideo = true
+        if (video._show) hasVideo = video
       }
       this.hasVideo = hasVideo
     },
@@ -23,7 +23,7 @@ export default {
         if (video === item) {
           video.show(false)
         }
-        if (video._show) hasVideo = true
+        if (video._show) hasVideo = video
       }
       this.hasVideo = hasVideo
     },
@@ -152,10 +152,12 @@ export default {
       }
 
       item.stop = () => {
-        video.pause()
-        video.currentTime = 0
-        item._playing = false
         this.videoHide(item)
+        video.pause()
+        this.$nextTick(() => {
+          video.currentTime = 0
+          item._playing = false
+        })
       }
 
       item.show = val => {
@@ -173,10 +175,10 @@ export default {
 
       item.play = () => {
         // console.error(`Playing video ${file.href}`)
-        this.videoShow(item)
         item.video.play()
         item._playing = true
         item._didContinue = false
+        this.$nextTick(() => this.videoShow(item))
       }
 
       item.preloader = e => {
@@ -205,7 +207,7 @@ export default {
         if (item._didContinue) return
         item._didContinue = true
         if (typeof item.onContinue === 'function') {
-          item.stop()
+          // item.stop()
           item.onContinue()
         }
       }
@@ -215,12 +217,12 @@ export default {
           item.loopCount--
           if (!item.loopCount) {
             item._playing = false
-            item.video.pause()
+            this.$nextTick(() => item.video.pause())
             item.doContinue()
           }
         } else if (!item.loop || item.loops === 1) {
           item._playing = false
-          item.video.pause()
+          this.$nextTick(() => item.video.pause())
           item.doContinue()
         } else {
           item.doContinue()

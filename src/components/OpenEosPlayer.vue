@@ -11,12 +11,15 @@
         }"
       ></div>
       <div
-        v-show="(hideVideo || !hasVideo) && image && !hideImage"
+        v-show="(!hideVideo && hasVideo) || (image && !hideImage)"
         :class="{
           'oeos-top': true,
         }"
       >
-        <div class="oeos-image">
+        <div
+          class="oeos-image"
+          v-show="(hideVideo || !hasVideo) && image && !hideImage"
+        >
           <img
             ref="mainImage"
             :src="image && image.href"
@@ -32,6 +35,7 @@
           class="oeos-image-overlays"
           ref="imageOverlays"
           @click="imageClick"
+          v-show="(hideVideo || !hasVideo) && image && !hideImage"
         >
           <overlay-item
             v-for="overlay in imageOverlays"
@@ -40,28 +44,13 @@
             @ready="overlay.ready"
           ></overlay-item>
         </div>
-        <resize-observer @notify="imageResize" />
-      </div>
-      <div
-        v-show="!hideVideo && hasVideo"
-        :class="{
-          'oeos-top': true,
-        }"
-      >
-        <div class="oeos-video" ref="videoElements">
-          <!-- <video
-            :ref="'video' + video.id"
-            :src="video.file.href"
-            class="oeos-clickable"
-            controls="true"
-            autostart="true"
-            preload="auto"
-            muted="true"
-            @play="video.play"
-            @error="video.error"
-          ></video> -->
-        </div>
         <div
+          v-show="!hideVideo && hasVideo"
+          class="oeos-video"
+          ref="videoElements"
+        ></div>
+        <div
+          v-show="!hideVideo && hasVideo"
           class="oeos-video-overlays"
           ref="videoOverlays"
           @click="videoClick"
