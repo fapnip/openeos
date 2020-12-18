@@ -203,6 +203,7 @@
         >
       </div>
     </div>
+    <div v-if="showSoundTime" class="oeos-sound-time">{{ soundTime }}</div>
   </div>
 </template>
 
@@ -437,8 +438,13 @@ export default {
   left: 0;
   right: 0;
 }
-#oeos-active-sounds {
+#oeos-sounds {
   display: none;
+}
+.oeos-sound-time {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 .oeos-start-title {
   text-align: center;

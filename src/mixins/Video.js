@@ -5,6 +5,7 @@ export default {
     videos: {},
     hideVideo: false,
     hasVideo: false,
+    lastVideoPlay: null,
   }),
 
   methods: {
@@ -223,6 +224,7 @@ export default {
         item._show = true
         item._didContinue = false
         item._playing = true
+        this.lastVideoPlay = item
         if (!item.playing()) {
           video.addEventListener('play', _showOnPlay)
           item.video.play()
@@ -409,14 +411,29 @@ export default {
       //   this.Interpreter.NONENUMERABLE_DESCRIPTOR
       // )
 
-      // interpreter.setProperty(
-      //   manager,
-      //   'stop',
-      //   interpreter.createNativeFunction(() => {
-      //     return Howler.stop()
-      //   }),
-      //   this.Interpreter.NONENUMERABLE_DESCRIPTOR
-      // )
+      interpreter.setProperty(
+        manager,
+        'stopAll',
+        interpreter.createNativeFunction(allBut => {
+          for (const k of Object.keys(this.videos)) {
+            const item = this.videos[k]
+            if (item.pseudoItem() !== allBut && item._id !== allBut) {
+              item.stop()
+              item._playing = false
+            }
+          }
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setProperty(
+        manager,
+        'lastPlayed',
+        interpreter.createNativeFunction(() => {
+          return this.lastVideoPlay && this.lastVideoPlay.pseudoItem()
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
 
       interpreter.setNativeFunctionPrototype(manager, 'play', function() {
         this._item.loopCount = this._item.loops

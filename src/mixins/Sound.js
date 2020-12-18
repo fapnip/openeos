@@ -1,4 +1,5 @@
 import { Howl, Howler } from 'howler'
+import TreeMap from '../util/TreeMap'
 
 let soundPools = {}
 
@@ -9,6 +10,8 @@ let PROTO
 export default {
   data: () => ({
     sounds: {},
+    soundTime: 0,
+    showSoundTime: false,
   }),
 
   mounted() {
@@ -21,7 +24,7 @@ export default {
     const keys = Object.keys(sounds)
     for (let i = keys.length - 1; i >= 0; i--) {
       const key = keys[i]
-      sounds[key].sound.stop()
+      sounds[key].stop()
       delete sounds[key]
     }
   },
@@ -64,27 +67,35 @@ export default {
 
       let item
 
-      function _setItem(item) {
+      const clearLastDoAt = () => {
+        // console.warn('Clearing lastdo at')
+        item.lastDoAt = null
+        item._runningSound = null
+      }
+
+      const _setItem = () => {
         // console.log('Setting sound item', item, options)
         item.options = options
         item.loops = options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
         item.loopCount = item.loops
         item.id = options.id
+        if (options.startAt) item.startAt = options.startAt
+        clearLastDoAt()
+        item.doAt = new TreeMap()
       }
 
-      function _startItem(item) {
+      const _startItem = () => {
         if (!isNaN(volume)) item.sound.volume(volume)
-        if (!item.sound.playing()) item.sound.play()
-        item._playing = true
+        if (!item.sound.playing()) item.play()
       }
 
       item = this.sounds[options.id]
 
       // See if we were already loaded, and use that
       if (item) {
-        _setItem(item)
-        if (!preload) _startItem(item)
+        _setItem()
+        if (!preload) _startItem()
         return item.pseudoItem()
       }
 
@@ -95,8 +106,8 @@ export default {
         // see if we have a preloaded sound in the pool, and use that
         item = pool.pop()
         if (item) {
-          _setItem(item)
-          _startItem(item)
+          _setItem()
+          _startItem()
           this.sounds[options.id] = item
           return item.pseudoItem()
         }
@@ -118,14 +129,135 @@ export default {
         this.addAfterPreload(preload)
       }
 
-      const doPreload = e => {
-        if (!item.preloaded) {
-          item.preloaded = true
-          if (preload) {
-            item._playing = false
-            sound.stop()
-            this.doAfterPreload(true)
+      const isElementPlaying = el => {
+        return (
+          !el.paused && !el.ended && el.currentTime > 0 && el.readyState > 2
+        )
+      }
+
+      const getRunningSound = () => {
+        // Hack to get audio element from Howler
+        let runningSound = item._runningSound
+        if (!runningSound || !isElementPlaying(runningSound)) {
+          runningSound = sound._sounds.find(s => isElementPlaying(s._node))
+          if (runningSound) {
+            item._runningSound = runningSound && runningSound._node
           }
+        }
+        return runningSound
+      }
+
+      const getCurrentTime = () => {
+        const runningSound = getRunningSound()
+        return (runningSound && runningSound.currentTime) || sound.seek()
+      }
+
+      const formatTime = seconds => {
+        let minutes = Math.floor(seconds / 60)
+        minutes = minutes >= 10 ? minutes : '0' + minutes
+        const s = seconds % 60
+        seconds = s.toFixed(2)
+        seconds = s >= 10 ? seconds : '0' + seconds
+        return minutes + ':' + seconds
+      }
+
+      item.runDoAt = () => {
+        if (!item.doAt.getLength()) return false // Nothing to do.
+        const lastDoAt = item.lastDoAt
+        const lastTime = lastDoAt && lastDoAt.value && lastDoAt.key
+        const currentTime = getCurrentTime()
+        const doAction = item.doAt.floorEntry(
+          currentTime,
+          lastDoAt && lastDoAt.node
+        )
+        // if (currentTime > 4) return
+        if (this.showSoundTime) {
+          this.soundTime = formatTime(currentTime)
+        }
+        if (!doAction) return true // keep the timer running, since we may loop.
+        const doTime = doAction.key
+        if (doTime === lastTime) return true // Already did this
+        console.log(
+          'runDoAt doAction',
+          doAction,
+          currentTime,
+          doTime,
+          lastTime,
+          lastDoAt && lastDoAt.node
+        )
+        // console.warn('Recording last do at', doAction)
+        item.lastDoAt = doAction
+        if (currentTime - doTime > 1 && doTime !== 0) return true
+        const doObj = doAction.value
+        if (doObj && doObj.func.class === 'Function') {
+          if (doObj.sync) {
+            // Do on next animation frame
+            requestAnimationFrame(() => {
+              interpreter.queueFunction(doObj.func, pseudoItem)
+              interpreter.run()
+            })
+          } else {
+            // Do as soon as possible
+            interpreter.queueFunction(doObj.func, pseudoItem)
+            interpreter.run()
+          }
+        }
+        return true
+      }
+
+      item.stop = () => {
+        item._playing = false
+        clearLastDoAt()
+        clearInterval(item._doInterval)
+        sound.stop()
+        if (item.startAt) sound.seek(item.startAt)
+      }
+
+      item.seek = v => {
+        item._runningSound = null
+        clearLastDoAt()
+        sound.seek(v)
+      }
+
+      item.play = () => {
+        item._playing = true
+        item._runningSound = null
+        clearInterval(item._doInterval)
+        // Howler doesn't support the event we need to track time, so we do this crap
+        sound.play()
+        if (item.runDoAt()) {
+          item._doInterval = setInterval(() => {
+            if (!item.runDoAt()) clearInterval(item._doInterval)
+          }, 33) // Check around 30 times a second
+        }
+      }
+
+      item.pause = () => {
+        clearInterval(item._doInterval)
+        item._playing = false
+        sound.pause()
+      }
+
+      const doPrePlay = e => {
+        if (item.startAt) {
+          sound.seek(item.startAt)
+        }
+        item.play()
+        item._preloadTimeout = setTimeout(() => {
+          doPreload('Timeout waiting for sound preload')
+        }, 10000)
+      }
+
+      const doPreload = e => {
+        if (item.preloaded) return
+        if (typeof e === 'string') {
+          console.error(e, file.href)
+        }
+        clearTimeout(item._preloadTimeout)
+        item.preloaded = true
+        if (preload) {
+          item.stop()
+          this.doAfterPreload(true)
         }
       }
 
@@ -140,8 +272,9 @@ export default {
           autoPlay: true,
           volume: isNaN(volume) ? 1 : volume,
           format: [file.format || 'mp3'],
-          onload: doPreload,
-          onloaderror: function(id, error) {
+          onplay: doPreload,
+          onload: doPrePlay,
+          onploaderror: function(id, error) {
             console.error('Unable to load sound', file.href, error)
             doPreload.call(this)
           },
@@ -156,13 +289,13 @@ export default {
         if (item.loop && item.loops > 1) {
           item.loopCount--
           if (!item.loopCount) {
-            item._playing = false
-            sound.stop()
+            item.stop()
           }
         } else if (!item.loop || item.loops === 1) {
-          item._playing = false
-          sound.stop()
+          item.stop()
         }
+        item._runningSound = null
+        clearLastDoAt()
       })
       ;['play', 'end', 'pause'].forEach(type => {
         sound.on(type, e => {
@@ -175,7 +308,7 @@ export default {
       } else {
         // Use new
         this.sounds[options.id] = item
-        _startItem(item)
+        _startItem()
       }
       console.log('Created sound item', item)
       return pseudoItem
@@ -184,8 +317,7 @@ export default {
       for (const k of Object.keys(this.sounds)) {
         const item = this.sounds[k]
         if (!item.options.background) {
-          item.sound.stop()
-          item._playing = false
+          item.stop()
           if (item.options.fromPageScript) {
             const pool = this.getSoundPool(item.preloadKey)
             pool.push(item) // Put sound back in pool for later re-use
@@ -246,6 +378,18 @@ export default {
 
       interpreter.setProperty(
         manager,
+        'showSoundTime',
+        interpreter.createNativeFunction(function(val) {
+          if (!arguments.length) {
+            return vue.showSoundTime
+          }
+          vue.showSoundTime = val
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setProperty(
+        manager,
         'volume',
         interpreter.createNativeFunction(volume => {
           return Howler.volume(volume)
@@ -266,26 +410,22 @@ export default {
         manager,
         'stop',
         interpreter.createNativeFunction(() => {
-          return Howler.stop()
+          for (const k of Object.keys(this.sounds)) {
+            this.sounds[k].stop()
+          }
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'play', function() {
         this._item.loopCount = this._item.loops
-        this._item.sound.play()
-        this._item._playing = true
+        this._item.play()
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
-        this._item.sound.pause()
-        this._item._playing = false
+        this._item.pause()
       })
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
-        this._item.sound.stop()
-        this._item._playing = false
-      })
-      interpreter.setNativeFunctionPrototype(manager, 'pan', function(pan) {
-        this._item.sound.pan(pan)
+        this._item.stop()
       })
       interpreter.setNativeFunctionPrototype(manager, 'mute', function(muted) {
         this._item.sound.mute(muted === undefined ? true : muted)
@@ -306,9 +446,15 @@ export default {
         return this._item.sound.volume()
       })
       interpreter.setNativeFunctionPrototype(manager, 'rate', function(rate) {
+        if (!arguments.length) {
+          return this._item.sound.rate()
+        }
         this._item.sound.rate(rate)
       })
       interpreter.setNativeFunctionPrototype(manager, 'seek', function(time) {
+        if (!arguments.length) {
+          return this._item.sound.seek()
+        }
         time = Number(time)
         if (isNaN(time)) {
           return interpreter.createThrowable(
@@ -322,7 +468,28 @@ export default {
             'time must be greater than or equal to 0'
           )
         }
-        this._item.sound.seek(time)
+        this._item.seek(time)
+      })
+      interpreter.setNativeFunctionPrototype(manager, 'startAt', function(
+        time
+      ) {
+        if (!arguments.length) {
+          return this._item.startAt || 0
+        }
+        time = Number(time)
+        if (isNaN(time)) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'time must be a valid number'
+          )
+        }
+        if (time < 0) {
+          return interpreter.createThrowable(
+            interpreter.RANGE_ERROR,
+            'time must be greater than or equal to 0'
+          )
+        }
+        this._item.startAt = time
       })
       interpreter.setNativeFunctionPrototype(manager, 'setVolume', function(
         volume
@@ -348,6 +515,32 @@ export default {
         }
         this._item.sound.volume(volume)
       })
+
+      interpreter.setNativeFunctionPrototype(manager, 'setDoAt', function(
+        time,
+        func,
+        sync
+      ) {
+        time = Number(time)
+        if (isNaN(time)) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            'time must be a valid floating point number'
+          )
+        }
+        if (time < 0) {
+          return interpreter.createThrowable(
+            interpreter.RANGE_ERROR,
+            'time must be greater than or equal to 0'
+          )
+        }
+        this._item.doAt.set(time, { func: func, sync: sync })
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'clearDoAt', function() {
+        this._item.doAt = new TreeMap()
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'fade', function(
         from,
         to,
@@ -356,8 +549,7 @@ export default {
         this._item.sound.fade(from, to, duration)
       })
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
-        this._item.sound.stop()
-        this._item._playing = false
+        this._item.stop()
         const pool = vue.getSoundPool(this._item.preloadKey)
         pool.push(this._item) // Put sound back in pool for later re-use
         delete vue.sounds[this._item.options.id]
