@@ -12,7 +12,8 @@ export const extToType = Object.entries(extensionMap).reduce((a, e) => {
   return a
 }, {})
 
-export const CORS_PROXY = 'https://oeos-proxy1.herokuapp.com/'
+// export const CORS_PROXY = 'https://oeos-proxy1.herokuapp.com/'
+export const CORS_PROXY = 'https://oeos.ml/proxy.php?csurl='
 
 export const buildHref = (item, smaller) => {
   if (item.href) {

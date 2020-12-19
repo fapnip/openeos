@@ -251,7 +251,7 @@ export default {
     const teaseId = params.get('id')
     if (teaseId) {
       this.formUri = true
-      let teaseUrl = `https://milovana.com/webteases/showtease.php?id=${teaseId}`
+      let teaseUrl = `https://milovana.com/webteases/showtease.php&id=${teaseId}`
       const key = params.get('key')
       if (key) {
         teaseUrl += `&key=${key}`
@@ -381,7 +381,7 @@ export default {
     getRemoteScript(uri) {
       this.loading = true
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php?id=${uri}&${FIX_POLLUTION}`
+        `${CORS_PROXY}https://milovana.com/webteases/geteosscript.php&id=${uri}&${FIX_POLLUTION}`
       )
         .then(response => response.json())
         .then(script => {
@@ -404,7 +404,7 @@ export default {
         })
         .catch(e => {
           fetch(
-            `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&${FIX_POLLUTION}`
+            `${CORS_PROXY}https://milovana.com/webteases/showtease.php&id=${uri}&${FIX_POLLUTION}`
           )
             .then(response => response.text())
             .then(contents => {
@@ -430,7 +430,7 @@ export default {
     },
     getRemoteScriptName(uri, script) {
       fetch(
-        `${CORS_PROXY}https://milovana.com/webteases/showtease.php?id=${uri}&${FIX_POLLUTION}`
+        `${CORS_PROXY}https://milovana.com/webteases/showtease.php&id=${uri}&${FIX_POLLUTION}`
       )
         .then(response => response.text())
         .then(contents => {
