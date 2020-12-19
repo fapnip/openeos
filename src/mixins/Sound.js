@@ -177,17 +177,18 @@ export default {
         if (!doAction) return true // keep the timer running, since we may loop.
         const doTime = doAction.key
         if (doTime === lastTime) return true // Already did this
-        console.log(
-          'runDoAt doAction',
-          doAction,
-          currentTime,
-          doTime,
-          lastTime,
-          lastDoAt && lastDoAt.node
-        )
+        // console.log(
+        //   'runDoAt doAction',
+        //   doAction,
+        //   currentTime,
+        //   doTime,
+        //   lastTime,
+        //   lastDoAt && lastDoAt.node
+        // )
         // console.warn('Recording last do at', doAction)
         item.lastDoAt = doAction
         if (currentTime - doTime > 1 && doTime !== 0) return true
+        this.debug('Run doAt', doTime)
         const doObj = doAction.value
         if (doObj && doObj.func.class === 'Function') {
           if (doObj.sync) {
