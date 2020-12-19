@@ -188,7 +188,7 @@ export default {
         // console.warn('Recording last do at', doAction)
         item.lastDoAt = doAction
         if (currentTime - doTime > 1 && doTime !== 0) return true
-        this.debug('Run doAt', doTime)
+        this.debug('Run doAt', doTime, currentTime)
         const doObj = doAction.value
         if (doObj && doObj.func.class === 'Function') {
           if (doObj.sync) {
@@ -229,7 +229,7 @@ export default {
         if (item.runDoAt()) {
           item._doInterval = setInterval(() => {
             if (!item.runDoAt()) clearInterval(item._doInterval)
-          }, 33) // Check around 30 times a second
+          }, 16) // Check around 30 times a second
         }
       }
 
