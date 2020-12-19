@@ -139,8 +139,11 @@ export default {
         // Hack to get audio element from Howler
         let runningSound = item._runningSound
         if (!runningSound || !isElementPlaying(runningSound)) {
-          runningSound = sound._sounds.find(s => isElementPlaying(s._node))
-          if (runningSound) {
+          const runningSounds = sound._sounds.filter(s =>
+            isElementPlaying(s._node)
+          )
+          if (runningSounds.length) {
+            runningSound = runningSounds[runningSounds.length - 1]
             item._runningSound = runningSound && runningSound._node
           }
         }
