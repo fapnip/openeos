@@ -159,7 +159,7 @@ export default {
         let minutes = Math.floor(seconds / 60)
         minutes = minutes >= 10 ? minutes : '0' + minutes
         const s = seconds % 60
-        seconds = s.toFixed(2)
+        seconds = s.toFixed(1)
         seconds = s >= 10 ? seconds : '0' + seconds
         return minutes + ':' + seconds
       }
