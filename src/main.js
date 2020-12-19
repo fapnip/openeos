@@ -8,13 +8,18 @@ import GlobalEvents from 'vue-global-events'
 import 'typeface-noto-sans'
 import VueResize from 'vue-resize'
 
-Vue.config.productionTip = false
+if (location.hostname === 'oeos-player-preview.herokuapp.com') {
+  const query = window.location.search
+  window.location.replace('https://oeos.ml' + query)
+} else {
+  Vue.config.productionTip = false
 
-Vue.use(VueResize)
-Vue.use(VueScrollTo)
-Vue.component('GlobalEvents', GlobalEvents)
+  Vue.use(VueResize)
+  Vue.use(VueScrollTo)
+  Vue.component('GlobalEvents', GlobalEvents)
 
-new Vue({
-  vuetify,
-  render: h => h(App),
-}).$mount('#app')
+  new Vue({
+    vuetify,
+    render: h => h(App),
+  }).$mount('#app')
+}
