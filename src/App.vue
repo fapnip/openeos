@@ -34,9 +34,9 @@
 
       <v-spacer></v-spacer>
       <span v-if="!formUri">{{ pageId }}</span>
-      <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
+      <!-- <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
-      </v-btn>
+      </v-btn> -->
       <v-btn icon @click="toggleFullscreen">
         <v-icon>mdi-fullscreen</v-icon>
       </v-btn>
