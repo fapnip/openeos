@@ -1,5 +1,7 @@
 <?php
 
+header("Access-Control-Allow-Origin: *");
+
 $valid_requests = array(
   'milovana.com'
 );
