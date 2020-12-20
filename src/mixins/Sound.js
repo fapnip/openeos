@@ -135,6 +135,25 @@ export default {
         )
       }
 
+      const isElementStopped = el => {
+        return el.ended || (el.currentTime === 0 && el.readyState < 3)
+      }
+
+      const getPausedOrRunningSound = () => {
+        // Hack to get audio element from Howler
+        let runningSound = getRunningSound()
+        if (!runningSound || isElementStopped(runningSound)) {
+          const runningSounds = sound._sounds.filter(
+            s => !isElementStopped(s._node)
+          )
+          if (runningSounds.length) {
+            runningSound = runningSounds[runningSounds.length - 1]
+            item._runningSound = runningSound && runningSound._node
+          }
+        }
+        return runningSound
+      }
+
       const getRunningSound = () => {
         // Hack to get audio element from Howler
         let runningSound = item._runningSound
@@ -211,6 +230,7 @@ export default {
 
       item.stop = () => {
         item._playing = false
+        item._elPaused = false
         clearLastDoAt()
         clearInterval(item._doInterval)
         sound.stop()
@@ -220,16 +240,34 @@ export default {
       item.seek = v => {
         item._runningSound = null
         clearLastDoAt()
-        sound.seek(v)
+        const soundEl = getPausedOrRunningSound()
+        if (soundEl) {
+          soundEl.currentTime = v
+        } else {
+          sound.seek(v)
+        }
       }
 
       item.play = () => {
-        console.log('starting sound', options, item.loop, item.loops, item)
         item._playing = true
         item._runningSound = null
         clearInterval(item._doInterval)
         // Howler doesn't support the event we need to track time, so we do this crap
-        sound.play()
+        const soundEl = getPausedOrRunningSound()
+        if (soundEl && soundEl.play && item._elPaused) {
+          soundEl.play()
+        } else if (
+          soundEl &&
+          soundEl._node &&
+          soundEl._node.play &&
+          item._elPaused
+        ) {
+          soundEl._node.play()
+        } else {
+          console.dir(soundEl)
+          sound.play()
+        }
+        item._elPaused = false
         if (item.runDoAt()) {
           item._doInterval = setInterval(() => {
             if (!item.runDoAt()) clearInterval(item._doInterval)
@@ -240,7 +278,14 @@ export default {
       item.pause = () => {
         clearInterval(item._doInterval)
         item._playing = false
-        sound.pause()
+        const soundEl = getPausedOrRunningSound()
+        if (soundEl) {
+          soundEl.pause()
+          item._elPaused = true
+          this.dispatchEvent({ target: pseudoItem, type: 'pause' })
+        } else {
+          sound.pause()
+        }
       }
 
       const doPrePlay = e => {
