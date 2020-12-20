@@ -231,9 +231,11 @@ export default {
       item.stop = () => {
         item._playing = false
         item._elPaused = false
+        item._runningSound = null
         clearLastDoAt()
         clearInterval(item._doInterval)
         sound.stop()
+        this.dispatchEvent({ target: pseudoItem, type: 'stop' })
         // if (item.startAt) sound.seek(item.startAt)
       }
 
@@ -250,12 +252,12 @@ export default {
 
       item.play = () => {
         item._playing = true
-        item._runningSound = null
         clearInterval(item._doInterval)
         // Howler doesn't support the event we need to track time, so we do this crap
         const soundEl = getPausedOrRunningSound()
         if (soundEl && soundEl.play && item._elPaused) {
           soundEl.play()
+          this.dispatchEvent({ target: pseudoItem, type: 'play' })
         } else if (
           soundEl &&
           soundEl._node &&
@@ -263,8 +265,8 @@ export default {
           item._elPaused
         ) {
           soundEl._node.play()
+          this.dispatchEvent({ target: pseudoItem, type: 'play' })
         } else {
-          console.dir(soundEl)
           sound.play()
         }
         item._elPaused = false
@@ -319,7 +321,7 @@ export default {
           src: [file.href],
           html5: true, // Allows us no not preload the entire file
           loop: item.loop,
-          autoPlay: true,
+          autoPlay: false,
           volume: isNaN(volume) ? 1 : volume,
           format: [file.format || 'mp3'],
           onplay: doPreload,
