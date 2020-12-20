@@ -426,6 +426,9 @@ export default {
 }
 </script>
 <style>
+html {
+  overflow: hidden;
+}
 .oeos-start-prompt,
 .oeos-outer,
 .oeos-main {
@@ -523,9 +526,6 @@ export default {
 }
 .oeos-clickable {
   pointer-events: auto;
-}
-html {
-  overflow: hidden;
 }
 .oeos-bottom::-webkit-scrollbar {
   /* WebKit */
