@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify'
-const allowedDomains = /^(https:\/\/milovana\.com\/|https:\/\/oeos-player-preview\.herokuapp\.com\/|https:\/\/github.com\/fapnip\/)/
+const allowedDomains = /^(https:\/\/milovana\.com\/|https:\/\/oeos\.ml\/|https:\/\/oeos-player-preview\.herokuapp\.com\/|https:\/\/github.com\/fapnip\/)/
 const cssUrlMatcher = /url[\s ]*\(['"\s ]*()([^)'"]+)['"\s ]*\)/gi
 
 export default {
