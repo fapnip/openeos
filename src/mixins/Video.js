@@ -33,7 +33,10 @@ export default {
     videoClick(e) {
       const item = this.hasVideo
       const pseudoItem = item && item.pseudoItem()
-      if (!pseudoItem || !this.hasEventListeners(pseudoItem, 'click')) return
+      if (!pseudoItem || !this.hasEventListeners(pseudoItem, 'click')) {
+        // If no video click listeners, fall back to plage image click
+        return this.imageClick(e)
+      }
       const rect = e.target.getBoundingClientRect()
       const x = e.clientX - rect.left //x position within the element.
       const y = e.clientY - rect.top //y position within the element.
@@ -431,6 +434,15 @@ export default {
         'lastPlayed',
         interpreter.createNativeFunction(() => {
           return this.lastVideoPlay && this.lastVideoPlay.pseudoItem()
+        }),
+        this.Interpreter.NONENUMERABLE_DESCRIPTOR
+      )
+
+      interpreter.setProperty(
+        manager,
+        'activeVideo',
+        interpreter.createNativeFunction(() => {
+          return this.hasVideo && this.hasVideo.pseudoItem()
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
