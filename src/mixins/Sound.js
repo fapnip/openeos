@@ -76,7 +76,7 @@ export default {
       const _setItem = () => {
         // console.log('Setting sound item', item, options)
         item.options = options
-        item.loops = options.loops || 0
+        item.loops = options.loops === undefined ? 1 : options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
         item.loopCount = item.loops
         item.id = options.id
@@ -214,7 +214,7 @@ export default {
         clearLastDoAt()
         clearInterval(item._doInterval)
         sound.stop()
-        if (item.startAt) sound.seek(item.startAt)
+        // if (item.startAt) sound.seek(item.startAt)
       }
 
       item.seek = v => {
@@ -224,6 +224,7 @@ export default {
       }
 
       item.play = () => {
+        console.log('starting sound', options, item.loop, item.loops, item)
         item._playing = true
         item._runningSound = null
         clearInterval(item._doInterval)
@@ -290,9 +291,10 @@ export default {
       item.sound = sound
 
       sound.on('end', () => {
+        // console.warn('ended sound', options, item.loop, item.loops, item)
         if (item.loop && item.loops > 1) {
           item.loopCount--
-          if (!item.loopCount) {
+          if (item.loopCount < 1) {
             item.stop()
           }
         } else if (!item.loop || item.loops === 1) {

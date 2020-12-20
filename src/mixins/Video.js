@@ -108,7 +108,7 @@ export default {
         // console.log('Setting sound item', item, options)
         // item.controls = options.controls
         item.onContinue = options.onContinue
-        item.loops = options.loops || 0
+        item.loops = options.loops === undefined ? 1 : options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
         item.loopCount = item.loops
         item.id = options.id
