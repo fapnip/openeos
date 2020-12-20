@@ -80,6 +80,7 @@ export default {
         item.loop = item.loops > 1 || item.loops === 0
         item.loopCount = item.loops
         item.id = options.id
+        item.seekable = !!options.seekable
         if (options.startAt) item.startAt = options.startAt
         clearLastDoAt()
         item.doAt = new TreeMap()
@@ -240,10 +241,20 @@ export default {
       }
 
       item.seek = v => {
-        item._runningSound = null
         clearLastDoAt()
         const soundEl = getPausedOrRunningSound()
-        if (soundEl) {
+        if (v === undefined) {
+          if (soundEl.play) {
+            return soundEl.currentTime
+          } else if (soundEl && soundEl._node && soundEl._node.play) {
+            return soundEl.currentTime
+          } else {
+            return sound.seek()
+          }
+        }
+        if (soundEl.play) {
+          soundEl.currentTime = v
+        } else if (soundEl && soundEl._node && soundEl._node.play) {
           soundEl.currentTime = v
         } else {
           sound.seek(v)
@@ -319,7 +330,7 @@ export default {
         }
         sound = new Howl({
           src: [file.href],
-          html5: true, // Allows us no not preload the entire file
+          html5: !item.seekable, // Allows us no not preload the entire file
           loop: item.loop,
           autoPlay: false,
           volume: isNaN(volume) ? 1 : volume,
@@ -506,7 +517,7 @@ export default {
       })
       interpreter.setNativeFunctionPrototype(manager, 'seek', function(time) {
         if (!arguments.length) {
-          return this._item.sound.seek()
+          return this._item.seek()
         }
         time = Number(time)
         if (isNaN(time)) {
