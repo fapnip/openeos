@@ -265,7 +265,7 @@ export default {
         item._playing = true
         clearInterval(item._doInterval)
         // Howler doesn't support the event we need to track time, so we do this crap
-        const soundEl = getPausedOrRunningSound()
+        const soundEl = item._runningSound && getPausedOrRunningSound()
         if (soundEl && soundEl.play && item._elPaused) {
           soundEl.play()
           this.dispatchEvent({ target: pseudoItem, type: 'play' })
