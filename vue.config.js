@@ -5,6 +5,9 @@ module.exports = {
   publicPath: './',
   transpileDependencies: ['vuetify'],
   configureWebpack: {
+    optimization: {
+      splitChunks: false,
+    },
     plugins: [
       new webpack.ProvidePlugin({
         acorn: path.resolve(path.join(__dirname, 'src/interpreter/acorn.js')),
@@ -25,5 +28,8 @@ module.exports = {
         },
       ],
     },
+  },
+  css: {
+    extract: false,
   },
 }
