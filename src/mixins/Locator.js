@@ -26,19 +26,17 @@ function addToPreloadPool(locator, item, lookupPool) {
   }
   pool.push(item)
 }
-function avoidLast(value, array, randomGetter, locator, lookupPool) {
+function avoidLast(value, array, randomGetter, cfn, locator, lookupPool) {
   // lasts = lasts || lastRandoms
   lookupPool = lookupPool || preloadPools
   const pool = getPreloadPool(locator, lookupPool)
   let avoid = pool[pool.length - 1]
   let avoid2 = pool[pool.length - 2]
-  if (typeof avoid === 'object' && avoid !== null) {
-    avoid = avoid.locator
-  }
   // delete lasts[locator]
   for (
     let i = 10, l = array.length;
-    (l > 2 && i > 0 && value === avoid) || (l > 3 && i > 0 && value === avoid2);
+    (l > 2 && i > 0 && cfn(value, avoid)) ||
+    (l > 3 && i > 0 && cfn(value, avoid2));
     i--
   ) {
     // Try not to repeat the last file
@@ -121,6 +119,7 @@ export default {
             randLocator,
             locatorArray,
             _getRandom,
+            (a, b) => a && a === b,
             locator,
             locatorArrayPreload
             // ,
@@ -190,7 +189,13 @@ export default {
         }
       }
       if (preload && isRandom) {
-        file = avoidLast(file, matches, _getRandom, locator)
+        file = avoidLast(
+          file,
+          matches,
+          _getRandom,
+          (a, b) => b && a === b.item,
+          locator
+        )
         const result = {
           item: file,
           href: buildHref(file),
@@ -233,7 +238,13 @@ export default {
           }
         }
         if (preload) {
-          image = avoidLast(image, images, _getRandom, locator)
+          image = avoidLast(
+            image,
+            images,
+            _getRandom,
+            (a, b) => b && a === b.item,
+            locator
+          )
           const result = {
             item: image,
             href: buildHref(image),
