@@ -7,6 +7,8 @@ const colors = {}
 
 export default {
   data: () => ({
+    // defaultBackgroundTexture: `${process.env.BASE_URL}bg-texture.png`,
+    defaultBackgroundTexture: `https://i.ibb.co/C1MnYvW/bg-texture.png`,
     backgroundTexture: null,
     backgroundColor: null,
     forcedBackgroundColor: null,
@@ -19,7 +21,7 @@ export default {
     selectedBackgroundTexture() {
       return (
         this.currentBackgroundColor &&
-        (this.backgroundTexture || `${process.env.BASE_URL}bg-texture.png`)
+        (this.backgroundTexture || this.defaultBackgroundTexture)
       )
     },
   },

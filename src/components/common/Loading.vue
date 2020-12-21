@@ -1,13 +1,14 @@
 <template>
   <div style="width:100%">
-    <img :src="`${publicPath}loading.gif`" class="oeos-loader-center" />
+    <img :src="loadingImage" class="oeos-loader-center" />
     <div class="oeos-loader-center"><slot></slot></div>
   </div>
 </template>
 <script>
 export default {
   data: () => ({
-    publicPath: process.env.BASE_URL,
+    loadingImage: 'https://i.ibb.co/54zVXjc/loading.gif',
+    // loadingImage: `${process.env.BASE_URL}loading.gif`,
   }),
 }
 </script>
