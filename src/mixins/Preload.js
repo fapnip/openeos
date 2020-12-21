@@ -87,7 +87,7 @@ export default {
           if (typeof onError === 'function') {
             onError(e)
           } else {
-            console.error('Preload error:', file && file.error, e)
+            console.error('Preload error1:', file && file.error, e)
           }
         }
         preload.src = file.href
@@ -98,7 +98,7 @@ export default {
         if (typeof onError === 'function') {
           onError((file && file.error) || 'Invalid locator')
         } else {
-          console.error('Preload error:', file && file.error)
+          console.error('Preload error2:', file && file.error)
         }
       }
     },

@@ -72,11 +72,11 @@ export default {
       if (fromArray) return fromArray
       const link = this.lookupRemoteLink(locator, preload)
       if (link) return link
-      if (!preload) {
+      const pool = getPreloadPool(locator)
+      if (!preload && pool.length) {
         // Preload the next call to this locator
         this.preloadImage(locator)
       }
-      const pool = getPreloadPool(locator)
       const preloaded = !preload && pool.shift()
       if (preloaded) {
         // A random locator was pre-loaded, but not yet used
@@ -105,7 +105,7 @@ export default {
           locatorArray[Math.floor(Math.random() * locatorArray.length)]
         const pool = getPreloadPool(locator, locatorArrayPreload)
         if (!preload) {
-          this.preloadImage(locator)
+          if (pool.length) this.preloadImage(locator)
           const preloaded = pool.shift()
           if (preloaded) {
             // if (!pool.length) {
