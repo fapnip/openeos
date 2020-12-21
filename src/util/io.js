@@ -25,7 +25,7 @@ export const encodeForCorsProxy = (url, query) => {
   const parts = url.split('?')
   url = parts[0]
   query = query || parts[1]
-  if (isLocalHost(location.hostname)) {
+  if (location.protocol === 'file:' || isLocalHost(location.hostname)) {
     return DEV_CORS_PROXY + url + (query ? '?' + query : '')
   }
   return RELATIVE_CORS_PROXY + url + (query ? '&' + query : '')
