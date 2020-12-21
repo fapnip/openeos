@@ -5,7 +5,7 @@ import 'vue-resize/dist/vue-resize.css'
 // import '@mdi/font/css/materialdesignicons.css'
 import VueScrollTo from 'vue-scrollto'
 import GlobalEvents from 'vue-global-events'
-import 'typeface-noto-sans'
+// import 'typeface-noto-sans'
 import VueResize from 'vue-resize'
 
 if (location.hostname === 'oeos-player-preview.herokuapp.com') {
