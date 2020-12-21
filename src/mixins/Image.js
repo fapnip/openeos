@@ -116,7 +116,13 @@ export default {
     },
     setImage(locator) {
       this.hideImage = false
-      this.image = this.locatorLookup(locator)
+      const prevImage = this.image
+      const image = this.locatorLookup(locator)
+      this.image = image
+      if (prevImage && image && image.href === prevImage.href) {
+        // same damn image?
+        this.videoHideAll()
+      }
       pageImageLoadCounter++
     },
     imageClick(e) {
