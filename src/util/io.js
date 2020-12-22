@@ -12,7 +12,7 @@ export const extToType = Object.entries(extensionMap).reduce((a, e) => {
   return a
 }, {})
 
-export const DEV_CORS_PROXY = 'https://oeos-proxy1.herokuapp.com/'
+export const DEV_CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
 export const RELATIVE_CORS_PROXY = '/proxy.php?csurl='
 
 export const isLocalHost = host => {
