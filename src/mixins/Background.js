@@ -1,8 +1,3 @@
-// import Vibrant from 'node-vibrant/lib/browser.js'
-// import Pipeline from 'node-vibrant/lib/pipeline/index.js'
-
-// Vibrant.use(Pipeline)
-
 import * as Vibrant from 'node-vibrant'
 
 const colors = {}
