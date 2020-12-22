@@ -12,23 +12,13 @@ export const extToType = Object.entries(extensionMap).reduce((a, e) => {
   return a
 }, {})
 
-export const DEV_CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
-export const PHP_CORS_PROXY = '/proxy.php?csurl='
-
-export const isLocalHost = host => {
-  return host.match(
-    /^(localhost|(127\.[0-9]+\.[0-9]+\.[0-9]+)|(10\.[0-9]+\.[0-9]+\.[0-9]+)|(172\.1[6-9]\.[0-9]+\.[0-9]+)|(172\.2[0-9]\.[0-9]+\.[0-9]+)|(172\.3[0-1]\.[0-9]+\.[0-9]+)|(192\.168\.[0-9]+\.[0-9]+))$/i
-  )
-}
-
 export const encodeForCorsProxy = (url, query) => {
   const parts = url.split('?')
   url = parts[0]
   query = query || parts[1]
-  if (location.protocol === 'file:' || isLocalHost(location.hostname)) {
-    return DEV_CORS_PROXY + url + (query ? '?' + query : '')
-  }
-  return PHP_CORS_PROXY + url + (query ? '&' + query : '')
+  const proxy = process.env.VUE_APP_CORS_PROXY
+  const querySep = proxy.match(/\?/) ? '&' : '?'
+  return proxy + url + (query ? querySep + query : '')
 }
 
 export const buildHref = (item, smaller) => {
