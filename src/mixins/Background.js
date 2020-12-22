@@ -1,7 +1,9 @@
-import Vibrant from 'node-vibrant/lib/browser.js'
-import Pipeline from 'node-vibrant/lib/pipeline/index.js'
+// import Vibrant from 'node-vibrant/lib/browser.js'
+// import Pipeline from 'node-vibrant/lib/pipeline/index.js'
 
-Vibrant.use(Pipeline)
+// Vibrant.use(Pipeline)
+
+import * as Vibrant from 'node-vibrant'
 
 const colors = {}
 
@@ -36,7 +38,7 @@ export default {
     },
   },
   methods: {
-    async setBackgroundFromImage() {
+    setBackgroundFromImage() {
       const image = this.image
       const href = image && image.href
       if (!href || image.error) return
@@ -44,16 +46,17 @@ export default {
       // if (!img) return
       let color = colors[href]
       if (!color) {
-        const { DarkMuted } = await Vibrant.from(href).getPalette()
-        color = DarkMuted.getHex()
-        colors[href] = color
-        // Vibrant seems to have a memory leak
-        // This helps, but there's more it leaves behind
-        // What's the correct way to destroy a vibrant instance?
-        const els = document.getElementsByClassName('@vibrant/canvas')
-        if (els.length) els[els.length - 1].remove()
+        Vibrant.from(href)
+          .getPalette()
+          .then(({ DarkMuted }) => {
+            color = DarkMuted.getHex()
+            colors[href] = color
+            this.backgroundColor = color
+          })
+        // const { DarkMuted } = await Vibrant.from(href).getPalette()
+      } else {
+        this.backgroundColor = color
       }
-      this.backgroundColor = color
     },
   },
 }
