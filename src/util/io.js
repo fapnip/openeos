@@ -13,7 +13,7 @@ export const extToType = Object.entries(extensionMap).reduce((a, e) => {
 }, {})
 
 export const DEV_CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
-export const RELATIVE_CORS_PROXY = '/proxy.php?csurl='
+export const PHP_CORS_PROXY = '/proxy.php?csurl='
 
 export const isLocalHost = host => {
   return host.match(
@@ -28,7 +28,7 @@ export const encodeForCorsProxy = (url, query) => {
   if (location.protocol === 'file:' || isLocalHost(location.hostname)) {
     return DEV_CORS_PROXY + url + (query ? '?' + query : '')
   }
-  return RELATIVE_CORS_PROXY + url + (query ? '&' + query : '')
+  return PHP_CORS_PROXY + url + (query ? '&' + query : '')
 }
 
 export const buildHref = (item, smaller) => {
