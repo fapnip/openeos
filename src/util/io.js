@@ -3,6 +3,8 @@ const extensionMap = {
   'image/jpeg': 'jpg',
 }
 
+const resolved = {}
+
 export const FIX_POLLUTION = encodeURIComponent(
   '__oeos:' + window.location.hostname
 )
@@ -17,8 +19,14 @@ export const encodeForCorsProxy = (url, query) => {
   url = parts[0]
   query = query || parts[1]
   const proxy = process.env.VUE_APP_CORS_PROXY
-  const querySep = proxy.match(/\?/) ? '&' : '?'
-  return proxy + url + (query ? querySep + query : '')
+  const encode = process.env.VUE_APP_CORS_PROXY_ENCODE === 'true'
+  const querySep = process.env.VUE_APP_CORS_PROXY_QUERY_SEPARATOR
+  // const querySep = proxy.match(/\?/) ? '&' : '?'
+  if (encode) {
+    return proxy + encodeURIComponent(url + (query ? '?' + query : ''))
+  } else {
+    return proxy + url + (query ? querySep + query : '')
+  }
 }
 
 export const buildHref = (item, smaller) => {
@@ -27,9 +35,14 @@ export const buildHref = (item, smaller) => {
   }
   // console.log('Building href for:', item)
   if (!item.type || item.type.match(/^image/)) {
-    return `https://media.milovana.com/timg/tb_${smaller ? 'l' : 'xl'}/${
+    smaller = smaller || screen.width <= 1024 // User smaller images on lower res devices
+    let result = resolved[item.hash]
+    if (result) return result
+    result = `https://media.milovana.com/timg/tb_${smaller ? 'l' : 'xl'}/${
       item.hash
     }.jpg?${FIX_POLLUTION}`
+    resolved[item.hash] = result
+    return result
   } else {
     return `https://media.milovana.com/timg/${item.hash}.${
       extensionMap[item.type]
