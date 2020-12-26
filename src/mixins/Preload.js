@@ -69,8 +69,8 @@ export default {
         return // audio preloading done elsewhere
       }
       function _onPreload() {
-        delete preloadedImages[file.href]
         _this.doAfterPreload(wait)
+        setTimeout(() => delete preloadedImages[file.href], 0)
       }
       if (file && !file.error && file.href) {
         preloaded[file.href] = true
