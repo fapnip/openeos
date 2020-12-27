@@ -3,7 +3,7 @@
   "version": "0.8.0",
   "private": true,
   "author": {
-    "name": "Fapnip"
+    "name": "fapnip"
   },
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -22,6 +22,7 @@
     "node-vibrant": "^3.1.6",
     "prettysize": "^2.0.0",
     "string-strip-html": "^6.3.0",
+    "tone": "^14.7.58",
     "typeface-noto-sans": "^1.1.13",
     "validate-color": "^2.1.0",
     "vue": "^2.6.11",
