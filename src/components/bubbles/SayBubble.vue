@@ -24,8 +24,6 @@
 import stripHtml from 'string-strip-html'
 import wordsCounter from 'word-counting'
 
-let timeout = false
-
 const DELAY_BASE = 1500
 const DELAY_PER_CHAR = 30
 const DELAY_PER_CHAR_MAX = 8000
@@ -61,6 +59,7 @@ export default {
     return {
       selectedOption: null,
       continued: false,
+      timeout: false,
     }
   },
 
@@ -116,7 +115,7 @@ export default {
     } else {
       if (this.mode !== 'pause') {
         const duration = this.duration || 0
-        timeout = setTimeout(() => {
+        this.timeout = setTimeout(() => {
           this.continue()
         }, duration)
       }
@@ -125,13 +124,13 @@ export default {
   },
 
   beforeUnmount() {
-    clearTimeout(timeout)
+    this.stopTimeout()
   },
 
   methods: {
     continue() {
       if (!this.active) return
-      clearTimeout(timeout)
+      this.stopTimeout()
       this.onContinue()
     },
     onClick(event) {
@@ -139,6 +138,9 @@ export default {
         if (event && event.stopPropagation) event.stopPropagation()
         this.onContinue()
       }
+    },
+    stopTimeout() {
+      clearTimeout(this.timeout)
     },
   },
 }
