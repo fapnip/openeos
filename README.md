@@ -8,6 +8,7 @@ npm install
 ```
 
 ### Compiles and hot-reloads for development
+Follow instructions in `.env.development` to configure proxy for local development.
 ```
 npm run serve
 ```
