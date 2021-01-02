@@ -413,6 +413,17 @@ export default {
       for (const videoOption of videos) {
         this.preloadVideo(videoOption, true)
       }
+      this.debug('Loading JS Includes')
+      for (const jsInclude of Object.values(this.getJsIncludes())) {
+        try {
+          interpreter.appendCode(jsInclude)
+          interpreter.run()
+        } catch (e) {
+          console.error('Error executing JS include', jsInclude)
+          console.error(e)
+        }
+      }
+      this.debug('Loading Init Script')
       interpreter.appendCode(this.getInitScript())
       interpreter.run()
       this.debug('Loaded Init Script and started media preload')

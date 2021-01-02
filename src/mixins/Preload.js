@@ -1,9 +1,10 @@
-const preloaded = {}
-const afterPreload = []
-const preloadedImages = {}
+let preloaded = {}
+let afterPreload = []
+let preloadedImages = {}
 let waitingPreloads = 0
 let startupSounds = []
 let startupVideos = []
+let jsIncludes = {}
 let indicatorTimeout
 
 export default {
@@ -12,7 +13,19 @@ export default {
     startupVideos: [],
   }),
   computed: {},
+  mounted() {
+    preloaded = {}
+    afterPreload = []
+    preloadedImages = {}
+    waitingPreloads = 0
+    startupSounds = []
+    startupVideos = []
+    jsIncludes = {}
+  },
   methods: {
+    getJsIncludes() {
+      return jsIncludes
+    },
     popStartupVideos() {
       const result = startupVideos
       startupVideos = []
@@ -141,6 +154,9 @@ export default {
       if (!this.started || this.loading) {
         startupSounds.push(...pageScript.sounds)
         startupVideos.push(...pageScript.videos)
+        for (const jsInclude of pageScript.includes) {
+          jsIncludes[jsInclude] = jsInclude
+        }
       }
     },
     addAfterPreload(fn) {

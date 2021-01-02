@@ -5,6 +5,7 @@
 import pageCompilerUtil from '!!raw-loader!../interpreter/code/pageCompilerUtil.js'
 import { decodeHTML } from 'entities'
 import extractStyles from './extractStyles'
+const includeMatcher = /(\/\/|\/\*)[\s]*oeos-js-include/
 
 const parser = new DOMParser()
 
@@ -13,6 +14,7 @@ let sounds = []
 let videos = []
 let targets = {}
 let styles = {}
+let includes = []
 
 export default function pageCompiler(page) {
   images = {}
@@ -20,6 +22,7 @@ export default function pageCompiler(page) {
   videos = []
   targets = {}
   styles = {}
+  includes = []
   return {
     script: `
     if (!pages._getNavQueued()) (function(continueFns){
@@ -33,6 +36,7 @@ export default function pageCompiler(page) {
     videos,
     targets,
     styles,
+    includes,
   }
 }
 
@@ -91,6 +95,10 @@ const commandList = {
   eval: c => {
     const style = extractStyles(c.script)
     Object.assign(styles, style.styles)
+    if (c.script && c.script.match(includeMatcher)) {
+      includes.push(c.script)
+      return `return false;`
+    }
     return `
     ${isolate(c.script)}
     return false;
