@@ -5,7 +5,7 @@
 import pageCompilerUtil from '!!raw-loader!../interpreter/code/pageCompilerUtil.js'
 import { decodeHTML } from 'entities'
 import extractStyles from './extractStyles'
-const includeMatcher = /(\/\/|\/\*)[\s]*oeos-js-include/
+const includeMatcher = /(\/\/|\/\*)[\s]*-*oeos-js-include/
 
 const parser = new DOMParser()
 
