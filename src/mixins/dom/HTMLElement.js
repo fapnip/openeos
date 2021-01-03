@@ -13,6 +13,7 @@ export default {
         elements.set(el, pseudo)
         pseudo._isRoot = isRoot
         pseudo._hookNative = true
+        el._o_pseudo = pseudo
       }
       return pseudo
     },
@@ -215,12 +216,26 @@ export default {
       // By Element
       ;['querySelector', 'closest', 'cloneNode'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(opt) {
-          if (this._isRoot && fnName.match(/^closest/)) {
+          if (fnName.match(/^closest/)) {
             const el = this._o_el[fnName](opt)
-            if (!el || el !== this._o_el) {
-              return null
+            if (el) {
+              // Check to make sure it's not outside the jail
+              let cEl = this._o_el
+              while (cEl) {
+                if (cEl._o_pseudo && cEl._o_pseudo._isRoot) {
+                  if (cEl === el) {
+                    // Selected root element.  Allow it.
+                    return this
+                  } else {
+                    // Element is outside of root
+                    console.error('Cannot select element outside jail', el)
+                    return null
+                  }
+                }
+                cEl = cEl.parentElement
+              }
             }
-            return this
+            return vue.getHTMLElementPseudo(el)
           }
           return vue.getHTMLElementPseudo(this._o_el[fnName](opt))
         })
