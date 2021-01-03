@@ -5,7 +5,7 @@ export default {
   data: () => ({}),
   methods: {
     getHTMLElementPseudo(el, isRoot) {
-      if (!el) return
+      if (!el) return null
       let pseudo = elements.get(el)
       if (!pseudo) {
         pseudo = this.interpreter.createObjectProto(proto)
