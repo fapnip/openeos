@@ -215,10 +215,10 @@ export default {
       // By Element
       ;['querySelector', 'closest', 'cloneNode'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(opt) {
-          if (this._isRoot && name.match(/^cloneNode/)) {
-            console.error(`Cannot perform ${name} on root node.`)
-            return
-          }
+          // if (this._isRoot && fnName.match(/^cloneNode/)) {
+          //   console.error(`Cannot perform ${fnName} on root node.`)
+          //   return
+          // }
           return vue.getHTMLElementPseudo(this._o_el[fnName](opt))
         })
       })
