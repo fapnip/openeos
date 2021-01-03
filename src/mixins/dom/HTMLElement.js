@@ -225,7 +225,7 @@ export default {
                 if (cEl._o_pseudo && cEl._o_pseudo._isRoot) {
                   if (cEl === el) {
                     // Selected root element.  Allow it.
-                    return this
+                    return cEl._o_pseudo
                   } else {
                     // Element is outside of root
                     console.error('Cannot select element outside jail', el)
