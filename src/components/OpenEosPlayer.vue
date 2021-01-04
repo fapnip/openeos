@@ -208,6 +208,7 @@
 </template>
 
 <script>
+import NoSleep from 'nosleep.js'
 import Interpreter from '../interpreter'
 const interpreter = new Interpreter('')
 interpreter.REGEXP_MODE = 1
@@ -307,6 +308,7 @@ export default {
     started: false,
     isDebug: true,
     loadingText: 'Preloading images...',
+    noSleep: new NoSleep(),
   }),
   computed: {
     initScript() {
@@ -395,6 +397,7 @@ export default {
       this.loading = false
     },
     runTease() {
+      this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
         console.log('Running start')
         this.loading = false

@@ -39,6 +39,11 @@ export default {
     },
   },
   methods: {
+    endTease() {
+      navCounter++
+      // TODO: display end modal
+      this.noSleep.disable() // Allow tease to sleep on mobile devices
+    },
     pagesInstance() {
       return pagesInstance
     },
@@ -550,8 +555,7 @@ export default {
         }
       )
       interpreter.setNativeFunctionPrototype(manager, 'end', () => {
-        navCounter++
-        // TODO: display end modal
+        vue.endTease()
       })
       interpreter.setNativeFunctionPrototype(manager, 'goto', pageId => {
         try {
