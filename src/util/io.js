@@ -1,3 +1,5 @@
+import SanitizeFilename from 'sanitize-filename'
+
 const extensionMap = {
   'audio/mpeg': 'mp3',
   'image/jpeg': 'jpg',
@@ -50,20 +52,23 @@ export const buildHref = (item, smaller) => {
   }
 }
 
-export function downloadObjectAsJson(exportObj, exportName) {
+export function downloadObjectAsJson(exportObj, exportName, ext, type) {
   var dataStr =
     'data:text/json;charset=utf-8,' +
     encodeURIComponent(JSON.stringify(exportObj))
   var downloadAnchorNode = document.createElement('a')
   downloadAnchorNode.setAttribute('href', dataStr)
-  downloadAnchorNode.setAttribute('download', exportName + '.json')
+  downloadAnchorNode.setAttribute(
+    'download',
+    exportName + (ext ? '.' + ext : '.json')
+  )
   document.body.appendChild(downloadAnchorNode) // required for firefox
   downloadAnchorNode.click()
   downloadAnchorNode.remove()
 }
 
 export function convertToValidFilename(string) {
-  return string.replace(/[/|\\:*?"<>]/g, ' ')
+  return SanitizeFilename(string).replace(/\s+/, ' ')
 }
 
 function readBlob(b) {
@@ -80,6 +85,10 @@ function readBlob(b) {
   })
 }
 
+function numPad(val, len) {
+  return (val || 0).toString().padStart(len, 0)
+}
+
 export async function downloadEosFile(file, smaller) {
   const url = buildHref(file, smaller)
   const response = await fetch(encodeForCorsProxy(url))
@@ -87,4 +96,16 @@ export async function downloadEosFile(file, smaller) {
   const content = await readBlob(blob)
   file.href = content
   return (content && content.length) || 0
+}
+
+export function getFormattedDateForFile() {
+  var date = new Date()
+  var str =
+    date.getFullYear() +
+    numPad(date.getMonth() + 1, 2) +
+    numPad(date.getDate(), 2) +
+    '-' +
+    numPad(date.getHours(), 2) +
+    numPad(date.getMinutes(), 2)
+  return str
 }

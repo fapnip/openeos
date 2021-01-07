@@ -40,6 +40,28 @@
       <v-btn icon @click="toggleFullscreen">
         <v-icon>mdi-fullscreen</v-icon>
       </v-btn>
+      <v-menu v-if="script" bottom :offset-y="true">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon dark v-bind="attrs" v-on="on">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item :disabled="!hasStorage" @click="downloadTeaseStorage">
+            <v-list-item-icon>
+              <v-icon :disabled="!hasStorage">mdi-download</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Download Tease Storage</v-list-item-title>
+          </v-list-item>
+          <v-list-item :disabled="teaseStarted" @click="restoreTeaseStorage">
+            <v-list-item-icon>
+              <v-icon :disabled="teaseStarted">mdi-upload</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Restore Tease Storage</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </v-app-bar>
 
     <v-main ref="mainPlayer">
@@ -50,7 +72,12 @@
         :author="author"
         :tease-id="teaseId"
         :is-fullscreen="this.isFullscreen"
+        :tease-storage="teaseStorage"
         @page-change="pageChange"
+        @save-storage="didStorageSave"
+        @load-storage="didStorageLoad"
+        @tease-start="didTeaseStart"
+        @tease-end="didTeaseEnd"
       />
       <v-container v-else>
         <template v-if="this.formUri && !this.error">
@@ -162,6 +189,7 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <input type="file" ref="teaseStorageLoader" style="display:none" />
   </v-app>
 </template>
 
@@ -175,8 +203,10 @@ import {
   convertToValidFilename,
   encodeForCorsProxy,
   FIX_POLLUTION,
+  getFormattedDateForFile,
 } from './util/io'
 import prettysize from 'prettysize'
+import CryptoJS from 'crypto-js'
 
 const parser = new DOMParser()
 
@@ -220,6 +250,9 @@ export default {
     fileUpload: null,
     pageId: null,
     downloaded: 0,
+    hasStorage: false,
+    teaseStarted: false,
+    teaseStorage: null,
     message: {
       title: null,
       html: null,
@@ -264,6 +297,73 @@ export default {
     // this.getRemoteScript('id=45184')
   },
   methods: {
+    restoreTeaseStorage() {
+      const input = this.$refs.teaseStorageLoader
+      input.type = 'file'
+      input.accept = `.oeos_${this.teaseId}`
+      input.addEventListener('change', handleFiles, false)
+      const vue = this
+      function handleFiles() {
+        const file = this.files[0]
+        if (file) {
+          var reader = new FileReader()
+          reader.onload = function(e) {
+            try {
+              const bytes = CryptoJS.AES.decrypt(
+                JSON.parse(e.target.result),
+                vue.teaseId + '::OEOS'
+              )
+              const storageData = bytes.toString(CryptoJS.enc.Utf8)
+              if (
+                storageData &&
+                storageData.startsWith('{') &&
+                JSON.parse(storageData)
+              ) {
+                vue.teaseStorage = storageData
+              } else {
+                console.error('Invalid data?', bytes, storageData)
+                throw new Error('Invalid tease storage file', storageData)
+              }
+            } catch (err) {
+              vue.showMessage(
+                'Invalid Tease Storage',
+                'Sorry, that file does not appear to be a valid storage file for this tease.'
+              )
+              console.error(err)
+            }
+          }
+          reader.readAsText(file)
+        }
+      }
+      input.click()
+    },
+    downloadTeaseStorage() {
+      const storageData = CryptoJS.AES.encrypt(
+        this.teaseStorage,
+        this.teaseId + '::OEOS'
+      ).toString()
+      downloadObjectAsJson(
+        storageData,
+        convertToValidFilename(this.title + '-' + getFormattedDateForFile()),
+        `oeos_${this.teaseId}`
+      )
+    },
+    didStorageSave(v) {
+      if (v && v !== '{}') {
+        this.hasStorage = true
+      }
+      this.teaseStorage = v
+    },
+    didStorageLoad(v) {
+      if (v && v !== '{}') {
+        this.hasStorage = true
+      }
+      this.teaseStorage = v
+    },
+    didTeaseStart() {
+      this.teaseStarted = true
+    },
+    didTeaseEnd() {},
     pageChange(pageId) {
       this.pageId = pageId
     },
@@ -271,6 +371,13 @@ export default {
       this.message.show = false
       this.message.onContinue = () => {}
       this.message.onCancel = false
+    },
+    showMessage(title, html, onContinue, onCancel) {
+      this.message.title = title
+      this.message.html = html
+      this.message.onContinue = onContinue || function() {}
+      this.message.onCancel = onCancel
+      this.message.show = true
     },
     async uploadFile() {
       console.log('Ready to upload', this.fileUpload)
@@ -361,6 +468,8 @@ export default {
     },
     loadMilovanaUrl() {
       this.error = null
+      this.hasStorage = false
+      this.easeStarted = false
       if (this.loading) return
       const uri = this.parseTeaseURI()
       if (!uri) {

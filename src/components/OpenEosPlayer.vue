@@ -397,6 +397,7 @@ export default {
       this.loading = false
     },
     runTease() {
+      this.$emit('tease-start')
       this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
         console.log('Running start')

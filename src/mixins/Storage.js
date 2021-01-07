@@ -2,9 +2,31 @@ let STORAGE = {}
 let MAX_STORAGE = 1024
 
 export default {
+  props: {
+    teaseStorage: {
+      type: String,
+      default: null,
+    },
+  },
   data: () => ({}),
   mounted() {
     this.loadStorage()
+  },
+  watch: {
+    teaseStorage(v) {
+      const key = this.getStorageKey()
+      if (v && v !== localStorage.getItem(key)) {
+        try {
+          const decoded = JSON.parse(v)
+          STORAGE = decoded
+          console.warn('Restored tease storage', STORAGE)
+          this.saveStorage()
+          return
+        } catch (e) {
+          console.error('Invalid storage data', v)
+        }
+      }
+    },
   },
   methods: {
     getStorageKey() {
@@ -17,9 +39,14 @@ export default {
         console.error(
           `Unable to save Tease Storage.  Over ${MAX_STORAGE} bytes.`
         )
-        return
+        this.$emit('save-storage', data) // Allow parent handlers to decide if it's too bug for them.
+        return data.length - MAX_STORAGE
       }
-      localStorage.setItem(this.getStorageKey(), data)
+      const key = this.getStorageKey()
+      if (data !== localStorage.getItem(key)) {
+        localStorage.setItem(key, data)
+        this.$emit('save-storage', data)
+      }
     },
     loadStorage() {
       if (!this.teaseId) return
@@ -28,6 +55,7 @@ export default {
         try {
           const decoded = JSON.parse(data)
           STORAGE = decoded
+          this.$emit('load-storage', data)
           return
         } catch (e) {
           console.error('Invalid storage data', data)
@@ -84,7 +112,7 @@ export default {
             JSON.stringify(interpreter.pseudoToNative(value))
           )
 
-          this.saveStorage()
+          return this.saveStorage()
         })
       )
       interpreter.setProperty(
@@ -100,7 +128,7 @@ export default {
 
           delete STORAGE[keyName]
 
-          this.saveStorage()
+          return this.saveStorage()
         })
       )
       interpreter.setProperty(
