@@ -121,6 +121,7 @@ export default {
       item.preloadKey = preloadKey
       item.file = file
       item.id = options.id
+      item._playingId = null
       this.$set(item, '_playing', false)
       _setItem(item)
 
@@ -130,70 +131,97 @@ export default {
         this.addAfterPreload(preload)
       }
 
-      const isElementPlaying = el => {
-        return (
-          !el.paused && !el.ended && el.currentTime > 0 && el.readyState > 2
-        )
-      }
+      // const isElementPlaying = el => {
+      //   return (
+      //     !el.paused && !el.ended && el.currentTime > 0 && el.readyState >= 1
+      //   )
+      // }
 
-      const isElementStopped = el => {
-        return (
-          el.ended ||
-          (el.currentTime === 0 && el.readyState < 3 && el.readyState >= 1)
-        )
-      }
+      // const isElementStopped = el => {
+      //   return (
+      //     el.ended ||
+      //     el.paused ||
+      //     (el.currentTime === 0 && el.readyState < 3 && el.readyState >= 1)
+      //   )
+      // }
 
-      const getPausedOrRunningSound = () => {
-        // Hack to get audio element from Howler
-        let runningSound = getRunningSound()
-        if (!runningSound || isElementStopped(runningSound)) {
-          const runningSounds = sound._sounds.filter(
-            s => !isElementStopped(s._node)
-          )
-          if (runningSounds.length) {
-            runningSound = runningSounds[runningSounds.length - 1]
-            item._runningSound = runningSound && runningSound._node
-          }
-        }
-        return runningSound
-      }
+      // const getPausedOrRunningSound = () => {
+      //   // Hack to get audio element from Howler
+      //   let runningSound = getRunningSound()
+      //   if (!runningSound || isElementStopped(runningSound)) {
+      //     const runningSounds = sound._sounds.filter(
+      //       s => !isElementStopped(s._node)
+      //     )
+      //     if (runningSounds.length) {
+      //       runningSound = runningSounds[runningSounds.length - 1]
+      //       runningSound = runningSound && runningSound._node
+      //       item._runningSound = runningSound
+      //     }
+      //   }
+      //   return runningSound
+      // }
 
-      const getRunningSound = () => {
-        // Hack to get audio element from Howler
-        let runningSound = item._runningSound
-        if (!runningSound || !isElementPlaying(runningSound)) {
-          const runningSounds = sound._sounds.filter(s =>
-            isElementPlaying(s._node)
-          )
-          if (runningSounds.length) {
-            runningSound = runningSounds[runningSounds.length - 1]
-            item._runningSound = runningSound && runningSound._node
-          }
-        }
-        return runningSound
-      }
+      // const getRunningSound = () => {
+      //   // Hack to get audio element from Howler
+      //   let runningSound = item._runningSound
+      //   if (!runningSound || !isElementPlaying(runningSound)) {
+      //     const runningSounds = sound._sounds.filter(s =>
+      //       isElementPlaying(s._node)
+      //     )
+      //     if (runningSounds.length) {
+      //       runningSound = runningSounds[runningSounds.length - 1]
+      //       runningSound = runningSound && runningSound._node
+      //       item._runningSound = runningSound
+      //     }
+      //   }
+      //   return runningSound
+      // }
 
-      const stopRunningSounds = restartAt => {
-        // Hack to stop audio elements from Howler
-        // Need to abandon howler and just use HtmlAudio elements directly since holwer abstracts too much
-        let stopped = false
-        sound._sounds.forEach(el => {
-          if (!el._node.paused && !el._node.ended && el._node.readyState >= 1) {
-            stopped = true
-            el._node.pause()
-            el._node.currentTime = restartAt || 0
-          }
-        })
-        if (!stopped) {
-          item._elPaused = false
-          item._runningSound = null
-          sound.stop()
-        }
-      }
+      // const stopRunningSounds = restartAt => {
+      //   // Hack to stop audio elements from Howler
+      //   // Need to abandon howler and just use HtmlAudio elements directly since holwer abstracts too much
+      //   let stopped = false
+      //   sound._sounds.forEach(el => {
+      //     if (!el._node.paused && !el._node.ended && el._node.readyState >= 1) {
+      //       stopped = true
+      //       el._node.pause()
+      //       el._node.currentTime = restartAt || 0
+      //     }
+      //   })
+      //   if (!stopped) {
+      //     item._elPaused = false
+      //     item._runningSound = null
+      //     sound._sounds.forEach(el => {
+      //       el._node.pause()
+      //       el._node.currentTime = restartAt || 0
+      //     })
+      //     sound.stop()
+      //   }
+      // }
+
+      // const getPlayingSound = () => {
+      //   // if (item._playingSoundId) {
+      //   //   const s = sound._soundById(item._playingSoundId)
+      //   //   if (s) return s
+      //   // }
+      //   for (let i = 0, l = sound._sounds.length; i < l; i++) {
+      //     const s = sound._sounds[i]
+      //     if (!s._paused) {
+      //       // item._playingSoundId = s._id
+      //       return s
+      //     }
+      //   }
+      // }
 
       const getCurrentTime = () => {
-        const runningSound = getRunningSound()
-        return (runningSound && runningSound.currentTime) || sound.seek()
+        // console.log('Checking', sound._sounds)
+        // const s = getPlayingSound()
+        // if (s) {
+        //   return s._node.ended ? 0 : s._node.currentTime
+        // }
+        return sound.seek()
+        // const runningSound = getRunningSound()
+        // return (runningSound && runningSound.currentTime) || sound.seek()
       }
 
       const formatTime = seconds => {
@@ -251,84 +279,83 @@ export default {
       }
 
       item.stop = () => {
-        if (item._playing) {
-          item._playing = false
-          item._elPaused = true
-          // item._runningSound = null
-          clearLastDoAt()
-          clearInterval(item._doInterval)
-          stopRunningSounds(item.startAt)
-          this.dispatchEvent({ target: pseudoItem, type: 'stop' })
-        }
+        // if (item._playing) {
+        sound.stop()
+        clearLastDoAt()
+        clearInterval(item._doInterval)
+        // stopRunningSounds(item.startAt)
+        this.dispatchEvent({ target: pseudoItem, type: 'stop' })
+        // }
       }
 
       item.seek = v => {
         clearLastDoAt()
-        const soundEl = getPausedOrRunningSound()
+        // const soundEl = getPausedOrRunningSound()
         if (v === undefined) {
-          if (soundEl.play) {
-            return soundEl.currentTime
-          } else if (soundEl && soundEl._node && soundEl._node.play) {
-            return soundEl.currentTime
-          } else {
-            return sound.seek()
-          }
+          // if (soundEl.play) {
+          //   return soundEl.currentTime
+          // } else if (soundEl && soundEl._node && soundEl._node.play) {
+          //   return soundEl.currentTime
+          // } else {
+          return sound.seek()
+          // }
         }
-        if (soundEl.play) {
-          soundEl.currentTime = v
-        } else if (soundEl && soundEl._node && soundEl._node.play) {
-          soundEl.currentTime = v
-        } else {
-          sound.seek(v)
-        }
+        // if (soundEl.play) {
+        //   soundEl.currentTime = v
+        // } else if (soundEl && soundEl._node && soundEl._node.play) {
+        //   soundEl.currentTime = v
+        // } else {
+        sound.seek(v)
+        // }
       }
 
       item.play = () => {
-        if (!item._playing) {
-          clearInterval(item._doInterval)
-          // Howler doesn't support the event we need to track time, so we do this crap
-          const soundEl = item._runningSound && getPausedOrRunningSound()
-          if (soundEl && soundEl.play && item._elPaused) {
-            soundEl.play()
-            this.dispatchEvent({ target: pseudoItem, type: 'play' })
-          } else if (
-            soundEl &&
-            soundEl._node &&
-            soundEl._node.play &&
-            item._elPaused
-          ) {
-            soundEl._node.play()
-            this.dispatchEvent({ target: pseudoItem, type: 'play' })
-          } else {
-            sound.play()
-          }
-          if (item.runDoAt()) {
-            item._doInterval = setInterval(() => {
-              if (!item.runDoAt()) clearInterval(item._doInterval)
-            }, 16) // Check around 30 times a second
-          }
-          item._playing = true
-          item._elPaused = false
+        // if (!item._playing) {
+        clearInterval(item._doInterval)
+        // Howler doesn't support the event we need to track time, so we do this crap
+        // const soundEl = item._runningSound && getPausedOrRunningSound()
+        // if (soundEl && soundEl.play && item._elPaused) {
+        //   soundEl.play()
+        //   this.dispatchEvent({ target: pseudoItem, type: 'play' })
+        // } else if (
+        //   soundEl &&
+        //   soundEl._node &&
+        //   soundEl._node.play &&
+        //   item._elPaused
+        // ) {
+        //   soundEl._node.play()
+        //   this.dispatchEvent({ target: pseudoItem, type: 'play' })
+        // } else {
+        sound.play()
+        // getPlayingSound()
+        // }
+        if (item.runDoAt()) {
+          item._doInterval = setInterval(() => {
+            if (!item.runDoAt()) clearInterval(item._doInterval)
+          }, 16) // Check around 30 times a second
         }
+        item._playing = true
+        item._elPaused = false
+        // }
       }
 
       item.pause = () => {
         clearInterval(item._doInterval)
         item._playing = false
-        const soundEl = getPausedOrRunningSound()
-        if (soundEl) {
-          soundEl.pause()
-          item._elPaused = true
-          this.dispatchEvent({ target: pseudoItem, type: 'pause' })
-        } else {
-          sound.pause()
-        }
+        // const soundEl = getPausedOrRunningSound()
+        // if (soundEl) {
+        //   soundEl.pause()
+        //   item._elPaused = true
+        //   this.dispatchEvent({ target: pseudoItem, type: 'pause' })
+        // } else {
+        sound.pause()
+        // }
       }
 
       const doPrePlay = e => {
-        if (item.startAt) {
-          sound.seek(item.startAt)
-        }
+        // if (item.startAt) {
+        //   sound.seek(item.startAt)
+        // }
         item.play()
         item._preloadTimeout = setTimeout(() => {
           doPreload('Timeout waiting for sound preload')
@@ -343,8 +370,15 @@ export default {
         clearTimeout(item._preloadTimeout)
         item.preloaded = true
         if (preload) {
+          // if (!item.preloaded) {
+          //   item.pause()
+          //   item.preloaded = 1
+          //   item.play()
+          // } else {
+          //   item.preloaded = 2
           item.stop()
           this.doAfterPreload(true)
+          // }
         }
       }
 
@@ -353,12 +387,12 @@ export default {
           this.incrementPreload(file.href)
         }
         sound = new Howl({
-          src: [file.href],
-          html5: !item.seekable, // Allows us no not preload the entire file
+          src: file.href,
+          html5: false, // Allows us no not preload the entire file
           loop: item.loop,
           autoPlay: false,
           volume: isNaN(volume) ? 1 : volume,
-          format: [file.format || 'mp3'],
+          format: file.format || 'mp3',
           onplay: doPreload,
           onload: doPrePlay,
           onploaderror: function(id, error) {
