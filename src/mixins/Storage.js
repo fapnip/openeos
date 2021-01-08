@@ -39,7 +39,7 @@ export default {
         console.error(
           `Unable to save Tease Storage.  Over ${MAX_STORAGE} bytes.`
         )
-        this.$emit('save-storage', data) // Allow parent handlers to decide if it's too bug for them.
+        this.$emit('save-storage', data) // Allow parent handlers to decide if it's too big for them.
         return data.length - MAX_STORAGE
       }
       const key = this.getStorageKey()
