@@ -7,8 +7,18 @@ let proto
 const usedStyles = {}
 const sheetClass = 'oeos-extracted-stylesheet'
 
-// Probably should change this to allowed tags, but for now..
-const blockedTags = { applet: true, script: true, link: true, iframe: true }
+// Probably should change this to allowed tags, but for now this should be okay.
+// Really sanitizeHtml should catch all the bad stuff, this is just an extra check.
+const blockedTags = {
+  applet: true,
+  script: true,
+  link: true,
+  iframe: true,
+  meta: true,
+  frameset: true,
+  object: true,
+  embed: true,
+}
 
 export default {
   mixins: [
@@ -69,20 +79,32 @@ export default {
         interpreter.createObjectProto(proto)
       )
 
-      //
-      ;['createElement', 'createTextNode'].forEach(fnName => {
+      // Filter any create element
+      ;['createElement'].forEach(fnName => {
         interpreter.setNativeFunctionPrototype(manager, fnName, function(
           ...attr
         ) {
           const el = document[fnName](...attr)
-          if (blockedTags[el.tagName.toLowerCase()]) {
+          if (
+            blockedTags[el.tagName.toLowerCase()] ||
+            !vue.sanitizeHtml(el.outerHTML)
+          ) {
             return interpreter.createThrowable(
               interpreter.TYPE_ERROR,
               "Sorry.  You can't make " + el.tagName + '.'
             )
           }
           vue.sanitizeHtml(el)
+
           return vue.getHTMLElementPseudo(el)
+        })
+      })
+      // Don't really need to filter text nodes?
+      ;['createTextNode'].forEach(fnName => {
+        interpreter.setNativeFunctionPrototype(manager, fnName, function(
+          ...attr
+        ) {
+          return vue.getHTMLElementPseudo(document[fnName](...attr))
         })
       })
 
