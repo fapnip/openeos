@@ -85,6 +85,17 @@ function readBlob(b) {
   })
 }
 
+export function acronym(text) {
+  return text
+    .split(/\s+/)
+    .reduce(
+      (accumulator, word) =>
+        accumulator +
+        (word.match(/^[a-z]/i) && !word.match(/[0-9]/) ? word.charAt(0) : ''),
+      ''
+    )
+}
+
 function numPad(val, len) {
   return (val || 0).toString().padStart(len, 0)
 }

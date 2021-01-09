@@ -204,6 +204,7 @@ import {
   encodeForCorsProxy,
   FIX_POLLUTION,
   getFormattedDateForFile,
+  acronym,
 } from './util/io'
 import prettysize from 'prettysize'
 import CryptoJS from 'crypto-js'
@@ -344,7 +345,9 @@ export default {
       ).toString()
       downloadObjectAsJson(
         storageData,
-        convertToValidFilename(this.title + '-' + getFormattedDateForFile()),
+        convertToValidFilename(
+          acronym(this.title) + '-' + getFormattedDateForFile()
+        ),
         `oeos_${this.teaseId}`
       )
     },
