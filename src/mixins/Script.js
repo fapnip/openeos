@@ -33,6 +33,7 @@ export default {
     setScript(script) {
       SCRIPT = script
       this.updateGalleryLookup()
+      this.loadStorage()
     },
     getPageScript(pageId) {
       const page = this.getPage(pageId)

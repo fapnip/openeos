@@ -9,9 +9,6 @@ export default {
     },
   },
   data: () => ({}),
-  mounted() {
-    this.loadStorage()
-  },
   watch: {
     teaseStorage(v) {
       const key = this.getStorageKey()
@@ -44,18 +41,19 @@ export default {
       }
       const key = this.getStorageKey()
       if (data !== localStorage.getItem(key)) {
-        localStorage.setItem(key, this.hasStorageModule ? data : false)
-        this.$emit('save-storage', this.hasStorageModule ? data : false)
+        localStorage.setItem(key, this.hasStorageModule() ? data : false)
+        this.$emit('save-storage', this.hasStorageModule() ? data : false)
       }
     },
     loadStorage() {
       if (!this.teaseId) return
       const data = localStorage.getItem(this.getStorageKey())
+      console.log('this.hasStorageModule', this.hasStorageModule())
       if (data) {
         try {
           const decoded = JSON.parse(data)
           STORAGE = decoded
-          this.$emit('load-storage', this.hasStorageModule ? data : false)
+          this.$emit('load-storage', this.hasStorageModule() ? data : false)
           return
         } catch (e) {
           console.error('Invalid storage data', data)
@@ -64,7 +62,7 @@ export default {
       STORAGE = {}
       this.$emit(
         'load-storage',
-        this.hasStorageModule ? JSON.stringify(STORAGE) : false
+        this.hasStorageModule() ? JSON.stringify(STORAGE) : false
       )
     },
     installStorage(interpreter, globalObject) {

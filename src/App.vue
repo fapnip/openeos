@@ -359,7 +359,7 @@ export default {
       if (v && v !== '{}') {
         this.hasStorage = true
       }
-      this.teaseStorage = v
+      if (v) this.teaseStorage = v
     },
     didStorageLoad(v) {
       if (v && v !== '{}') {
@@ -369,7 +369,8 @@ export default {
       } else {
         this.hasStorage = null
       }
-      this.teaseStorage = v
+      console.log('Did storage load', v)
+      if (v) this.teaseStorage = v
     },
     didTeaseStart() {
       this.teaseStarted = true
