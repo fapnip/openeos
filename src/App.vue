@@ -364,8 +364,7 @@ export default {
     didStorageLoad(v) {
       if (v && v !== '{}') {
         this.hasStorage = true
-      }
-      if (!v) {
+      } else if (!v) {
         this.hasStorage = false
       } else {
         this.hasStorage = null
