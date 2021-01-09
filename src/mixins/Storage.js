@@ -44,8 +44,8 @@ export default {
       }
       const key = this.getStorageKey()
       if (data !== localStorage.getItem(key)) {
-        localStorage.setItem(key, data)
-        this.$emit('save-storage', data)
+        localStorage.setItem(key, this.hasStorageModule ? data : false)
+        this.$emit('save-storage', this.hasStorageModule ? data : false)
       }
     },
     loadStorage() {
@@ -55,13 +55,17 @@ export default {
         try {
           const decoded = JSON.parse(data)
           STORAGE = decoded
-          this.$emit('load-storage', data)
+          this.$emit('load-storage', this.hasStorageModule ? data : false)
           return
         } catch (e) {
           console.error('Invalid storage data', data)
         }
       }
       STORAGE = {}
+      this.$emit(
+        'load-storage',
+        this.hasStorageModule ? JSON.stringify(STORAGE) : false
+      )
     },
     installStorage(interpreter, globalObject) {
       const manager = interpreter.createObject(interpreter.OBJECT)

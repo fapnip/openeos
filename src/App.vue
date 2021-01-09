@@ -40,7 +40,7 @@
       <v-btn icon @click="toggleFullscreen">
         <v-icon>mdi-fullscreen</v-icon>
       </v-btn>
-      <v-menu v-if="script" bottom :offset-y="true">
+      <v-menu v-if="script && hasStorage !== false" bottom :offset-y="true">
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon dark v-bind="attrs" v-on="on">
             <v-icon>mdi-dots-vertical</v-icon>
@@ -48,17 +48,21 @@
         </template>
 
         <v-list>
-          <v-list-item :disabled="!hasStorage" @click="downloadTeaseStorage">
+          <v-list-item v-if="!teaseStarted" @click="restoreTeaseStorage">
+            <v-list-item-icon>
+              <v-icon>mdi-upload</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Restore Tease Storage</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            v-else
+            :disabled="!hasStorage"
+            @click="downloadTeaseStorage"
+          >
             <v-list-item-icon>
               <v-icon :disabled="!hasStorage">mdi-download</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Download Tease Storage</v-list-item-title>
-          </v-list-item>
-          <v-list-item :disabled="teaseStarted" @click="restoreTeaseStorage">
-            <v-list-item-icon>
-              <v-icon :disabled="teaseStarted">mdi-upload</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Restore Tease Storage</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -360,6 +364,11 @@ export default {
     didStorageLoad(v) {
       if (v && v !== '{}') {
         this.hasStorage = true
+      }
+      if (!v) {
+        this.hasStorage = false
+      } else {
+        this.hasStorage = null
       }
       this.teaseStorage = v
     },

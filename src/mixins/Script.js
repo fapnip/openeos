@@ -15,6 +15,9 @@ export default {
     pageScripts = {}
   },
   methods: {
+    hasStorageModule() {
+      return SCRIPT && SCRIPT.modules && SCRIPT.modules.storage
+    },
     getInitScript() {
       return (SCRIPT && SCRIPT.init) || ''
     },
