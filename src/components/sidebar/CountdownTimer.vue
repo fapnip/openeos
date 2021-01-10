@@ -206,6 +206,8 @@ export default {
   color: white;
   display: inline-block;
   line-height: var(--cd-width);
+  font-size: 1.2em;
+  text-shadow: 0px 0px 4px black, 0px 0px 4px black;
 }
 
 .oeos-countdown-bg,
