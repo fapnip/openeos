@@ -5,14 +5,13 @@
   "author": {
     "name": "fapnip"
   },
-  "license" : "SEE LICENSE IN LICENSE",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.21.0",
     "compare-versions": "^3.6.0",
     "core-js": "^3.6.5",
     "crypto-js": "^4.0.0",
