@@ -5,6 +5,7 @@
   "author": {
     "name": "fapnip"
   },
+  "license" : "SEE LICENSE IN LICENSE",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
