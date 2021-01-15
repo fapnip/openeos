@@ -56,6 +56,10 @@ const supportedHosts = [
 // TODO: break this out to multiple lines
 const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
 
+function _validateHref(href) {
+  return href && !!href.match(allowedUrlMatcher)
+}
+
 export default {
   data: () => ({}),
   methods: {
@@ -198,7 +202,7 @@ export default {
         )
         const result = {
           item: file,
-          href: buildHref(file),
+          href: buildHref(file, null, _validateHref),
           locator: locator,
         }
         // if (matches.length > 2) lastRandoms[locator] = file.href
@@ -207,7 +211,7 @@ export default {
       }
       return {
         item: file,
-        href: buildHref(file),
+        href: buildHref(file, null, _validateHref),
         locator: locator,
       }
     },
@@ -247,7 +251,7 @@ export default {
           )
           const result = {
             item: image,
-            href: buildHref(image),
+            href: buildHref(image, null, _validateHref),
             locator: locator,
           }
           // if (images.length > 2) lastRandoms[locator] = image.href
@@ -269,7 +273,7 @@ export default {
       }
       return {
         item: image,
-        href: buildHref(image),
+        href: buildHref(image, null, _validateHref),
         locator: locator,
       }
     },

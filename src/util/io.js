@@ -31,9 +31,16 @@ export const encodeForCorsProxy = (url, query) => {
   }
 }
 
-export const buildHref = (item, smaller) => {
+export const buildHref = (item, smaller, validator) => {
   if (item.href) {
-    return item.href
+    if (validator) {
+      const href = validator(item.href)
+      if (href && !href.match(/^#/)) {
+        return href
+      }
+    } else {
+      return item.href
+    }
   }
   // console.log('Building href for:', item)
   if (!item.type || item.type.match(/^image/)) {
