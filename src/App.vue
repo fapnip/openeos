@@ -7,6 +7,7 @@
       color="primary"
       dark
       :class="{ 'oeos-fullscreen': isFullscreen }"
+      @click.stop="() => {}"
     >
       <div class="d-flex">
         <div v-if="title" class="oeos-title">
