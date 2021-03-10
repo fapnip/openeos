@@ -14,6 +14,11 @@ let nextImageFuncs = []
 
 let pagesInstance = null
 
+const isPattern = s => {
+  if (typeof s !== 'string') return false
+  return !!s.match(/(^!|[*?{}])/)
+}
+
 export default {
   data: () => ({
     waitingForPageChange: false,
@@ -39,6 +44,14 @@ export default {
     },
   },
   methods: {
+    getPageNames: function(pattern, onlyEnabled) {
+      const pages = Object.keys(this.pages())
+      if (!pattern) return pages
+      const filter = minimatch
+        .filter(pattern)
+        .filter(p => !onlyEnabled || !disabledPages[p])
+      return pages.filter(filter)
+    },
     endTease() {
       navCounter++
       // TODO: display end modal
@@ -216,9 +229,21 @@ export default {
       const proto = manager.properties['prototype']
       interpreter.setProperty(globalObject, 'PageManager', manager)
 
-      interpreter.setNativeFunctionPrototype(manager, 'list', () => {
-        return interpreter.nativeToPseudo(Object.keys(this.pages()))
-      })
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'list',
+        (pattern, onlyEnabled) => {
+          if (pattern && typeof pattern !== 'string') {
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'If filter pattern is supplied, must be a string'
+            )
+          }
+          return interpreter.nativeToPseudo(
+            this.getPageNames(pattern, onlyEnabled)
+          )
+        }
+      )
 
       interpreter.setNativeFunctionPrototype(manager, 'isEnabled', pageId => {
         if (typeof pageId !== 'string') {
@@ -559,6 +584,17 @@ export default {
       })
       interpreter.setNativeFunctionPrototype(manager, 'goto', pageId => {
         try {
+          if (isPattern(pageId)) {
+            const pages = this.getPageNames(pageId, true)
+            if (!pages.length)
+              return interpreter.createThrowable(
+                interpreter.RANGE_ERROR,
+                `No enabled pages found with pattern: ${pageId}`
+              )
+            return this.showPage(
+              pages[Math.floor(Math.random() * pages.length)]
+            )
+          }
           return this.showPage(pageId)
         } catch (e) {
           return interpreter.createThrowable(
