@@ -6,7 +6,7 @@ import { version } from '../../package.json'
 let navCounter = 0
 let navIndex = 0
 let disabledPages = {}
-const preloadedPage = {}
+let preloadedPage = {}
 let lastGetPageId = null
 let skipNextBubbleClear = false
 let nextPageFuncs = []
@@ -30,6 +30,7 @@ export default {
   mounted() {
     navCounter = 0
     disabledPages = {}
+    preloadedPage = {}
     document.addEventListener('visibilitychange', this.documentVisibilityChange)
   },
   beforeDestroy() {
@@ -47,10 +48,8 @@ export default {
     getPageNames: function(pattern, onlyEnabled) {
       const pages = Object.keys(this.pages())
       if (!pattern) return pages
-      const filter = minimatch
-        .filter(pattern)
-        .filter(p => !onlyEnabled || !disabledPages[p])
-      return pages.filter(filter)
+      const filter = minimatch.filter(pattern)
+      return pages.filter(filter).filter(p => !onlyEnabled || !disabledPages[p])
     },
     endTease() {
       navCounter++
@@ -156,7 +155,7 @@ export default {
       const didPages = {}
       didPages[pageId] = true
       for (const target of Object.keys(pageScript.targets)) {
-        if (!didPages[preloadedPage[target]] && !didPages[target]) {
+        if (/*!didPages[preloadedPage[target]] && */ !didPages[target]) {
           this.preloadPage(target, pageId)
           didPages[lastGetPageId] = true
         }
@@ -186,20 +185,32 @@ export default {
       return lastGetPageId
     },
     getPage(pattern, preload) {
-      if (!preload && preloadedPage[pattern]) {
-        const result = preloadedPage[pattern]
-        delete preloadedPage[pattern]
-        pattern = result
-      }
-      if (pattern && pattern.match(/\*/)) {
-        const filter = minimatch.filter(pattern)
-        const pages = Object.keys(this.pages()).filter(filter)
-        const selectedPage = pages[Math.floor(Math.random() * pages.length)]
-        if (selectedPage) {
-          if (preload) preloadedPage[pattern] = selectedPage
-          pattern = selectedPage
+      // if (!preload && preloadedPage[pattern]) {
+      //   const result = preloadedPage[pattern]
+      //   delete preloadedPage[pattern]
+      //   pattern = result
+      // }
+      if (isPattern(pattern)) {
+        var lastLookup = preloadedPage[pattern]
+        if (!lastLookup) {
+          lastLookup = []
+          preloadedPage[pattern] = lastLookup
+        }
+        if (!preload && lastLookup.length) {
+          pattern = lastLookup.shift()
         } else {
-          throw new Error(`No page found with pattern: ${pattern}`)
+          const pages = this.getPageNames(pattern, true)
+          const selectedPage =
+            pages.length && pages[Math.floor(Math.random() * pages.length)]
+          if (selectedPage) {
+            if (preload) {
+              // preloadedPage[pattern] = selectedPage
+              lastLookup.push(selectedPage)
+            }
+            pattern = selectedPage
+          } else {
+            throw new Error(`No enabled page found with pattern: ${pattern}`)
+          }
         }
       }
       const result = this.pages()[pattern]
@@ -584,19 +595,9 @@ export default {
       })
       interpreter.setNativeFunctionPrototype(manager, 'goto', pageId => {
         try {
-          if (isPattern(pageId)) {
-            const pages = this.getPageNames(pageId, true)
-            if (!pages.length)
-              return interpreter.createThrowable(
-                interpreter.RANGE_ERROR,
-                `No enabled pages found with pattern: ${pageId}`
-              )
-            return this.showPage(
-              pages[Math.floor(Math.random() * pages.length)]
-            )
-          }
           return this.showPage(pageId)
         } catch (e) {
+          console.error(e)
           return interpreter.createThrowable(
             interpreter.TYPE_ERROR,
             `Error loading page: ${pageId};  ${e.toString()}`
