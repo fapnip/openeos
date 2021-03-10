@@ -197,8 +197,12 @@ export default {
           preloadedPage[pattern] = lastLookup
         }
         if (!preload && lastLookup.length) {
-          pattern = lastLookup.shift()
-        } else {
+          const preloadFromPattern = lastLookup.shift()
+          if (this.isPageEnabled(preloadFromPattern)) {
+            pattern = preloadFromPattern
+          }
+        }
+        if (isPattern(pattern)) {
           const pages = this.getPageNames(pattern, true)
           const selectedPage =
             pages.length && pages[Math.floor(Math.random() * pages.length)]
