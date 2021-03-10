@@ -1,5 +1,9 @@
 <template>
-  <v-row ref="rootElement" :align="align">
+  <v-row
+    ref="rootElement"
+    :align="align"
+    class="oeos-clickable text-center ma-0"
+  >
     <v-text-field
       v-if="active"
       v-model="inputValue"

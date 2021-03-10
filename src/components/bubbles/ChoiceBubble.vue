@@ -3,7 +3,7 @@
     v-if="options[0] && selectedOption === null"
     ref="rootElement"
     align="center"
-    class="oeos-choices text-center"
+    class="oeos-choices text-center ma-0"
   >
     <template v-for="(option, i) in options">
       <v-expand-x-transition :key="option.label + ':' + i">
@@ -23,7 +23,7 @@
     v-else-if="selectedOption"
     ref="rootElement"
     align="center"
-    class="oeos-choices text-center"
+    class="oeos-choices text-center ma-0"
   >
     <v-btn class="oeos-clickable custom-transform-class text-none" disabled>
       <span v-html="selectedOption.label"></span
@@ -33,7 +33,7 @@
     v-else
     ref="rootElement"
     align="center"
-    class="oeos-clickable oeos-choices text-center"
+    class="oeos-clickable oeos-choices text-center ma-0"
   >
     <v-btn disabled> <span> ... </span></v-btn>
   </v-row>
