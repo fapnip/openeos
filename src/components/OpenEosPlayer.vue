@@ -1,6 +1,12 @@
 <template>
   <div class="oeos-outer">
-    <div :class="mainClass" v-resize="scrollToBottom" @click="pageClick">
+    <div
+      ref="oeosOuter"
+      :style="cssVars"
+      :class="mainClass"
+      v-resize="scrollToBottom"
+      @click="pageClick"
+    >
       <div
         v-if="currentBackgroundColor"
         class="oeos-background"
@@ -20,6 +26,16 @@
           class="oeos-image"
           v-show="(hideVideo || !hasVideo) && image && !hideImage"
         >
+          <!-- <img
+            ref="mainImage"
+            :src="image && image.href"
+            class="oeos-clickable"
+            crossorigin="anonymous"
+            @load="imageLoad"
+            @loadstart="imageResize"
+            @progress="imageResize"
+            @error="imageError"
+          /> -->
           <img
             ref="mainImage"
             :src="image && image.href"
@@ -309,6 +325,7 @@ export default {
     isDebug: true,
     loadingText: 'Preloading images...',
     noSleep: new NoSleep(),
+    cssVars: {},
   }),
   computed: {
     initScript() {
@@ -349,6 +366,19 @@ export default {
     },
   },
   methods: {
+    setCssVar(key, val) {
+      if (!key) {
+        return
+      }
+      if (!key.match(/^--[a-zA-Z]/)) {
+        key = '--' + key
+      }
+      if (val === undefined) {
+        delete this.cssVars[key]
+      } else {
+        this.cssVars[key] = val
+      }
+    },
     debug() {
       if (this.isDebug) {
         console.log(...arguments)
