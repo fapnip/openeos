@@ -46,6 +46,7 @@ export default {
       if (!this.hideVideo && this.hasVideo) {
         this.videoResize()
       } else {
+        // const outer = this.$refs.oeosOuter
         const img = this.$refs.mainImage
         const imgOverlay = this.$refs.imageOverlays
         if (img && imgOverlay) {
@@ -63,6 +64,7 @@ export default {
           }
           imgOverlay.style.width = Math.ceil(width) + 'px'
           imgOverlay.style.height = Math.ceil(height) + 'px'
+          this.setCssVar('--image-scale', height / 720)
         }
       }
       this.scrollToBottom()
