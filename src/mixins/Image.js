@@ -35,6 +35,7 @@ export default {
     fullScreenImage: false,
     hideImage: false,
     image: null,
+    imageScale: 0,
   }),
   beforeMount() {
     checkWebpFeature('animation', r => {
@@ -64,7 +65,9 @@ export default {
           }
           imgOverlay.style.width = Math.ceil(width) + 'px'
           imgOverlay.style.height = Math.ceil(height) + 'px'
-          this.setCssVar('--image-scale', height / 720)
+          var imageScale = height / 720
+          this.imageScale = imageScale
+          this.setCssVar('--image-scale', imageScale)
         }
       }
       this.scrollToBottom()

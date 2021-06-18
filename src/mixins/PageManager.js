@@ -378,6 +378,14 @@ export default {
         }
       )
 
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'getImageScale',
+        function() {
+          return vue.imageScale
+        }
+      )
+
       interpreter.setNativeFunctionPrototype(manager, 'hideBubbles', function(
         v
       ) {
