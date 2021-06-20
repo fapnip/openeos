@@ -147,6 +147,12 @@ export default {
         for (const locator of Object.keys(pageScript.images)) {
           this.preloadImage(locator, wait)
         }
+        for (const soundOption of pageScript.sounds) {
+          this.preloadSound(soundOption, true)
+        }
+        for (const videoOption of pageScript.videos) {
+          this.preloadVideo(videoOption, true)
+        }
       } else {
         this.debug('Skipping image preload on:', pageId)
       }

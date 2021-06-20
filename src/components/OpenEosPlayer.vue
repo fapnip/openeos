@@ -442,10 +442,12 @@ export default {
       const sounds = this.popStartupSounds()
       for (const soundOption of sounds) {
         this.preloadSound(soundOption, true)
+        break
       }
       const videos = this.popStartupVideos()
       for (const videoOption of videos) {
         this.preloadVideo(videoOption, true)
+        break
       }
       this.debug('Loading JS Includes')
       for (const jsInclude of Object.values(this.getJsIncludes())) {
