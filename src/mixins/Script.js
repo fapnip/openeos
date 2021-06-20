@@ -35,8 +35,9 @@ export default {
       this.updateGalleryLookup()
       this.loadStorage()
     },
-    getPageScript(pageId) {
-      const page = this.getPage(pageId)
+    getPageScript(pattern) {
+      const page = this.getPage(pattern)
+      var pageId = this.lastGetPageId()
       let pageScript = pageScripts[pageId]
       if (!pageScript) {
         console.log('Compiling Page Script:', pageId)
