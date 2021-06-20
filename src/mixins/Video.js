@@ -190,12 +190,13 @@ export default {
         }
       }
 
-      item.stop = () => {
+      item.stop = noDidStop => {
         this.videoHide(item)
         this.$nextTick(() => {
           video.pause()
           video.currentTime = 0
           item._playing = false
+          if (!noDidStop) item._didStop = true
         })
       }
 
@@ -224,9 +225,14 @@ export default {
 
       item.play = () => {
         // console.error(`Playing video ${file.href}`)
+        if (item._preloading) {
+          item._playAfterLoad = true
+          return
+        }
         item._show = true
         item._didContinue = false
         item._playing = true
+        item._didStop = false
         this.lastVideoPlay = item
         if (!item.playing()) {
           video.addEventListener('play', _showOnPlay)
@@ -240,7 +246,7 @@ export default {
         // If we're pre-loading, stop the video playback and restart
         if (item._preloading) {
           // console.warn('Stopping after preload')
-          item.stop()
+          item.stop(true)
           this.videoHide(item)
           video.controls = false
           video.removeAttribute('controls')
@@ -255,6 +261,12 @@ export default {
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
           })
+          if (item._playAfterLoad) {
+            item._playAfterLoad = false
+            this.$nextTick(() => {
+              if (!item._didStop) item.play()
+            })
+          }
         }
       }
 
