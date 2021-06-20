@@ -184,6 +184,13 @@ export default {
     lastGetPageId() {
       return lastGetPageId
     },
+    hasPage(pattern) {
+      if (isPattern(pattern)) {
+        return !!this.getPageNames(pattern, true).length
+      } else {
+        return !!this.pages()[pattern]
+      }
+    },
     getPage(pattern, preload) {
       // if (!preload && preloadedPage[pattern]) {
       //   const result = preloadedPage[pattern]
@@ -394,6 +401,10 @@ export default {
         }
         vue.hideBubbles = !!v
         return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'contains', function(p) {
+        return vue.hasPage(p)
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'hasCssProperty', val => {
