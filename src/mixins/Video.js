@@ -278,7 +278,14 @@ export default {
           video.muted = false
           item._preloading = false
           video.addEventListener('ended', item.looper)
-          ;['play', 'ended', 'pause', 'waiting'].forEach(type => {
+          ;[
+            'play',
+            'ended',
+            'pause',
+            'waiting',
+            'stalled',
+            'timeupdate',
+          ].forEach(type => {
             video.addEventListener(type, () => {
               if (!item._didFirstStop) return
               this.dispatchEvent({ target: pseudoItem, type }, e)
