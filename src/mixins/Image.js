@@ -46,29 +46,28 @@ export default {
     imageResize() {
       if (!this.hideVideo && this.hasVideo) {
         this.videoResize()
-      } else {
-        // const outer = this.$refs.oeosOuter
-        const img = this.$refs.mainImage
-        const imgOverlay = this.$refs.imageOverlays
-        if (img && imgOverlay) {
-          let width = img.clientWidth
-          let height = img.clientHeight
-          const naturalHeight = img.naturalHeight
-          const naturalWidth = img.naturalWidth
-          const xScale = width / naturalWidth
-          const yScale = height / naturalHeight
-          if (xScale === 1) {
-            width = naturalWidth * yScale
-          }
-          if (yScale === 1 || xScale < yScale) {
-            height = naturalHeight * xScale
-          }
-          imgOverlay.style.width = Math.ceil(width) + 'px'
-          imgOverlay.style.height = Math.ceil(height) + 'px'
-          var imageScale = height / 720
-          this.imageScale = imageScale
-          this.setCssVar('--image-scale', imageScale)
+      }
+      // const outer = this.$refs.oeosOuter
+      const img = this.$refs.mainImage
+      const imgOverlay = this.$refs.imageOverlays
+      if (img && imgOverlay) {
+        let width = img.clientWidth
+        let height = img.clientHeight
+        const naturalHeight = img.naturalHeight
+        const naturalWidth = img.naturalWidth
+        const xScale = width / naturalWidth
+        const yScale = height / naturalHeight
+        if (xScale === 1) {
+          width = naturalWidth * yScale
         }
+        if (yScale === 1 || xScale < yScale) {
+          height = naturalHeight * xScale
+        }
+        imgOverlay.style.width = Math.ceil(width) + 'px'
+        imgOverlay.style.height = Math.ceil(height) + 'px'
+        var imageScale = height / 720
+        this.imageScale = imageScale
+        this.setCssVar('--image-scale', imageScale)
       }
       this.scrollToBottom()
     },

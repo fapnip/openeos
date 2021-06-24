@@ -22,10 +22,7 @@
           'oeos-top': true,
         }"
       >
-        <div
-          class="oeos-image"
-          v-show="(hideVideo || !hasVideo) && image && !hideImage"
-        >
+        <div :class="imageContainerClass">
           <!-- <img
             ref="mainImage"
             :src="image && image.href"
@@ -39,7 +36,7 @@
           <img
             ref="mainImage"
             :src="image && image.href"
-            class="oeos-clickable"
+            :class="mainImageClass"
             crossorigin="anonymous"
             @load="imageLoad"
             @loadstart="imageResize"
@@ -51,7 +48,7 @@
           class="oeos-image-overlays"
           ref="imageOverlays"
           @click="imageClick"
-          v-show="(hideVideo || !hasVideo) && image && !hideImage"
+          v-show="imageIsVisible"
         >
           <overlay-item
             v-for="overlay in imageOverlays"
@@ -348,6 +345,18 @@ export default {
         'no-backdrop': !this.hasBackdropFilter,
         'oeos-image-full': this.fullScreenImage,
       }
+    },
+    imageContainerClass() {
+      return {
+        'oeos-image': true,
+        'oeos-hide-no-click': !this.imageIsVisible,
+      }
+    },
+    imageIsVisible() {
+      return (this.hideVideo || !this.hasVideo) && this.image && !this.hideImage
+    },
+    mainImageClass() {
+      return { 'oeos-clickable': this.imageIsVisible }
     },
   },
   // beforeMount() {
@@ -741,6 +750,10 @@ html {
 
 .oeos-main .v-btn.v-size--default .v-btn__content > span {
   white-space: normal;
+}
+
+.oeos-hide-no-click {
+  visibility: hidden;
 }
 
 @keyframes fadeinout {
