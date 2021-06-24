@@ -35,7 +35,10 @@ export default {
       }
     },
     removeBubble(item) {
-      const index = this.bubbles.findIndex(i => i === item)
+      const index = this.bubbles.findIndex(
+        i => i === item || (i && i.item === item)
+      )
+      console.log('removing bubble', item, index)
       if (index > -1) {
         this.bubbles.splice(index, 1)
       }
