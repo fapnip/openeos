@@ -63,6 +63,7 @@ export default {
         if (video._show) hasVideo = video
       }
       this.hasVideo = hasVideo
+      this.$nextTick(() => this.imageResize())
     },
     videoHide(item) {
       let hasVideo = false
@@ -73,6 +74,7 @@ export default {
         if (video._show) hasVideo = video
       }
       this.hasVideo = hasVideo
+      this.$nextTick(() => this.imageResize())
     },
     videoHideAll() {
       for (const video of Object.values(this.videos)) {
@@ -80,6 +82,7 @@ export default {
         video.video.pause()
       }
       this.hasVideo = false
+      this.$nextTick(() => this.imageResize())
     },
     preloadVideo(options, fromPageScript) {
       try {
