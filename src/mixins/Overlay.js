@@ -81,9 +81,9 @@ export default {
         return this._item.id
       })
 
-      interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
-        return vue.getHTMLElementPseudo(this._item._o_el, true)
-      })
+      // interpreter.setNativeFunctionPrototype(manager, 'getElement', function() {
+      //   return vue.getHTMLElementPseudo(this._item._o_el, true)
+      // })
 
       interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
         const item = this._item
