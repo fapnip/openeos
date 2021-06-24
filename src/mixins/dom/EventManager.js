@@ -105,7 +105,7 @@ export default {
               const pseudoEvent = vue.buildElementEvent(_this, e)
               if (vue.hasEventListeners(_this, e.type)) {
                 // Dispatch pseudo events, if any
-                console.log('Dispatching event', pseudoEvent, e)
+                // console.log('Dispatching event', pseudoEvent, e)
                 vue.dispatchPseudoEvent(pseudoEvent, _this, e)
               }
             }
@@ -154,7 +154,7 @@ export default {
           if (listener && !listener.done && !event._stopImmediatePropagation) {
             const listenerFunc = listener.value[0]
             const listenerOpts = listener.value[1]
-            console.log('Calling', listenerFunc)
+            // console.log('Calling', listenerFunc)
             return interpreter
               .callFunction(listenerFunc, _this, event)
               .then(() => {
@@ -257,7 +257,7 @@ export default {
       const interpreter = this.interpreter
       const target = eventObj.target
       if (!interpreter.isa(target, eventTarget)) {
-        console.log('Bad Target', target, eventObj)
+        console.warn('Bad Target', target, eventObj)
         throw new TypeError('tried to dispatch an event on a non-EventTarget')
       }
       const event = this.buildEventObject(eventObj)
