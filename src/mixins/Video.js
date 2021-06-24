@@ -28,6 +28,9 @@ export default {
         }
         vidOverlay.style.width = Math.ceil(width) + 'px'
         vidOverlay.style.height = Math.ceil(height) + 'px'
+        var imageScale = height / 720
+        this.imageScale = imageScale
+        this.setCssVar('--video-scale', imageScale)
       }
     },
     videoClick(e) {
