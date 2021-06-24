@@ -51,8 +51,8 @@ export default {
       }
     },
     incrementPreload(href) {
-      this.debug('Queuing preload:', href)
       waitingPreloads++
+      this.debug('Queuing preload:', waitingPreloads, href)
       this.checkPreloadIndicator()
     },
     doAfterPreload(wait, isError) {
@@ -70,10 +70,13 @@ export default {
       this.showPreloading = false
       waitingPreloads = 0
       // console.log('Finished preload.')
+      let fnCount = afterPreload.length
+      let i = 0
       let fn = afterPreload.shift()
-      while (fn) {
+      while (fn && i < fnCount) {
         fn()
-        fn = afterPreload.shift()
+        i++
+        if (i < fnCount) fn = afterPreload.shift()
       }
     },
     addPreload(file, asType, wait, onLoad, onError) {
