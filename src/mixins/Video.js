@@ -190,14 +190,24 @@ export default {
         }
       }
 
-      item.stop = noDidStop => {
+      var afterStop = () => {
+        item._stopping = false
+        if (preload && !item._didFirstStop) {
+          // console.warn('Did initial pause after preload', file.href)
+          this.$nextTick(() => this.doAfterPreload(true))
+        }
+        item._didFirstStop = true
+      }
+
+      item.stop = () => {
         this.videoHide(item)
-        this.$nextTick(() => {
-          video.pause()
-          video.currentTime = 0
-          item._playing = false
-          if (!noDidStop) item._didStop = true
-        })
+        item._stopping = item.playing()
+        // this.$nextTick(() => {
+        item.video.removeEventListener('pause', playAfterStop)
+        video.pause()
+        video.currentTime = 0
+        item._playing = false
+        // })
       }
 
       item.show = val => {
@@ -215,57 +225,68 @@ export default {
 
       const _showOnPlay = e => {
         if (item._show) {
+          // console.log('Showing video:', file.href)
           item.show(true)
           this.videoShow(item)
           this.$nextTick(() => this.videoResize())
           video.removeEventListener('play', _showOnPlay)
           this.dispatchEvent({ target: pseudoItem, type: 'play-start' }, e)
+        } else {
+          // console.log('Skipping show of video:', file.href)
         }
       }
 
-      item.play = () => {
+      item.play = noShow => {
         // console.error(`Playing video ${file.href}`)
         if (item._preloading) {
           item._playAfterLoad = true
           return
         }
-        item._show = true
+        item._show = item._show || !noShow
         item._didContinue = false
-        item._playing = true
-        item._didStop = false
         this.lastVideoPlay = item
-        if (!item.playing()) {
+        if (item._stopping) {
+          // console.log('Deferring till pause')
+          video.addEventListener('pause', playAfterStop)
+        } else if (!item.playing()) {
+          item._playing = true
           video.addEventListener('play', _showOnPlay)
           item.video.play()
         } else {
+          item._playing = true
           _showOnPlay()
         }
+        item._stopping = false
+      }
+
+      item._stopping = false
+      var playAfterStop = () => {
+        item.video.removeEventListener('pause', playAfterStop)
+        if (!item._stopping) item.play()
       }
 
       item.preloader = e => {
         // If we're pre-loading, stop the video playback and restart
         if (item._preloading) {
           // console.warn('Stopping after preload')
-          item.stop(true)
+          video.removeEventListener('play', item.preloader)
+          item.stop()
           this.videoHide(item)
           video.controls = false
           video.removeAttribute('controls')
           // video.autoplay = true
           video.muted = false
-          this.doAfterPreload(true)
           item._preloading = false
-          video.removeEventListener('play', item.preloader)
           video.addEventListener('ended', item.looper)
           ;['play', 'ended', 'pause', 'waiting'].forEach(type => {
             video.addEventListener(type, () => {
+              if (!item._didFirstStop) return
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
           })
           if (item._playAfterLoad) {
             item._playAfterLoad = false
-            this.$nextTick(() => {
-              if (!item._didStop) item.play()
-            })
+            item.play()
           }
         }
       }
@@ -298,6 +319,7 @@ export default {
 
       item.error = e => {
         // item._o_el = e.target
+        console.log('Error preloading video', item)
         if (preload) this.doAfterPreload(true)
       }
 
@@ -320,6 +342,7 @@ export default {
       video.addEventListener('loadedmetadata', item.loadedmetadata)
       video.addEventListener('play', item.preloader)
       video.addEventListener('error', item.error)
+      video.addEventListener('pause', afterStop)
       video.src = file.href
 
       console.log('refs', this.$refs)
@@ -459,10 +482,10 @@ export default {
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
 
-      interpreter.setNativeFunctionPrototype(manager, 'play', function() {
+      interpreter.setNativeFunctionPrototype(manager, 'play', function(v) {
         this._item.loopCount = this._item.loops
-        this._item.video.play()
-        this._item._playing = true
+        this._item.play(v)
+        // this._item._playing = true
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
         this._item.video.pause()
@@ -547,7 +570,7 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
         this._item.stop()
         this._item._playing = false
-        delete vue.sounds[this._item.options.id]
+        delete vue.sounds[this._item.id]
       })
     },
   },
