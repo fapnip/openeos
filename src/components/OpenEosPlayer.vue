@@ -735,6 +735,11 @@ html {
   font-weight: bold;
 }
 
+.oeos-main .v-btn.v-size--default.expand-x-transition-enter-active,
+.oeos-main .v-btn.v-size--default.expand-x-transition-leave-active {
+  height: 36px;
+}
+
 .oeos-main .v-btn.v-size--small {
   height: auto;
   min-height: 26px;
@@ -744,12 +749,27 @@ html {
   font-weight: bold;
 }
 
+.oeos-main .v-btn.v-size--small.expand-x-transition-enter-active {
+  height: 26px;
+}
+
 .oeos-main .v-btn.v-size--default .v-btn__content {
   max-width: 100%;
 }
 
 .oeos-main .v-btn.v-size--default .v-btn__content > span {
   white-space: normal;
+}
+
+.oeos-main
+  .v-btn.v-size--default.expand-x-transition-enter-active
+  .v-btn__content
+  > span,
+.oeos-main
+  .v-btn.v-size--default.expand-x-transition-leave-active
+  .v-btn__content
+  > span {
+  white-space: nowrap;
 }
 
 .oeos-hide-no-click {
