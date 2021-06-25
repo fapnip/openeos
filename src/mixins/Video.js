@@ -580,10 +580,15 @@ export default {
         }
         this._item.video.volume = volume
       })
+      interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
+        this._item.stop()
+        this._item._playing = false
+        delete vue.videos[this._item.id]
+      })
       interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
         this._item.stop()
         this._item._playing = false
-        delete vue.sounds[this._item.id]
+        delete vue.videos[this._item.id]
       })
     },
   },
