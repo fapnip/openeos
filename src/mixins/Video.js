@@ -580,16 +580,14 @@ export default {
         }
         this._item.video.volume = volume
       })
-      interpreter.setNativeFunctionPrototype(manager, 'remove', function() {
+      var destroyVideo = function() {
         this._item.stop()
         this._item._playing = false
+        this._item.video.remove()
         delete vue.videos[this._item.id]
-      })
-      interpreter.setNativeFunctionPrototype(manager, 'destroy', function() {
-        this._item.stop()
-        this._item._playing = false
-        delete vue.videos[this._item.id]
-      })
+      }
+      interpreter.setNativeFunctionPrototype(manager, 'remove', destroyVideo)
+      interpreter.setNativeFunctionPrototype(manager, 'destroy', destroyVideo)
     },
   },
 }
