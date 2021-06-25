@@ -152,41 +152,41 @@ export default {
         optionManager,
         'remove',
         function() {
-          _remove.call(this._choice, this._index)
+          _remove.call(this._choice.pseudoItem(), this._index)
         }
       )
       interpreter.setNativeFunctionPrototype(
         optionManager,
         'select',
         function() {
-          _select.call(this._choice, this._index)
+          _select.call(this._choice.pseudoItem(), this._index)
         }
       )
       interpreter.setNativeFunctionPrototype(optionManager, 'visible', function(
         ...args
       ) {
-        _visible.call(this._choice, this._index, ...args)
+        _visible.call(this._choice.pseudoItem(), this._index, ...args)
       })
       interpreter.setNativeFunctionPrototype(optionManager, 'keep', function(
         ...args
       ) {
-        _keep.call(this._choice, this._index, ...args)
+        _keep.call(this._choice.pseudoItem(), this._index, ...args)
       })
       interpreter.setNativeFunctionPrototype(optionManager, 'color', function(
         ...args
       ) {
-        _color.call(this._choice, this._index, ...args)
+        _color.call(this._choice.pseudoItem(), this._index, ...args)
       })
       interpreter.setNativeFunctionPrototype(optionManager, 'label', function(
         ...args
       ) {
-        _label.call(this._choice, this._index, ...args)
+        _label.call(this._choice.pseudoItem(), this._index, ...args)
       })
       interpreter.setNativeFunctionPrototype(
         optionManager,
         'parent',
         function() {
-          return this._choice
+          return this._choice.pseudoItem()
         }
       )
       interpreter.setNativeFunctionPrototype(
