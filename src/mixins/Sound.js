@@ -326,7 +326,7 @@ export default {
         //   soundEl._node.play()
         //   this.dispatchEvent({ target: pseudoItem, type: 'play' })
         // } else {
-        sound.play()
+        !sound.playing() && sound.play()
         // getPlayingSound()
         // }
         if (item.runDoAt()) {
