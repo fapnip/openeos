@@ -6,7 +6,10 @@
     class="oeos-choices text-center ma-0"
   >
     <template v-for="(option, i) in options">
-      <v-expand-x-transition :key="option.label + ':' + i">
+      <v-expand-x-transition
+        v-if="option.animate"
+        :key="option.label + ':' + i"
+      >
         <v-btn
           v-show="optionVisible(option)"
           :key="option.label + ':' + i"
@@ -17,6 +20,16 @@
           <span v-html="option.label"></span
         ></v-btn>
       </v-expand-x-transition>
+      <v-btn
+        v-else
+        v-show="optionVisible(option)"
+        :key="option.label + ':' + i"
+        :color="option.color"
+        class="oeos-clickable custom-transform-class text-none mx-1 px-2"
+        @click.stop="optionSelect(option)"
+      >
+        <span v-html="option.label"></span
+      ></v-btn>
     </template>
   </v-row>
   <v-row
