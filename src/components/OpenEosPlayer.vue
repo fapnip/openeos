@@ -18,6 +18,7 @@
       ></div>
       <div
         v-show="(!hideVideo && hasVideo) || (image && !hideImage)"
+        ref="oeosTop"
         :class="{
           'oeos-top': true,
         }"
@@ -322,7 +323,17 @@ export default {
     isDebug: true,
     loadingText: 'Preloading images...',
     noSleep: new NoSleep(),
-    cssVars: {},
+    cssVars: {
+      '--bubble-area-top': '0',
+      '--bubble-area-image-top': '70%',
+      '--bubble-area-left': '0',
+      '--bubble-area-right': '0',
+      '--bubble-area-bottom': '0',
+      '--notifications-top': 'auto',
+      '--notifications-left': 'auto',
+      '--notifications-right': '10px',
+      '--notifications-bottom': '30%',
+    },
   }),
   computed: {
     initScript() {
@@ -542,7 +553,7 @@ html {
 }
 .oeos-top {
   position: absolute;
-  height: 70%;
+  height: var(--bubble-area-image-top);
   top: 0;
   left: 0;
   right: 0;
@@ -560,16 +571,18 @@ html {
 .oeos-notifications {
   position: absolute;
   overflow: visible;
-  bottom: 30%;
-  right: 10px;
+  top: var(--notifications-top);
+  left: var(--notifications-left);
+  right: var(--notifications-right);
+  bottom: var(--notifications-bottom);
 }
 .oeos-bottom {
   position: absolute;
   overflow-y: scroll;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  top: var(--bubble-area-top);
+  bottom: var(--bubble-area-bottom);
+  left: var(--bubble-area-left);
+  right: var(--bubble-area-right);
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
   /* scroll-behavior: smooth; */
@@ -589,7 +602,7 @@ html {
   height: 0;
 }
 .oeos-bottom.has-image {
-  top: 70%;
+  top: var(--bubble-area-image-top);
 }
 .oeos-image {
   position: absolute;

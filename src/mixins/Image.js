@@ -49,6 +49,8 @@ export default {
       }
       // const outer = this.$refs.oeosOuter
       const img = this.$refs.mainImage
+      const oeosTop = this.$refs.oeosTop
+      const oeosBottom = this.$refs.oeosBottom
       const imgOverlay = this.$refs.imageOverlays
       if (img && imgOverlay) {
         let width = img.clientWidth
@@ -68,6 +70,12 @@ export default {
         var imageScale = height / 720
         this.imageScale = imageScale
         this.setCssVar('--image-scale', imageScale)
+      }
+      if (oeosTop) {
+        this.setCssVar('--top-scale', oeosTop.clientHeight / 720)
+      }
+      if (oeosBottom) {
+        this.setCssVar('--bottom-scale', oeosBottom.clientHeight / 720)
       }
       this.scrollToBottom()
     },

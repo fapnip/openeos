@@ -564,6 +564,37 @@ export default {
         return compareVersions(version, v)
       })
 
+      const allowedCssVars = {
+        '--bubble-area-top': true,
+        '--bubble-area-image-top': true,
+        '--bubble-area-left': true,
+        '--bubble-area-right': true,
+        '--bubble-area-bottom': true,
+        '--notifications-top': true,
+        '--notifications-left': true,
+        '--notifications-right': true,
+        '--notifications-bottom': true,
+      }
+
+      interpreter.setNativeFunctionPrototype(manager, 'cssVar', function(
+        name,
+        val
+      ) {
+        if (!allowedCssVars[name]) {
+          return interpreter.createThrowable(
+            interpreter.TYPE_ERROR,
+            `Invalid cssVar: ${name};  Allowed cssVars are: ${Object.keys(
+              allowedCssVars
+            ).join(', ')}`
+          )
+        }
+        if (arguments.length < 2) {
+          return vue.cssVars[name]
+        }
+        vue.cssVars[name] = val + ''
+        return this
+      })
+
       interpreter.setNativeFunctionPrototype(manager, 'barColor', function(
         color
       ) {
