@@ -566,7 +566,7 @@ html {
   top: 0;
   bottom: 0;
   right: 10px;
-  pointer-events: auto;
+  pointer-events: none;
 }
 .oeos-notifications {
   position: absolute;
@@ -575,6 +575,7 @@ html {
   left: var(--notifications-left);
   right: var(--notifications-right);
   bottom: var(--notifications-bottom);
+  pointer-events: auto;
 }
 .oeos-bottom {
   position: absolute;

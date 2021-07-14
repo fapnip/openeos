@@ -200,6 +200,7 @@ export default {
   height: var(--cd-width);
   width: var(--cd-width);
   text-align: center;
+  pointer-events: auto;
 }
 
 .oeos-countdown-number {
