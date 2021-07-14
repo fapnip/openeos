@@ -66,6 +66,13 @@ export default {
         timeStamp: e.timeStamp + performance.timing.navigationStart,
       })
     },
+    documentSizeChange(e) {
+      this.dispatchEvent({
+        target: pagesInstance,
+        type: 'resize', // Tab lost or gained focus
+        timeStamp: e.timeStamp + performance.timing.navigationStart,
+      })
+    },
     isPageEnabled(pageId) {
       return !disabledPages[pageId]
     },

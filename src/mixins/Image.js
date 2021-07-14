@@ -36,6 +36,8 @@ export default {
     hideImage: false,
     image: null,
     imageScale: 0,
+    lastImageWidth: 0,
+    lastImageHeight: 0,
   }),
   beforeMount() {
     checkWebpFeature('animation', r => {
@@ -44,6 +46,10 @@ export default {
   },
   methods: {
     imageResize() {
+      const lastImageWidth = this.lastImageWidth
+      const lastImageHeight = this.lastImageHeight
+      let width = this.lastImageWidth
+      let height = this.lastImageHeight
       if (!this.hideVideo && this.hasVideo) {
         this.videoResize()
       }
@@ -53,8 +59,10 @@ export default {
       const oeosBottom = this.$refs.oeosBottom
       const imgOverlay = this.$refs.imageOverlays
       if (img && imgOverlay) {
-        let width = img.clientWidth
-        let height = img.clientHeight
+        width = img.clientWidth
+        height = img.clientHeight
+        this.lastImageWidth = width
+        this.lastImageHeight = height
         const naturalHeight = img.naturalHeight
         const naturalWidth = img.naturalWidth
         const xScale = width / naturalWidth
@@ -78,6 +86,9 @@ export default {
         this.setCssVar('--bottom-scale', oeosBottom.clientHeight / 720)
       }
       this.scrollToBottom()
+      if (width !== lastImageWidth || height !== lastImageHeight) {
+        this.documentSizeChange()
+      }
     },
     pageImageLoadCounter() {
       return pageImageLoadCounter
