@@ -292,7 +292,7 @@ export default {
             'stalled',
             'timeupdate',
           ].forEach(type => {
-            video.addEventListener(type, () => {
+            video.addEventListener(type, e => {
               if (!item._didFirstStop) return
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
@@ -334,6 +334,7 @@ export default {
         // item._o_el = e.target
         console.log('Error preloading video', item)
         if (preload) this.doAfterPreload(true)
+        this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
       }
 
       if (typeof preload === 'function') {
