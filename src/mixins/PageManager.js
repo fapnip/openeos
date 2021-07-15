@@ -70,7 +70,8 @@ export default {
       this.dispatchEvent({
         target: pagesInstance,
         type: 'resize', // Tab lost or gained focus
-        timeStamp: e.timeStamp + performance.timing.navigationStart,
+        timeStamp:
+          (e && e.timeStamp + performance.timing.navigationStart) || Date.now(),
       })
     },
     isPageEnabled(pageId) {
