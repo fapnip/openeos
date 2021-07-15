@@ -19,6 +19,11 @@ export default {
     installSay(interpreter, globalObject) {
       const vue = this
       const constructor = opt => {
+        if (typeof opt === 'string') {
+          opt = interpreter.nativeToPseudo({
+            label: opt,
+          })
+        }
         const optProps = opt.properties
         let id = '__say_' + ++idCounter
         const pseudoItem = interpreter.createObjectProto(proto)
