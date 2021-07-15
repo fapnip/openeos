@@ -210,16 +210,13 @@ export default {
   },
   watch: {
     paused(v, ov) {
-      console.log('Pause changed', v, ov)
       if (v && !ov) {
         // Was just paused
-        console.log('Pausing...')
         this.startPause = Date.now()
         this.clearTimers()
       }
       if (!v && ov) {
         // Was just un-paused
-        console.log('Un-pausing...')
         if (this.startPause) {
           var pausedFor = Date.now() - this.startPause
           this.startTime += pausedFor
