@@ -125,14 +125,11 @@ export default {
         manager,
         'getAll',
         interpreter.createNativeFunction(() => {
-          return interpreter.arrayNativeToPseudo(
-            Object.keys(
-              this.timers.reduce((a, v) => {
-                a.push(v._pseudoItem)
-                return a
-              }, [])
-            )
-          )
+          var pseudoArray = interpreter.createArray()
+          this.timers.forEach((a, i) => {
+            interpreter.setProperty(pseudoArray, i, a.pseudoItem())
+          })
+          return pseudoArray
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
