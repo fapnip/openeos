@@ -2,7 +2,10 @@
   <div
     ref="rootElement"
     v-show="!isHidden"
-    class="oeos-countdown"
+    :class="{
+      'oeos-countdown': true,
+      'oeos-paused': this.paused,
+    }"
     :style="cssVars"
   >
     <svg
@@ -46,6 +49,10 @@ export default {
       type: String,
       default: 'rgba(255, 0, 0, 0.753)',
     },
+    pauseColor: {
+      type: String,
+      default: 'rgba(142, 142, 142, 0.7)',
+    },
     background: {
       type: String,
       default: 'rgba(0, 0, 0, 0.25)',
@@ -62,12 +69,17 @@ export default {
       type: String,
       default: 'normal',
     },
+    paused: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       running: false,
       timePassed: 0,
       startTime: 0,
+      startPause: 0,
       timerInterval: null,
       timeout: null,
       loopCount: 0,
@@ -90,7 +102,9 @@ export default {
         '--cd-stroke-width': this.strokeWidth + 'px',
         '--cd-stroke-time': this.duration + 'ms',
         '--cd-stroke-color': this.color,
+        '--cd-stroke-pause-color': this.pauseColor,
         '--cd-bg-color': this.background,
+        '--cd-stroke-play-state': this.paused ? 'paused' : 'running',
       }
     },
     bgRadius() {
@@ -160,6 +174,7 @@ export default {
     },
 
     checkTimer() {
+      if (this.paused) return
       let t = Date.now() - this.startTime
       if (t >= this.duration) {
         t = this.duration
@@ -174,18 +189,44 @@ export default {
       })
     },
 
-    startTimer() {
-      this.timePassed = 0
-      this.startTime = Date.now()
+    startTimer(skipInit) {
+      if (!skipInit) {
+        this.timePassed = 0
+        this.startTime = Date.now()
+      }
       this.timeout = setTimeout(() => {
         this.onTimesUp()
-      }, this.duration)
+      }, this.duration - (Date.now() - this.startTime))
       this.timerInterval = setInterval(() => {
         if (!this.running) return
         this.checkTimer()
       }, 250)
       this.checkTimer()
       this.running = true
+      if (this.paused) {
+        this.startPause = Date.now()
+      }
+    },
+  },
+  watch: {
+    paused(v, ov) {
+      console.log('Pause changed', v, ov)
+      if (v && !ov) {
+        // Was just paused
+        console.log('Pausing...')
+        this.startPause = Date.now()
+        this.clearTimers()
+      }
+      if (!v && ov) {
+        // Was just un-paused
+        console.log('Un-pausing...')
+        if (this.startPause) {
+          var pausedFor = Date.now() - this.startPause
+          this.startTime += pausedFor
+          this.startPause = 0
+        }
+        this.startTimer(true)
+      }
     },
   },
 }
@@ -233,6 +274,7 @@ export default {
 }
 
 .oeos-countdown-line circle {
+  transition: stroke 1s;
   stroke-dasharray: var(--cd-dasharray);
   stroke-dashoffset: 0px;
   stroke-linecap: round;
@@ -241,8 +283,13 @@ export default {
   fill: none;
 }
 
+.oeos-paused .oeos-countdown-line circle {
+  stroke: var(--cd-stroke-pause-color);
+}
+
 .oeos-countdown-line:not(.spin) circle {
   animation: oeos-countdown var(--cd-stroke-time) linear 1 forwards;
+  animation-play-state: var(--cd-stroke-play-state);
 }
 
 .oeos-countdown-line.spin circle {

@@ -141,6 +141,7 @@
           :duration="timer.duration"
           :loops="timer.loops"
           :type="timer.style"
+          :paused="timer.paused"
           :is-debug="isDebug"
           @timeout="timer.onTimeout"
           @loop="timer.onLoop"

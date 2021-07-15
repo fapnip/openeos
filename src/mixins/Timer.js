@@ -52,6 +52,7 @@ export default {
         timer.timeLeft = duration
         timer.loop = 0
         timer.id = timerId
+        timer.paused = !!timer.paused
         timer.onTimeout = () => {
           if (optProps.onTimeout) {
             // onTimeout callback provided by interperted code
@@ -91,7 +92,7 @@ export default {
         }
         console.log('Adding timer', timer)
         vue.timers.push(timer)
-        return timer
+        return pseudoItem
       }
 
       const manager = interpreter.createNativeFunction(constructor, true)
@@ -124,13 +125,28 @@ export default {
         manager,
         'getAll',
         interpreter.createNativeFunction(() => {
-          return interpreter.arrayNativeToPseudo(Object.keys(this.timers))
+          return interpreter.arrayNativeToPseudo(
+            Object.keys(
+              this.timers.reduce((a, v) => {
+                a.push(v._pseudoItem)
+                return a
+              }, [])
+            )
+          )
         }),
         this.Interpreter.NONENUMERABLE_DESCRIPTOR
       )
 
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
         vue.removeTimer(this._item.id)
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
+        this._item.paused = true
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'play', function() {
+        this._item.paused = false
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'getId', function() {
@@ -147,6 +163,10 @@ export default {
 
       interpreter.setNativeFunctionPrototype(manager, 'getLoop', function() {
         return this._item.loop
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'getPaused', function() {
+        return !!this._item.paused
       })
 
       interpreter.setNativeFunctionPrototype(manager, 'getLoops', function() {
