@@ -332,8 +332,24 @@ export default {
 
       item.error = e => {
         // item._o_el = e.target
-        console.log('Error preloading video', item)
-        if (preload) this.doAfterPreload(true)
+        if (item._preloading) {
+          item._retryCount--
+          if (item._retryCount) {
+            console.warn('Error preloading video -- retrying', item)
+            this.dispatchEvent({ target: pseudoItem, type: 'retry' }, e)
+            video.src = ''
+            video.load()
+            this.$nextTick(() => {
+              startVideoPreload()
+              video.load()
+            })
+            return
+          }
+          console.warn('Error preloading video', item)
+          if (preload) this.doAfterPreload(true)
+        } else {
+          console.warn('Error playing video', item)
+        }
         this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
       }
 
@@ -343,21 +359,26 @@ export default {
         })
       }
 
-      item._preloading = true
-
       const video = document.createElement('video')
       item.video = video
-      video.classList.add('oeos-clickable')
-      video.setAttribute('controls', 'true')
-      video.preload = 'metadata'
-      video.autoplay = false // We'll do this later
-      video.muted = true
-      video.loop = !!item.loop && !item.loops === 1
-      video.addEventListener('loadedmetadata', item.loadedmetadata)
-      video.addEventListener('play', item.preloader)
-      video.addEventListener('error', item.error)
-      video.addEventListener('pause', afterStop)
-      video.src = file.href
+      item._retryCount = 3
+
+      const startVideoPreload = () => {
+        item._preloading = true
+        video.classList.add('oeos-clickable')
+        video.setAttribute('controls', 'true')
+        video.preload = 'metadata'
+        video.autoplay = false // We'll do this later
+        video.muted = true
+        video.loop = !!item.loop && !item.loops === 1
+        video.addEventListener('loadedmetadata', item.loadedmetadata)
+        video.addEventListener('play', item.preloader)
+        video.addEventListener('error', item.error)
+        video.addEventListener('pause', afterStop)
+        video.src = file.href
+      }
+
+      startVideoPreload()
 
       console.log('refs', this.$refs)
 
