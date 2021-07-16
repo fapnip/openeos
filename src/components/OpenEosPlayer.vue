@@ -223,7 +223,7 @@
         <v-card-title class="justify-center">{{ endDialogTitle }}</v-card-title>
         <v-card-text class="text-center">
           <p>
-            Remeber to
+            Remember to
             <a :href="teaseUrl" target="_blank">rate this tease on Milovana</a>!
           </p>
           <p>
