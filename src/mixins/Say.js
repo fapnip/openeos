@@ -30,26 +30,21 @@ export default {
         const interaction = {}
         interaction.pseudoItem = () => pseudoItem
         pseudoItem._item = interaction
+        this.setBubbleCommon(interaction, optProps)
         this.$set(interaction, 'active', true)
         interaction.setInactive = () => {
           this.$set(interaction, 'active', false)
         }
         interaction.id = id
         console.log('Iterating:', opt, Object.keys(optProps))
-        for (const k of Object.keys(optProps)) {
-          const val = optProps[k]
-          if (k === 'label') {
-            vue.$set(interaction, k, this.sanitizeHtml(val)) // make reactive
-          } else if (typeof val !== 'object' || val === null) {
-            vue.$set(interaction, k, val) // make reactive
-          } else {
-            // interaction[k] = val
-          }
-        }
         this.setReactive(interaction, ['label', 'color'])
-        interaction.mode = interaction.mode || 'auto'
+        interaction.mode = interaction.insertAt
+          ? 'instant'
+          : interaction.mode || 'auto'
         interaction.isAuto = interaction.mode === 'auto'
-        interaction.mode = getWaitMode(interpreter, opt)
+        interaction.mode = interaction.insertAt
+          ? interaction.mode
+          : getWaitMode(interpreter, opt)
         interaction.onContinue = () => {
           if (!interaction.active) return
           interaction.setInactive()

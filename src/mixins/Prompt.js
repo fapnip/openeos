@@ -12,6 +12,7 @@ export default {
         const interaction = {}
         interaction.pseudoItem = () => pseudoItem
         pseudoItem._item = interaction
+        this.setBubbleCommon(interaction, optProps)
         this.$set(interaction, 'active', true)
         this.$set(interaction, 'value', null)
         interaction.setInactive = () => {
@@ -19,14 +20,6 @@ export default {
         }
         interaction.id = id
         interaction.options = []
-        for (const k of Object.keys(optProps)) {
-          const val = optProps[k]
-          if (typeof val !== 'object') {
-            vue.$set(interaction, k, val) // make reactive
-          } else {
-            interaction[k] = val
-          }
-        }
         interaction.onInput = v => {
           if (!interaction.active) return
           interaction.setInactive()

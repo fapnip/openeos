@@ -13,6 +13,7 @@ export default {
         const interaction = {}
         interaction.pseudoItem = () => pseudoItem
         pseudoItem._item = interaction
+        this.setBubbleCommon(interaction, optProps)
         interaction.id = id
         interaction.options = []
         this.$set(interaction, 'active', true)

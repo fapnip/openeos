@@ -12,6 +12,12 @@ export default {
     scrolling: false,
   }),
   methods: {
+    insertBubbleAt(bubble, index) {
+      if (index < 0) index = 0
+      const maxIndex = this.bubbles.length
+      if (index > maxIndex) index = maxIndex
+      this.bubbles.splice(maxIndex - index, 0, bubble)
+    },
     bubbleClass(bubbles) {
       const item = bubbles.item || {}
       const result = {
@@ -46,6 +52,22 @@ export default {
     currentBubble() {
       return this.bubbles[this.bubbles.length - 1]
     },
+    setBubbleCommon(item, optProps) {
+      for (const k of Object.keys(optProps)) {
+        const val = optProps[k]
+        if (k === 'label') {
+          this.$set(item, k, this.sanitizeHtml(val)) // make reactive
+        } else if (typeof val !== 'object' || val === null) {
+          this.$set(item, k, val) // make reactive
+        } else {
+          item[k] = val
+        }
+      }
+      item.insertAt = parseInt(item.insertAt, 10)
+      if (isNaN(item.insertAt)) {
+        item.insertAt = 0
+      }
+    },
     addBubble(type, item) {
       const currentBubble = this.currentBubble()
       if (
@@ -59,7 +81,11 @@ export default {
         item: item,
         id: interactCounter++,
       }
-      this.bubbles.push(newBubble)
+      if (item.insertAt) {
+        this.insertBubbleAt(newBubble, item.insertAt)
+      } else {
+        this.bubbles.push(newBubble)
+      }
 
       console.log('Adding ' + newBubble.type, newBubble, this.bubbles)
       setTimeout(() => {
