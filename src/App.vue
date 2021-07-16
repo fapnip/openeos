@@ -34,7 +34,7 @@
       </div>
 
       <v-spacer></v-spacer>
-      <span v-if="!formUri">{{ pageId }}</span>
+      <span v-if="debugEnabled">{{ pageId }}</span>
       <!-- <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
       </v-btn> -->
@@ -78,6 +78,7 @@
         :tease-id="teaseId"
         :is-fullscreen="this.isFullscreen"
         :tease-storage="teaseStorage"
+        :debug-enabled="debugEnabled"
         @page-change="pageChange"
         @save-storage="didStorageSave"
         @load-storage="didStorageLoad"
@@ -235,6 +236,9 @@ export default {
     displayTitle() {
       return this.title ? this.title : 'this tease'
     },
+    debugEnabled() {
+      return !this.formUri || !!this.previewMode
+    },
   },
   data: () => ({
     isFullscreen: false,
@@ -249,6 +253,7 @@ export default {
     teaseKey: null,
     teaseUrl: null,
     formUri: false,
+    previewMode: 0,
     loading: false,
     version: version,
     downloadDialog: false,
@@ -288,6 +293,14 @@ export default {
     let uri = window.location.search.substring(1)
     let params = new URLSearchParams(uri)
     const teaseId = params.get('id')
+    let previewMode = params.get('preview')
+    if (previewMode) {
+      previewMode = parseInt(previewMode, 10)
+      if (isNaN(previewMode)) previewMode = 0
+    } else {
+      previewMode = 0
+    }
+    this.previewMode = previewMode
     if (teaseId) {
       this.formUri = true
       let teaseUrl = `https://milovana.com/webteases/showtease.php&id=${teaseId}`
