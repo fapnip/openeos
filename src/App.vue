@@ -306,7 +306,7 @@ export default {
     this.previewMode = previewMode
     if (teaseId) {
       this.formUri = true
-      let teaseUrl = `https://milovana.com/webteases/showtease.php&id=${teaseId}`
+      let teaseUrl = `https://milovana.com/webteases/showtease.php?id=${teaseId}`
       const key = params.get('key')
       if (key) {
         teaseUrl += `&key=${key}`
