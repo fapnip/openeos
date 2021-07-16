@@ -25,6 +25,8 @@ export default {
     currentPageId: null,
     lastPageId: '',
     commandIndex: 0,
+    showEndDialog: false,
+    endDialogTitle: 'Thanks for playing!',
     // preloadImages: [],
   }),
   mounted() {
@@ -55,6 +57,7 @@ export default {
       navCounter++
       // TODO: display end modal
       this.noSleep.disable() // Allow tease to sleep on mobile devices
+      this.showEndDialog = true
     },
     pagesInstance() {
       return pagesInstance
@@ -285,6 +288,21 @@ export default {
 
         return this.isPageEnabled(pageId)
       })
+
+      interpreter.setNativeFunctionPrototype(
+        manager,
+        'setEndDialogTitle',
+        v => {
+          if (typeof v !== 'string') {
+            return interpreter.createThrowable(
+              interpreter.TYPE_ERROR,
+              'endDialogTitle must be a string'
+            )
+          }
+
+          this.endDialogTitle = v
+        }
+      )
 
       interpreter.setNativeFunctionPrototype(manager, 'enable', function(
         pattern

@@ -218,6 +218,37 @@
         >
       </div>
     </div>
+    <v-dialog v-model="showEndDialog" scrollable max-width="320px">
+      <v-card>
+        <v-card-title class="justify-center">{{ endDialogTitle }}</v-card-title>
+        <v-card-text class="text-center">
+          <p>
+            Remeber to
+            <a :href="teaseUrl" target="_blank">rate this tease on Milovana</a>!
+          </p>
+          <p>
+            (Click the
+            <svg
+              stroke="currentColor"
+              fill="currentColor"
+              stroke-width="0"
+              viewBox="0 0 24 24"
+              size="20"
+              color="white"
+              height="20"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+              style="color: white;"
+            >
+              <path
+                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+              ></path>
+            </svg>
+            ) in the upper right of the tease displayed on Molivana.
+          </p>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <div v-if="showSoundTime" class="oeos-sound-time">{{ soundTime }}</div>
   </div>
 </template>
@@ -291,6 +322,10 @@ export default {
       default: '',
     },
     teaseId: {
+      type: String,
+      default: null,
+    },
+    teaseUrl: {
       type: String,
       default: null,
     },
