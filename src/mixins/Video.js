@@ -206,6 +206,7 @@ export default {
       }
 
       item.stop = () => {
+        console.warn('STOPPING', item)
         this.videoHide(item)
         item._stopping = item.playing()
         // this.$nextTick(() => {
@@ -223,8 +224,15 @@ export default {
           item._show = true
         } else {
           // console.error('Hiding', video)
-          item.video.classList.remove('oeos-show')
-          this.$nextTick(() => item.video.pause())
+          // item.video.classList.remove('oeos-show')
+          item._didShowOnPlay = true
+          if (!item._noPauseOnHide) {
+            console.warn('Pausing on next play')
+            this.$nextTick(() => item.video.pause())
+            item.video.classList.remove('oeos-show')
+          } else {
+            console.warn('Not pausing on next play')
+          }
           item._show = false
         }
       }
@@ -232,6 +240,7 @@ export default {
       const _showOnPlay = e => {
         if (item._show) {
           // console.log('Showing video:', file.href)
+          item._didShowOnPlay = true
           item.show(true)
           this.videoShow(item)
           this.$nextTick(() => this.videoResize())
@@ -256,9 +265,15 @@ export default {
           video.addEventListener('pause', playAfterStop)
         } else if (!item.playing()) {
           item._playing = true
-          video.addEventListener('play', _showOnPlay)
+          item._didShowOnPlay = false
+          // hack to try to reduce transition time between two html5 videos.
+          if (options.immediateShowOnPlay) {
+            _showOnPlay()
+          } else {
+            video.addEventListener('play', _showOnPlay)
+          }
           item.video.play()
-        } else {
+        } else if (item._didShowOnPlay) {
           item._playing = true
           _showOnPlay()
         }
@@ -345,12 +360,14 @@ export default {
             })
             return
           }
-          console.warn('Error preloading video', item)
+          console.warn('Error preloading video', item, e)
           if (preload) this.doAfterPreload(true)
-        } else {
-          console.warn('Error playing video', item)
+        } else if (!item._destroying) {
+          console.warn('Error playing video', item, e)
         }
-        this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
+        if (item._playing || item._preloading) {
+          this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
+        }
       }
 
       if (typeof preload === 'function') {
@@ -523,6 +540,7 @@ export default {
         // this._item._playing = true
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
+        console.warn('PAUSING', this._item)
         this._item.video.pause()
         this._item._playing = false
       })
@@ -558,6 +576,14 @@ export default {
           return this._item.video.playbackRate
         }
         this._item.video.playbackRate = rate
+      })
+      interpreter.setNativeFunctionPrototype(manager, 'noPauseOnHide', function(
+        v
+      ) {
+        if (!arguments.length) {
+          return this._item._noPauseOnHide
+        }
+        this._item._noPauseOnHide = !!v
       })
       interpreter.setNativeFunctionPrototype(manager, 'seek', function(time) {
         if (!arguments.length) {
@@ -604,6 +630,7 @@ export default {
       })
       var destroyVideo = function() {
         // this._item.stop()
+        this._item._destroying = true
         this._item._playing = false
         this._item.video.src = ''
         this._item.video.load()
