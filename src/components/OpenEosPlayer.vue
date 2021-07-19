@@ -492,6 +492,7 @@ export default {
       }
     },
     executeDebugCommand() {
+      this.showDebugPrompt = false
       const interpreter = this.interpreter
       console.warn(
         'Executing JavaScript Expression in JS Interpreter:\n' +
