@@ -34,7 +34,7 @@
       </div>
 
       <v-spacer></v-spacer>
-      <span v-if="debugEnabled">{{ pageId }}</span>
+      <span v-if="debugEnabled" @click="debugPrompt = true">{{ pageId }}</span>
       <!-- <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
       </v-btn> -->
@@ -82,11 +82,17 @@
         :tease-storage="teaseStorage"
         :debug-enabled="debugEnabled"
         :tease-url="teaseUrl"
+        :debug-prompt="debugPrompt"
         @page-change="pageChange"
         @save-storage="didStorageSave"
         @load-storage="didStorageLoad"
         @tease-start="didTeaseStart"
         @tease-end="didTeaseEnd"
+        @debugprompt="
+          v => {
+            debugPrompt = v
+          }
+        "
       />
       <v-container v-else>
         <template v-if="this.formUri && !this.error">
@@ -267,6 +273,7 @@ export default {
     hasStorage: false,
     teaseStarted: false,
     teaseStorage: null,
+    debugPrompt: false,
     message: {
       title: null,
       html: null,

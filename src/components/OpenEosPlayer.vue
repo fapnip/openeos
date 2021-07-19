@@ -249,6 +249,28 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <v-dialog
+      v-if="started"
+      v-model="showDebugPrompt"
+      scrollable
+      max-width="400px"
+    >
+      <v-card>
+        <v-card-title class="justify-center">Debug:</v-card-title>
+        <v-card-text class="text-center">
+          <v-textarea label="Evaluate Expression" v-model="debugCommand" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="showDebugPrompt = false">
+            Close
+          </v-btn>
+          <v-btn color="blue darken-1" text @click="executeDebugCommand()">
+            Run
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <div v-if="showSoundTime" class="oeos-sound-time">{{ soundTime }}</div>
   </div>
 </template>
@@ -329,6 +351,10 @@ export default {
       type: String,
       default: null,
     },
+    debugPrompt: {
+      type: Boolean,
+      default: false,
+    },
   },
   mixins: [
     sanitize,
@@ -359,6 +385,8 @@ export default {
     isDebug: true,
     loadingText: 'Preloading images...',
     noSleep: new NoSleep(),
+    showDebugPrompt: false,
+    debugCommand: '',
     cssVars: {
       '--bubble-area-top': '0',
       '--bubble-area-image-top': '70%',
@@ -413,6 +441,20 @@ export default {
     this.initInterpreter()
   },
   watch: {
+    debugPrompt(val, oldVal) {
+      if (val !== oldVal) {
+        if (this.showDebugPrompt !== val) {
+          this.showDebugPrompt = val
+        }
+      }
+    },
+    showDebugPrompt(val, oldVal) {
+      if (val !== oldVal) {
+        if (this.debugPrompt !== val) {
+          this.$emit('debugprompt', val)
+        }
+      }
+    },
     started(val) {
       if (val) {
         this.$nextTick(() => {
@@ -443,6 +485,20 @@ export default {
     debugWarn() {
       if (this.isDebug) {
         console.warn(...arguments)
+      }
+    },
+    executeDebugCommand() {
+      const interpreter = this.interpreter
+      console.warn(
+        'Executing JavaScript Expression in JS Interpreter:\n' +
+          this.debugCommand
+      )
+      try {
+        interpreter.appendCode(this.debugCommand)
+        interpreter.run()
+        console.warn('Result from JavaScript Expression:\n' + interpreter.value)
+      } catch (e) {
+        console.error('Error executing JavaScript Expression: ', e)
       }
     },
     installInterpreterModules(interpreter, globalObject) {
