@@ -258,7 +258,11 @@
       <v-card>
         <v-card-title class="justify-center">Debug:</v-card-title>
         <v-card-text class="text-center">
-          <v-textarea label="Evaluate Expression" v-model="debugCommand" />
+          <v-textarea
+            label="Evaluate Expression"
+            color="#fff"
+            v-model="debugCommand"
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
