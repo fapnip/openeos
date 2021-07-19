@@ -217,9 +217,21 @@ export default {
         // })
       }
 
+      item.showPrep = val => {
+        if (val) {
+          item.video.classList.add('oeos-show')
+          item.video.classList.add('oeos-show-prep')
+        } else {
+          if (!item._show) item.video.classList.remove('oeos-show')
+          item.video.classList.remove('oeos-show-prep')
+        }
+        this.$nextTick(() => this.videoResize())
+      }
+
       item.show = val => {
         if (val) {
           // console.error('Showing', video)
+          item.video.classList.remove('oeos-show-prep')
           item.video.classList.add('oeos-show')
           item._show = true
         } else {
@@ -227,11 +239,11 @@ export default {
           // item.video.classList.remove('oeos-show')
           item._didShowOnPlay = true
           if (!item._noPauseOnHide) {
-            console.warn('Pausing on next play')
             this.$nextTick(() => item.video.pause())
+            item.video.classList.remove('oeos-show-prep')
             item.video.classList.remove('oeos-show')
           } else {
-            console.warn('Not pausing on next play')
+            // console.warn('Not pausing on next play')
           }
           item._show = false
         }
@@ -549,6 +561,12 @@ export default {
           return this._item._show
         }
         this._item.show(v)
+      })
+      interpreter.setNativeFunctionPrototype(manager, 'showPrep', function(v) {
+        if (!arguments.length) {
+          return this._item.video.classList.contains('oeos-show-prep')
+        }
+        this._item.showPrep(v)
       })
       interpreter.setNativeFunctionPrototype(manager, 'stop', function() {
         this._item.stop()

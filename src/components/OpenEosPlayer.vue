@@ -714,6 +714,11 @@ html {
 .oeos-video video.oeos-show {
   display: block;
 }
+.oeos-video video.oeos-show-prep {
+  display: block;
+  visibility: visible !important;
+  opacity: 0 !important;
+}
 .oeos-scroll-button {
   position: absolute;
   bottom: 5px;
