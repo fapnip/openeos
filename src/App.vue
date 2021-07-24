@@ -83,6 +83,7 @@
         :debug-enabled="debugEnabled"
         :tease-url="teaseUrl"
         :debug-prompt="debugPrompt"
+        :allow-no-sleep="allowNoSleep"
         @page-change="pageChange"
         @save-storage="didStorageSave"
         @load-storage="didStorageLoad"
@@ -274,6 +275,7 @@ export default {
     teaseStarted: false,
     teaseStorage: null,
     debugPrompt: false,
+    allowNoSleep: false,
     message: {
       title: null,
       html: null,
@@ -304,6 +306,8 @@ export default {
     let params = new URLSearchParams(uri)
     const teaseId = params.get('id')
     let previewMode = params.get('preview')
+    this.allowNoSleep = !!params.get('nosleep')
+
     if (previewMode) {
       previewMode = parseInt(previewMode, 10)
       if (isNaN(previewMode)) previewMode = 0

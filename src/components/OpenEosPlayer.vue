@@ -359,6 +359,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    allowNoSleep: {
+      type: Boolean,
+      default: false,
+    },
   },
   mixins: [
     sanitize,
@@ -466,6 +470,13 @@ export default {
         })
       }
     },
+    allowNoSleep(val) {
+      if (val) {
+        this.noSleep.enable()
+      } else {
+        this.noSleep.disable()
+      }
+    },
   },
   methods: {
     setCssVar(key, val) {
@@ -545,7 +556,7 @@ export default {
     },
     runTease() {
       this.$emit('tease-start')
-      this.noSleep.enable() // Prevent tease from sleeping on mobile devices
+      if (this.allowNoSleep) this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
         console.log('Running start')
         this.loading = false

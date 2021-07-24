@@ -56,7 +56,7 @@ export default {
     endTease() {
       navCounter++
       // TODO: display end modal
-      this.noSleep.disable() // Allow tease to sleep on mobile devices
+      if (this.allowNoSleep) this.noSleep.disable() // Allow tease to sleep on mobile devices
       this.showEndDialog = true
     },
     pagesInstance() {
