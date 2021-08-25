@@ -203,12 +203,12 @@ foreach ($response_headers as $key => $response_header) {
         list($header, $value) = preg_split('/: /', $response_header, 2);
         $response_header = 'Location: ' . $_SERVER['REQUEST_URI'] . '?csurl=' . $value;
     }
-    // if (!preg_match('/^(Transfer-Encoding):/', $response_header)) {
-    //     header($response_header, false);
-    // }
-    // if (preg_match('/^(Content-Type):/', $response_header)) {
+    if (!preg_match('/^(Transfer-Encoding):/', $response_header)) {
+        header($response_header, false);
+    }
+    if (preg_match('/^(Content-Type):/', $response_header)) {
         
-    // }
+    }
 }
 
 if (isset($_REQUEST['ncpreview'])) {
