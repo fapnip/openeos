@@ -1,10 +1,11 @@
 <template>
   <div
     ref="rootElement"
-    v-show="!isHidden"
+    v-show="!isHidden || isDebug"
     :class="{
       'oeos-countdown': true,
-      'oeos-paused': this.paused,
+      'oeos-paused': paused,
+      'oeos-hidden-timer': isHidden,
     }"
     :style="cssVars"
   >
@@ -27,6 +28,11 @@
       <circle :r="lineRadius" :cx="size / 2" :cy="size / 2"></circle>
     </svg>
     <div class="oeos-countdown-number">{{ formattedTimeLeft }}</div>
+    <div class="oeos-countdown-skip">
+      <v-btn v-if="isDebug" elevation="1" x-small @click="onTimesUp"
+        >skip</v-btn
+      >
+    </div>
   </div>
 </template>
 
@@ -247,6 +253,21 @@ export default {
   line-height: var(--cd-width);
   font-size: 1.2em;
   text-shadow: 0px 0px 4px black, 0px 0px 4px black;
+}
+
+.oeos-hidden-timer {
+  height: auto;
+}
+
+.oeos-hidden-timer .oeos-countdown-number {
+  line-height: 100%;
+}
+
+.oeos-countdown-skip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
 }
 
 .oeos-countdown-bg,

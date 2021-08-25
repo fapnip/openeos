@@ -359,6 +359,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isDebug: {
+      type: Boolean,
+      default: false,
+    },
     allowNoSleep: {
       type: Boolean,
       default: false,
@@ -390,7 +394,6 @@ export default {
   data: () => ({
     loading: true,
     started: false,
-    isDebug: true,
     loadingText: 'Preloading images...',
     noSleep: new NoSleep(),
     showDebugPrompt: false,

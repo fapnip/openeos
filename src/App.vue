@@ -84,6 +84,8 @@
         :tease-url="teaseUrl"
         :debug-prompt="debugPrompt"
         :allow-no-sleep="allowNoSleep"
+        :preview-mode="previewMode"
+        :is-debug="previewMode > 0"
         @page-change="pageChange"
         @save-storage="didStorageSave"
         @load-storage="didStorageLoad"
@@ -532,7 +534,10 @@ export default {
       fetch(
         encodeForCorsProxy(
           'https://milovana.com/webteases/geteosscript.php',
-          `id=${uri}&${FIX_POLLUTION}`
+          `id=${uri}&${FIX_POLLUTION}` +
+            (this.previewMode
+              ? '&ncpreview=' + this.previewMode
+              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
         )
       )
         .then(response => response.json())
@@ -558,7 +563,10 @@ export default {
           fetch(
             encodeForCorsProxy(
               `https://milovana.com/webteases/showtease.php`,
-              `&id=${uri}&${FIX_POLLUTION}`
+              `&id=${uri}&${FIX_POLLUTION}` +
+                (this.previewMode
+                  ? '&preview=' + this.previewMode
+                  : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
             )
           )
             .then(response => response.text())
@@ -587,7 +595,10 @@ export default {
       fetch(
         encodeForCorsProxy(
           `https://milovana.com/webteases/showtease.php`,
-          `id=${uri}&${FIX_POLLUTION}`
+          `id=${uri}&${FIX_POLLUTION}` +
+            (this.previewMode
+              ? '&ncpreview=' + this.previewMode
+              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
         )
       )
         .then(response => response.text())
