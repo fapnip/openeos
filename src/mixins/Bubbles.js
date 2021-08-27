@@ -74,7 +74,7 @@ export default {
         currentBubble &&
         typeof currentBubble.item.setInactive === 'function'
       ) {
-        currentBubble.item.setInactive()
+        if (!item.insertAt) currentBubble.item.setInactive()
       }
       const newBubble = {
         type: type,
