@@ -30,7 +30,7 @@ export default {
     purgePageBubbles(keep) {
       if (keep) {
         let end = this.bubbles.length - keep
-        if (end < 0) end = this.bubbles.length
+        if (end < 0) end = 0
         this.bubbles.splice(0, end)
       } else {
         for (let i = this.bubbles.length - 1; i >= 0; i--) {
