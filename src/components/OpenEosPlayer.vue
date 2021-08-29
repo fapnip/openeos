@@ -449,6 +449,7 @@ export default {
   //   this.script = testJson
   // },
   mounted() {
+    this.debugCommand = localStorage.getItem('debug-' + this.teaseId) || null
     this.initInterpreter()
   },
   watch: {
@@ -516,6 +517,7 @@ export default {
         interpreter.appendCode(this.debugCommand)
         interpreter.run()
         console.warn('Result from JavaScript Expression:\n' + interpreter.value)
+        localStorage.setItem('debug-' + this.teaseId, this.debugCommand)
       } catch (e) {
         console.error('Error executing JavaScript Expression: ', e)
       }
