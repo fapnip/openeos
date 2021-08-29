@@ -123,10 +123,11 @@ export default {
         item.id = options.id
         item.onCon
         item._show = false
+        item.volume = isNaN(volume) ? 1 : volume
       }
 
       const _startItem = () => {
-        if (!isNaN(volume)) item.video.volume = volume
+        item.video.volume = item.volume
         // if (!item.playing()) item.play()
         item.play()
       }
@@ -284,6 +285,7 @@ export default {
           } else {
             video.addEventListener('play', _showOnPlay)
           }
+          item.video.volume = item.volume
           item.video.play()
         } else if (item._didShowOnPlay) {
           item._playing = true
@@ -644,6 +646,7 @@ export default {
             'volume must be less than or equal to 1'
           )
         }
+        this._item.volume = volume
         this._item.video.volume = volume
       })
       var destroyVideo = function() {
