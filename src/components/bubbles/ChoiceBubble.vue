@@ -1,16 +1,23 @@
 <template>
-  <v-row
-    v-if="options[0] && selectedOption === null"
-    ref="rootElement"
-    align="center"
-    class="oeos-choices text-center ma-0"
-  >
-    <template v-for="(option, i) in options">
-      <v-expand-x-transition
-        v-if="option.animate"
-        :key="option.label + ':' + i"
-      >
+  <v-row ref="rootElement" align="center" class="oeos-choices text-center ma-0">
+    <template v-if="options[0] && selectedOption === null">
+      <template v-for="(option, i) in options">
+        <v-expand-x-transition
+          v-if="option.animate"
+          :key="option.label + ':' + i"
+        >
+          <v-btn
+            v-show="optionVisible(option)"
+            :key="option.label + ':' + i"
+            :color="option.color"
+            class="oeos-clickable custom-transform-class text-none mx-1 px-2"
+            @click.stop="optionSelect(option)"
+          >
+            <span v-html="option.label"></span
+          ></v-btn>
+        </v-expand-x-transition>
         <v-btn
+          v-else
           v-show="optionVisible(option)"
           :key="option.label + ':' + i"
           :color="option.color"
@@ -19,36 +26,16 @@
         >
           <span v-html="option.label"></span
         ></v-btn>
-      </v-expand-x-transition>
-      <v-btn
-        v-else
-        v-show="optionVisible(option)"
-        :key="option.label + ':' + i"
-        :color="option.color"
-        class="oeos-clickable custom-transform-class text-none mx-1 px-2"
-        @click.stop="optionSelect(option)"
-      >
-        <span v-html="option.label"></span
-      ></v-btn>
+      </template>
     </template>
-  </v-row>
-  <v-row
-    v-else-if="selectedOption"
-    ref="rootElement"
-    align="center"
-    class="oeos-choices text-center ma-0"
-  >
-    <v-btn class="oeos-clickable custom-transform-class text-none" disabled>
+    <v-btn
+      v-else-if="selectedOption"
+      class="oeos-clickable custom-transform-class text-none"
+      disabled
+    >
       <span v-html="selectedOption.label"></span
     ></v-btn>
-  </v-row>
-  <v-row
-    v-else
-    ref="rootElement"
-    align="center"
-    class="oeos-clickable oeos-choices text-center ma-0"
-  >
-    <v-btn disabled> <span> ... </span></v-btn>
+    <v-btn v-else disabled> <span> ... </span></v-btn>
   </v-row>
 </template>
 
