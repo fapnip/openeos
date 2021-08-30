@@ -845,6 +845,9 @@ html {
   right: 5px;
   bottom: 7px;
 }
+.oeos-blink-button.no-blink {
+  animation: none;
+}
 .oeos-start-button {
   text-align: center;
   margin-left: auto;

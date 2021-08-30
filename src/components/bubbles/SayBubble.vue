@@ -6,14 +6,23 @@
     class="oeos-say-bubble oeos-clickable"
   >
     <global-events
-      v-if="active && allowSkip"
+      v-if="active && (allowSkip || (isDebug && !noPause))"
       @keydown.space.stop="onClick"
       @keydown.enter.stop="onClick"
     />
     <v-card-text ref="labelHtml" :class="textClass" v-html="filteredLabel">
     </v-card-text>
-    <div class="oeos-blink-button">
-      <v-btn v-if="showButton" icon x-small
+    <div
+      :class="{
+        'oeos-blink-button': true,
+        'no-blink': !showButton && isDebug && !noPause,
+      }"
+    >
+      <v-btn
+        v-if="active && (showButton || (isDebug && !noPause))"
+        icon
+        x-small
+        :color="!showButton && isDebug && !noPause ? 'rgb(250, 157, 157)' : ''"
         ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
       >
     </div>
@@ -134,7 +143,10 @@ export default {
       this.onContinue()
     },
     onClick(event) {
-      if (this.allowSkip || this.isPause) {
+      if (
+        this.active &&
+        (this.allowSkip || this.isPause || (this.isDebug && !this.noPause))
+      ) {
         if (event && event.stopPropagation) event.stopPropagation()
         this.onContinue()
       }
