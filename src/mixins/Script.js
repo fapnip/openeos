@@ -43,7 +43,7 @@ export default {
         this.debug('Compiling Page Script:', pageId)
         pageScript = pageCompiler(page)
         pageScripts[pageId] = pageScript
-        this.debug(`/* Page Script: ${pageId} */`, pageScript.script)
+        this.debugIf(2, `/* Page Script: ${pageId} */\n`, pageScript.script)
         this.addStyles(Object.keys(pageScript.styles))
       }
       return pageScript

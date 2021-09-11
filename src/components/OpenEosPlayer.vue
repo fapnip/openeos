@@ -363,6 +363,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    previewMode: {
+      type: Number,
+      default: 0,
+    },
     allowNoSleep: {
       type: Boolean,
       default: false,
@@ -494,6 +498,16 @@ export default {
         delete this.cssVars[key]
       } else {
         this.cssVars[key] = val
+      }
+    },
+    debugIf(level, ...args) {
+      if (this.previewMode >= level) {
+        console.log(...args)
+      }
+    },
+    debugWarnIf(level, ...args) {
+      if (this.previewMode >= level) {
+        console.warn(...args)
       }
     },
     debug() {
