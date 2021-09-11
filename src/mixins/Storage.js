@@ -16,7 +16,7 @@ export default {
         try {
           const decoded = JSON.parse(v)
           STORAGE = decoded
-          console.warn('Restored tease storage', STORAGE)
+          this.debugWarn('Restored tease storage', STORAGE)
           this.saveStorage()
           return
         } catch (e) {
@@ -48,7 +48,7 @@ export default {
     loadStorage() {
       if (!this.teaseId) return
       const data = localStorage.getItem(this.getStorageKey())
-      console.log('this.hasStorageModule', this.hasStorageModule())
+      this.debug('this.hasStorageModule', this.hasStorageModule())
       if (data) {
         try {
           const decoded = JSON.parse(data)

@@ -20,7 +20,7 @@ export default {
     waitingPreloads = 0
     startupSounds = []
     startupVideos = []
-    jsIncludes = {}
+    jsIncludes = []
   },
   methods: {
     getJsIncludes() {
@@ -163,8 +163,13 @@ export default {
       if (!this.started || this.loading) {
         startupSounds.push(...pageScript.sounds)
         startupVideos.push(...pageScript.videos)
+        var i = 1
         for (const jsInclude of pageScript.includes) {
-          jsIncludes[jsInclude] = jsInclude
+          jsIncludes.push({
+            id: pageId + ':include #' + i,
+            script: jsInclude,
+          })
+          i++
         }
       }
     },

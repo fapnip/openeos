@@ -101,7 +101,7 @@ export default {
             html = vue.sanitizeStyle(html)
           }
           this._o_el[name] = vue.sanitizeHtml(html)
-          console.log('Set', name, this._o_el[name])
+          vue.debug('Set', name, this._o_el[name])
         })
       })
 
@@ -283,7 +283,7 @@ export default {
             console.error(`Cannot perform ${fnName} on root node.`)
             return
           }
-          console.log('Doing:', fnName, this)
+          vue.debug('Doing:', fnName, this)
           if (pseudoEl) {
             if (pseudoEl._o_el && pseudoEl._o_el._isRoot) {
               console.error(`Cannot move root node.`)

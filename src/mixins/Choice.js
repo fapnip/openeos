@@ -18,7 +18,8 @@ export default {
         interaction.options = []
         this.$set(interaction, 'active', true)
         interaction.setInactive = () => {
-          console.log('Setting inactive', interaction)
+          this.$set(interaction, 'lock', false)
+          this.debug('Setting inactive', interaction)
           this.$set(interaction, 'active', false)
         }
 
@@ -46,7 +47,7 @@ export default {
               if (!option.keep) interaction.setInactive()
               const pseudoOpt = getOptionProto.call(interaction, option)
               if (o.onSelect) {
-                console.log('Doing choice onSelect', option, o.onSelect)
+                this.debug('Doing choice onSelect', option, o.onSelect)
                 interpreter.queueFunction(o.onSelect, pseudoOpt, option._index)
                 interpreter.run()
               }
@@ -60,7 +61,7 @@ export default {
           if (interaction.active) {
             interaction.setInactive()
             if (optProps.onContinue) {
-              console.log('Doing choice onContinue')
+              this.debug('Doing choice onContinue')
               interpreter.queueFunction(optProps.onContinue, pseudoItem)
               interpreter.run()
             }
@@ -142,6 +143,14 @@ export default {
           return this._item.active
         }
         this._item.active = !!v
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'lock', function(val) {
+        if (!arguments.length) {
+          return this._item.lock || false
+        }
+        this._item.lock = !!val
         return this
       })
 

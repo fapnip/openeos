@@ -1,10 +1,5 @@
 // Load Interpreter
-import acorn from './acorn'
 import { Interpreter } from './interpreter'
-
-Interpreter.prototype.parseCode = function(code) {
-  return acorn.parse(code, Interpreter.PARSE_OPTIONS)
-}
 
 /**
  * Execute the interpreter to program completion.  Vulnerable to infinite loops.

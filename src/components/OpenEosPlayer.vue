@@ -554,7 +554,7 @@ export default {
       this.setScript(this.script)
       const style = extractStyles(this.getInitScript())
       this.addStyles(Object.keys(style.styles))
-      this.debug('Precompiling all page scripts...')
+      console.log('Precompiling all page scripts...')
       this.preloadPage('start', 'script load', true)
       this.preloadPageScriptsAndSounds()
       this.loading = false
@@ -563,7 +563,7 @@ export default {
       this.$emit('tease-start')
       if (this.allowNoSleep) this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
-        console.log('Running start')
+        console.log('Starting tease')
         this.loading = false
         this.showPage('start')
         interpreter.run()
@@ -582,23 +582,37 @@ export default {
         this.preloadVideo(videoOption, true)
         break
       }
-      this.debug('Loading JS Includes')
-      for (const jsInclude of Object.values(this.getJsIncludes())) {
+      const jsIncludes = this.getJsIncludes()
+      if (jsIncludes.length) console.log('Loading JS Includes')
+      for (const jsInclude of jsIncludes) {
         try {
-          interpreter.appendCode(jsInclude)
+          this.debug('Loading JS Include:', jsInclude.id)
+          const parsedCode = interpreter.parse_(jsInclude.script, jsInclude.id)
+          interpreter.appendCode(parsedCode)
           interpreter.run()
         } catch (e) {
-          console.error('Error executing JS include', jsInclude)
+          console.error('Error executing JS include\n', jsInclude)
           console.error(e)
         }
       }
-      this.debug('Loading Init Script')
-      interpreter.appendCode(this.getInitScript())
+      const initScript = this.getInitScript()
+      if (initScript) {
+        console.log('Loading Init Script')
+        try {
+          const parsedInitScript = interpreter.parse_(initScript, 'InitScript')
+          interpreter.appendCode(parsedInitScript)
+          interpreter.run()
+          console.log('Loaded Init Script')
+        } catch (e) {
+          console.error('Error loading Init Script')
+          console.error(e)
+        }
+      } else {
+        console.log('No Init Script')
+      }
       interpreter.run()
-      this.debug('Loaded Init Script and started media preload')
-      this.interpreter.run()
       if (!this.hasWaitingPreloads()) {
-        console.log('Nothing to preload...')
+        this.debug('Nothing to preload...')
         this.doAfterPreload(true)
       }
     },

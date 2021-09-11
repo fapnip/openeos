@@ -33,10 +33,11 @@ export default {
         this.setBubbleCommon(interaction, optProps)
         this.$set(interaction, 'active', true)
         interaction.setInactive = () => {
+          this.$set(interaction, 'lock', false)
           this.$set(interaction, 'active', false)
         }
         interaction.id = id
-        console.log('Iterating:', opt, Object.keys(optProps))
+        this.debug('Iterating:', opt, Object.keys(optProps))
         this.setReactive(interaction, ['label', 'color'])
         interaction.mode = interaction.insertAt
           ? 'instant'
@@ -49,7 +50,7 @@ export default {
           if (!interaction.active) return
           interaction.setInactive()
           if (optProps.onContinue) {
-            console.log('Doing say onContinue', optProps.onContinue)
+            this.debug('Doing say onContinue', optProps.onContinue)
             interpreter.queueFunction(optProps.onContinue, pseudoItem)
             interpreter.run()
           }
@@ -89,6 +90,14 @@ export default {
           return this._item.active
         }
         this._item.active = !!v
+        return this
+      })
+
+      interpreter.setNativeFunctionPrototype(manager, 'lock', function(val) {
+        if (!arguments.length) {
+          return this._item.lock || false
+        }
+        this._item.lock = !!val
         return this
       })
 

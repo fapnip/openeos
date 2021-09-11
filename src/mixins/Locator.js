@@ -54,7 +54,7 @@ const supportedHosts = [
   'https://iili.io', // Freeimage.host
 ]
 // TODO: break this out to multiple lines
-const allowedUrlMatcher = /(^(https:\/\/[a-zA-Z0-9-_]+\.freeones\.com\/.+|https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
+const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
 
 function _validateHref(href) {
   return href && !!href.match(allowedUrlMatcher)
@@ -150,7 +150,7 @@ export default {
         return
       }
       if (urlMatch[5]) {
-        console.log('urlMatch', urlMatch)
+        this.debug('urlMatch', urlMatch)
         return this.locatorLookup(decodeURIComponent(urlMatch[5]), preload)
       }
       // let image = urlCache[locator]

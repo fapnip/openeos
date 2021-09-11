@@ -44,7 +44,7 @@ export default {
       const index = this.bubbles.findIndex(
         i => i === item || (i && i.item === item)
       )
-      console.log('removing bubble', item, index)
+      this.debug('removing bubble', item, index)
       if (index > -1) {
         this.bubbles.splice(index, 1)
       }
@@ -69,10 +69,10 @@ export default {
       }
     },
     addBubble(type, item) {
-      const currentBubble = this.currentBubble()
+      const currentBubble = this.currentBubble() || { item: {} }
       if (
-        currentBubble &&
-        typeof currentBubble.item.setInactive === 'function'
+        typeof currentBubble.item.setInactive === 'function' &&
+        !currentBubble.item.lock
       ) {
         if (!item.insertAt) currentBubble.item.setInactive()
       }
@@ -81,13 +81,13 @@ export default {
         item: item,
         id: interactCounter++,
       }
-      if (item.insertAt) {
-        this.insertBubbleAt(newBubble, item.insertAt)
+      if (item.insertAt || currentBubble.item.lock) {
+        this.insertBubbleAt(newBubble, item.insertAt || 1)
       } else {
         this.bubbles.push(newBubble)
       }
 
-      console.log('Adding ' + newBubble.type, newBubble, this.bubbles)
+      this.debug('Adding ' + newBubble.type, newBubble, this.bubbles)
       setTimeout(() => {
         this.scrollToBottom()
       }, 0)
@@ -150,7 +150,7 @@ export default {
           (oeosBottom.scrollTop + oeosBottom.clientHeight)
         if (oeosBottom && lastItem) {
           if (srollpx > 0) {
-            console.log('Scrolling to bottom')
+            this.debug('Scrolling to bottom')
             this.scrolling = true
             this.$scrollTo(lastItem, {
               container: oeosBottom,

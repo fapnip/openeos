@@ -26,7 +26,7 @@ export default {
       const constructor = function(opt) {
         const optProps = opt.properties
         let timerId = '__timer_' + ++idCounter
-        console.log('Creating timer')
+        vue.debug('Creating timer')
         const pseudoItem = interpreter.createObjectProto(proto)
         const timer = {}
         timer.pseudoItem = () => pseudoItem
@@ -57,12 +57,12 @@ export default {
           if (optProps.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(optProps.onTimeout, timer)
+            interpreter.queueFunction(optProps.onTimeout, pseudoItem)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
           if (optProps.onContinue) {
-            interpreter.queueFunction(optProps.onContinue, timer)
+            interpreter.queueFunction(optProps.onContinue, pseudoItem)
             vue.removeTimer(timer.id)
             interpreter.run()
           }
@@ -71,7 +71,7 @@ export default {
           if (optProps.onTimeout) {
             // onTimeout callback provided by interperted code
             // (interpreter has been doing other things while our timer was running)
-            interpreter.queueFunction(optProps.onTimeout, timer)
+            interpreter.queueFunction(optProps.onTimeout, pseudoItem)
             interpreter.run()
           }
         }
@@ -90,7 +90,7 @@ export default {
             interpreter.run()
           }
         }
-        console.log('Adding timer', timer)
+        vue.debug('Adding timer', timer)
         vue.timers.push(timer)
         return pseudoItem
       }

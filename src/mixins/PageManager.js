@@ -152,14 +152,17 @@ export default {
       }
     },
     showPage(patten, noRun) {
-      console.warn('Showing Page:', patten)
+      this.debugWarn('Showing Page:', patten)
       const interpreter = this.interpreter
       const pageScript = this.getPageScript(patten)
       const pageId = lastGetPageId
       let pageCode = pageScript.code
       if (!pageCode) {
         // console.log('Building "' + pageId + '" page script', pageScript.script)
-        pageCode = interpreter.parseCode(pageScript.script)
+        pageCode = interpreter.parse_(
+          pageScript.script,
+          'oeosPageScript:' + pageId
+        )
         pageScript.code = pageCode
       }
       this.preloadPage(pageId, this.lastPageId, true)
@@ -237,7 +240,7 @@ export default {
       }
       const result = this.pages()[pattern]
       if (!result) {
-        console.warn('Script pages', this.pages())
+        this.debugWarn('Script pages', this.pages())
         throw new Error(`Invalid page: ${pattern}`)
       }
       lastGetPageId = pattern
@@ -356,7 +359,7 @@ export default {
         manager,
         'captureImageClicks',
         function(v) {
-          console.warn(
+          console.error(
             'pages.captureImageClicks is deprecated.  Use stopImmediatePropagation() and stopPropagation().'
           )
           if (!arguments.length) {
@@ -370,7 +373,7 @@ export default {
         manager,
         'captureImageLoads',
         function(v) {
-          console.warn(
+          console.error(
             'pages.captureImageLoads is deprecated.  Image loads are always captured.  Do not use.'
           )
           if (!arguments.length) {
@@ -383,7 +386,7 @@ export default {
       interpreter.setNativeFunctionPrototype(manager, 'captureClicks', function(
         v
       ) {
-        console.warn(
+        console.error(
           'pages.captureClicks is deprecated.  Use stopImmediatePropagation() and stopPropagation().'
         )
         if (!arguments.length) {
@@ -471,7 +474,7 @@ export default {
               .callFunction(func, this, locator)
               .then(() => _doImageFunc())
               .catch(e => {
-                console.log(
+                console.error(
                   'Error in onNextImage call',
                   interpreter.getProperty(e, 'message')
                 )

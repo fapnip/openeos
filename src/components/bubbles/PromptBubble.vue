@@ -78,7 +78,7 @@ export default {
   methods: {
     onInput() {
       if (!this.active) return
-      console.log('Got input', this.inputValue)
+      this.debug('Got input', this.inputValue)
       this.onInputMethod(this.inputValue)
     },
   },

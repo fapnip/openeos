@@ -26,7 +26,7 @@ export default {
     image(image) {
       if (this.forcedBackgroundColor) return
       if (!image || !image.href) return
-      console.log('Displayed Image', { url: image.href })
+      this.debug('Displayed Image', { url: image.href })
       this.$nextTick(() => {
         this.setBackgroundFromImage()
       })

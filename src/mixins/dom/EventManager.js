@@ -287,7 +287,7 @@ export default {
     doEventCallbackFuncs(funcs, eventObj) {
       const interpreter = this.interpreter
       const event = this.buildEventObject(eventObj)
-      const target = eventObj.target || this.pagesInstance
+      const target = eventObj.target || this.pagesInstance()
       let func = funcs.shift()
       while (func) {
         interpreter.queueFunction(func, target, event)

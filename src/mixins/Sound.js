@@ -432,7 +432,7 @@ export default {
         this.sounds[options.id] = item
         _startItem()
       }
-      console.log('Created sound item', item)
+      this.debug('Created sound item', item)
       return pseudoItem
     },
     purgePageSounds() {

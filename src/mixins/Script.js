@@ -40,10 +40,10 @@ export default {
       var pageId = this.lastGetPageId()
       let pageScript = pageScripts[pageId]
       if (!pageScript) {
-        console.log('Compiling Page Script:', pageId)
+        this.debug('Compiling Page Script:', pageId)
         pageScript = pageCompiler(page)
         pageScripts[pageId] = pageScript
-        console.log(`/* Page Script: ${pageId} */`, pageScript.script)
+        this.debug(`/* Page Script: ${pageId} */`, pageScript.script)
         this.addStyles(Object.keys(pageScript.styles))
       }
       return pageScript

@@ -207,7 +207,7 @@ export default {
       }
 
       item.stop = () => {
-        console.warn('STOPPING', item)
+        this.debugWarn('STOPPING', item)
         this.videoHide(item)
         item._stopping = item.playing()
         // this.$nextTick(() => {
@@ -411,7 +411,7 @@ export default {
 
       startVideoPreload()
 
-      console.log('refs', this.$refs)
+      // console.log('refs', this.$refs)
 
       this.$refs.videoElements.appendChild(video)
       // video.removeAttribute('controls')
@@ -420,7 +420,7 @@ export default {
       this.videos[options.id] = item
       if (!preload) _startItem(item)
 
-      console.log('Created video item', item)
+      this.debug('Created video item', item)
       return pseudoItem
     },
     purgePageVideos() {
@@ -554,7 +554,7 @@ export default {
         // this._item._playing = true
       })
       interpreter.setNativeFunctionPrototype(manager, 'pause', function() {
-        console.warn('PAUSING', this._item)
+        vue.debugWarn('PAUSING', this._item)
         this._item.video.pause()
         this._item._playing = false
       })

@@ -80,7 +80,7 @@ const commandList = {
   if: (c, i, cl) => {
     return `
     var nextCmdFns = ${compileCommandsToArray(cl.splice(i + 1))};
-    if (${wrap(c.condition)}) {
+    if (${wrap(c.condition, false, 'If Action Condition')}) {
       _doCommandFns(${compileCommandsToArray(
         c.commands
       )}, nextCmdFns, continueFns);
@@ -100,7 +100,7 @@ const commandList = {
       return `return false;`
     }
     return `
-    ${isolate(c.script)}
+    ${isolate(c.script, 'Eval Action')}
     return false;
     `
   },
@@ -114,7 +114,7 @@ const commandList = {
       label: ${parseHtmlToJS(c.label)},
       mode: ${JSON.stringify(c.mode)},
       nextCommand: peekNext,
-      duration: ${buildExpression(c.duration)},
+      duration: ${buildExpression(c.duration, 'Say duration expression')},
       allowSkip: ${JSON.stringify(c.allowSkip)},
       align: ${JSON.stringify(c.align)},
       onContinue: function() {
@@ -155,8 +155,8 @@ const commandList = {
     `
     }
     new Timer({
-      duration: ${buildExpression(c.duration)},
-      loops: ${buildExpression(loops)},
+      duration: ${buildExpression(c.duration, 'Timer duration expression')},
+      loops: ${buildExpression(loops, 'Timer loops expression')},
       style: ${JSON.stringify(c.style)},
       isAsync: ${JSON.stringify(isAsync)},
       onTimeout: ${
@@ -180,7 +180,7 @@ const commandList = {
   image: c => {
     images[c.locator] = false
     return `
-    pages.setImage(${buildExpression(c.locator)});
+    pages.setImage(${buildExpression(c.locator, 'Image locator expression')});
     return false;
     `
   },
@@ -262,7 +262,10 @@ const commandList = {
     new Notification({
       title: ${parseHtmlToJS(c.title)},
       id: ${JSON.stringify(c.id)},
-      timerDuration: ${buildExpression(c.timerDuration)},
+      timerDuration: ${buildExpression(
+        c.timerDuration,
+        'Notification timer expression'
+      )},
       buttonLabel: ${parseHtmlToJS(c.buttonLabel)},
       onClick: function () {
         _navId = pages._getNavId(); // Allow execution on any page
@@ -288,19 +291,19 @@ const commandList = {
   goto: c => {
     targets[c.target] = true
     return `
-    pages.goto(${buildExpression(c.target)});
+    pages.goto(${buildExpression(c.target, 'Page goto expression')});
     return false;
     `
   },
   enable: c => {
     return `
-    pages.enable(${buildExpression(c.target)});
+    pages.enable(${buildExpression(c.target, 'Page enable expression')});
     return false;
     `
   },
   disable: c => {
     return `
-    pages.disable(${buildExpression(c.target)});
+    pages.disable(${buildExpression(c.target, 'Page disable expression')});
     return false;
     `
   },
@@ -368,8 +371,12 @@ function buildChoiceOption(o) {
   const hasVisible = 'visible' in o
   return `{
     label: ${parseHtmlToJS(o.label)},
-    ${hasVisible ? `visible: ${buildExpression(o.visible)},` : ``}
-    color: ${buildExpression(o.color)},
+    ${
+      hasVisible
+        ? `visible: ${buildExpression(o.visible, 'Choice visible expression')},`
+        : ``
+    }
+    color: ${buildExpression(o.color, 'Choice color expression')},
     onSelect: function () {
       _doCommandFns(${compileCommandsToArray(
         o.commands
@@ -378,34 +385,34 @@ function buildChoiceOption(o) {
   }`
 }
 
-function wrap(script, onerror) {
+function wrap(script, onerror, type) {
   return `
   (function() {try {return _globalEval(${JSON.stringify(script)})} 
     catch (e) {console.error(
-      e.toString(), 
-      'In EVAL', 
+      e.stack,
+      ${JSON.stringify('\nIn ' + (type || 'Script EVAL') + ':\n')},
       ${JSON.stringify(script)}
       );return ${onerror || ''}}
   })()`
 }
 
-function isolate(script) {
+function isolate(script, type) {
   return `
   try {_globalEval(${JSON.stringify(script)})} 
     catch (e) {console.error(
-      e.toString(),
-      'In EVAL', 
+      e.stack,
+      ${JSON.stringify('\n\nIn ' + (type || 'Script EVAL') + ':\n')},
       ${JSON.stringify(script)}
       )}`
 }
 
 const expressionRegexp = /^\$/
 
-function buildExpression(exp) {
+function buildExpression(exp, type) {
   if (typeof exp !== 'string' || !exp || !exp.match(expressionRegexp)) {
     return JSON.stringify(exp)
   }
-  return wrap(exp.replace(expressionRegexp, ''))
+  return wrap(exp.replace(expressionRegexp, ''), false, type)
 }
 
 // Convert HTML string to in-line javascript string expression
@@ -429,7 +436,7 @@ function parseHtmlToJS(string) {
     }
     const evExpression = decodeHTML(ev.innerHTML).trim()
     if (evExpression.length) {
-      result.push(wrap(evExpression, 'e.toString()'))
+      result.push(wrap(evExpression, 'e.toString()', 'Say/Text <eval>'))
     }
     docstring = afterEv
   }
