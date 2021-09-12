@@ -22,6 +22,7 @@ export default {
         interaction.options = []
         interaction.onInput = v => {
           if (!interaction.active) return
+          this.debug('Got input', v)
           interaction.setInactive()
           if (optProps.onInput) {
             this.$set(interaction, 'value', v)
