@@ -14,7 +14,8 @@ export default {
         pseudoItem._item = interaction
         this.setBubbleCommon(interaction, optProps)
         this.$set(interaction, 'active', true)
-        this.$set(interaction, 'value', null)
+        // this.$set(interaction, 'value', null)
+        this.$set(interaction, 'value', (optProps.value || '') + '')
         interaction.setInactive = () => {
           this.$set(interaction, 'active', false)
         }

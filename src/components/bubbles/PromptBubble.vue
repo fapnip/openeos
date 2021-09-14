@@ -12,6 +12,7 @@
       autofocus
       solo
       dense
+      style="min-width: 250px"
       hide-details="auto"
       append-icon="mdi-arrow-right-drop-circle"
       @click:append="onInput"
@@ -52,7 +53,16 @@ export default {
     }
   },
 
+  watch: {
+    // enteredValue(newVal) {
+    //   if (!this.inputValue && this.inputValue !== newVal) {
+    //     this.inputValue = newVal
+    //   }
+    // },
+  },
+
   mounted() {
+    // this.inputValue = this.enteredValue
     this.$emit('ready', this.$refs.rootElement)
   },
 
@@ -78,7 +88,11 @@ export default {
   methods: {
     onInput() {
       if (!this.active) return
-      this.onInputMethod(this.inputValue)
+      this.onInputMethod(
+        this.inputValue === undefined || this.inputValue === null
+          ? ''
+          : this.inputValue
+      )
     },
   },
 }
