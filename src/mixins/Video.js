@@ -144,6 +144,7 @@ export default {
         if (!item._hasVideoELement) {
           item.loadVideoElement()
         }
+        item.lastLoad = Date.now()
         if (!preload) {
           _startItem()
         }
@@ -226,7 +227,7 @@ export default {
         // console.log('Prepping to unload for stop', file.href)
         if (item._unloadVideoOnHide) {
           const v = item._unloadVideoOnHide
-          this.$nextTick(() => item.unloadVideoElement(v))
+          setTimeout(() => item.unloadVideoElement(v), 250)
           if (item._unloadVideoOnHide !== item.video) {
             item._unloadVideoOnHide = item.video
           } else {
@@ -281,7 +282,7 @@ export default {
           item._show = false
           if (item._unloadVideoOnHide) {
             const v = item._unloadVideoOnHide
-            this.$nextTick(() => item.unloadVideoElement(v))
+            setTimeout(() => item.unloadVideoElement(v), 250)
             if (item._unloadVideoOnHide !== item.video) {
               item._unloadVideoOnHide = item.video
             } else {
@@ -314,7 +315,7 @@ export default {
           if (lastVideo) {
             // unload last video as soon as possible
             const lastV = lastVideo.video
-            this.$nextTick(() => lastVideo.unloadVideoElement(lastV))
+            setTimeout(() => lastVideo.unloadVideoElement(lastV), 250)
           }
           this.lastVideoPlay = item
           return
@@ -331,7 +332,7 @@ export default {
           if (lastVideo._unloadVideoOnHide) {
             // kill it now
             const lastV = lastVideo._unloadVideoOnHide
-            this.$nextTick(() => lastVideo.unloadVideoElement(lastV))
+            setTimeout(() => lastVideo.unloadVideoElement(lastV), 250)
             if (lastVideo._unloadVideoOnHide !== lastVideo.video) {
               lastVideo._unloadVideoOnHide = lastVideo.video
             } else {
@@ -484,7 +485,8 @@ export default {
       const loadVideoElement = () => {
         // console.error('Loading video element:', file.href)
         if (item.video && !item.video._removing) {
-          item.unloadVideoElement(item.video)
+          const v = item.video
+          setTimeout(() => item.unloadVideoElement(v), 250)
         }
         const video = document.createElement('video')
         item.video = video
@@ -522,6 +524,9 @@ export default {
       item.unloadVideoElement = unloadVideoElement
 
       loadVideoElement()
+
+      item.createdAt = Date.now()
+      item.lastLoad = Date.now()
 
       // console.log('refs', this.$refs)
 
@@ -764,7 +769,6 @@ export default {
         // this._item.stop()
         this._item._destroying = true
         this._item._playing = false
-        this._item.unloadVideoElement(this._item.video)
         // const video = this._item.video
         // if (video) {
         //   video.src = ''
@@ -774,6 +778,7 @@ export default {
         //   video.load()
         // }
         vue.$nextTick(() => {
+          this._item.unloadVideoElement(this._item.video)
           delete vue.videos[this._item.id]
           // video && video.remove()
         })
