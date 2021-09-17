@@ -141,6 +141,9 @@ export default {
           item
         )
         _setItem()
+        if (!item._hasVideoELement) {
+          item.loadVideoElement()
+        }
         if (!preload) {
           _startItem()
         }
@@ -166,13 +169,17 @@ export default {
 
       item.playing = () => {
         // console.warn('Is playing?', video.paused, video.ended, video.readyState)
-        return !!(!video.paused && !video.ended && video.readyState > 2)
+        return !!(
+          !item.video.paused &&
+          !item.video.ended &&
+          item.video.readyState > 2
+        )
       }
 
       item.loadedmetadata = e => {
-        video.removeEventListener('loadedmetadata', item.loadedmetadata)
+        item.video.removeEventListener('loadedmetadata', item.loadedmetadata)
         // console.warn('Got metadata')
-        const playPromise = video.play()
+        const playPromise = item.video.play()
 
         // In browsers that don’t yet support this functionality,
         // playPromise won’t be defined.
@@ -207,15 +214,39 @@ export default {
       }
 
       item.stop = () => {
+        if (!item._hasVideoELement) return
         this.debugWarn('STOPPING', item)
         this.videoHide(item)
         item._stopping = item.playing()
         // this.$nextTick(() => {
         item.video.removeEventListener('pause', playAfterStop)
-        video.pause()
-        video.currentTime = 0
+        item.video.pause()
+        item.video.currentTime = 0
         item._playing = false
+        // console.log('Prepping to unload for stop', file.href)
+        if (item._unloadVideoOnHide) {
+          const v = item._unloadVideoOnHide
+          this.$nextTick(() => item.unloadVideoElement(v))
+          if (item._unloadVideoOnHide !== item.video) {
+            item._unloadVideoOnHide = item.video
+          } else {
+            item._unloadVideoOnHide = false
+          }
+        } else {
+          item._unloadVideoOnHide = item.video
+        }
         // })
+      }
+
+      item.reset = () => {
+        this.debugWarn('RESETTING', item)
+        this.videoHide(item)
+        item._stopping = item.playing()
+        // this.$nextTick(() => {
+        item.video.removeEventListener('pause', playAfterStop)
+        item.video.pause()
+        // item.video.currentTime = 0
+        item._playing = false
       }
 
       item.showPrep = val => {
@@ -235,6 +266,7 @@ export default {
           item.video.classList.remove('oeos-show-prep')
           item.video.classList.add('oeos-show')
           item._show = true
+          item._unloadVideoOnHide = false
         } else {
           // console.error('Hiding', video)
           // item.video.classList.remove('oeos-show')
@@ -247,6 +279,15 @@ export default {
             // console.warn('Not pausing on next play')
           }
           item._show = false
+          if (item._unloadVideoOnHide) {
+            const v = item._unloadVideoOnHide
+            this.$nextTick(() => item.unloadVideoElement(v))
+            if (item._unloadVideoOnHide !== item.video) {
+              item._unloadVideoOnHide = item.video
+            } else {
+              item._unloadVideoOnHide = false
+            }
+          }
         }
       }
 
@@ -257,7 +298,7 @@ export default {
           item.show(true)
           this.videoShow(item)
           this.$nextTick(() => this.videoResize())
-          video.removeEventListener('play', _showOnPlay)
+          item.video.removeEventListener('play', _showOnPlay)
           this.dispatchEvent({ target: pseudoItem, type: 'play-start' }, e)
         } else {
           // console.log('Skipping show of video:', file.href)
@@ -266,16 +307,46 @@ export default {
 
       item.play = noShow => {
         // console.error(`Playing video ${file.href}`)
+        const lastVideo = this.lastVideoPlay !== item && this.lastVideoPlay
         if (item._preloading) {
           item._playAfterLoad = true
+          // console.warn('Playing before preload', file.href)
+          if (lastVideo) {
+            // unload last video as soon as possible
+            const lastV = lastVideo.video
+            this.$nextTick(() => lastVideo.unloadVideoElement(lastV))
+          }
+          this.lastVideoPlay = item
+          return
+        }
+        if (!item._hasVideoELement) {
+          item._playAfterLoad = true
+          item.loadVideoElement()
           return
         }
         item._show = item._show || !noShow
         item._didContinue = false
+        if (lastVideo) {
+          // console.log('Prepping to unload for play', lastVideo.file.href)
+          if (lastVideo._unloadVideoOnHide) {
+            // kill it now
+            const lastV = lastVideo._unloadVideoOnHide
+            this.$nextTick(() => lastVideo.unloadVideoElement(lastV))
+            if (lastVideo._unloadVideoOnHide !== lastVideo.video) {
+              lastVideo._unloadVideoOnHide = lastVideo.video
+            } else {
+              lastVideo._unloadVideoOnHide = false
+            }
+          } else {
+            lastVideo._unloadVideoOnHide = lastVideo.video
+          }
+        }
         this.lastVideoPlay = item
+        item._playCount++
+        // console.warn('Playing', file.href)
         if (item._stopping) {
           // console.log('Deferring till pause')
-          video.addEventListener('pause', playAfterStop)
+          item.video.addEventListener('pause', playAfterStop)
         } else if (!item.playing()) {
           item._playing = true
           item._didShowOnPlay = false
@@ -283,7 +354,7 @@ export default {
           if (options.immediateShowOnPlay) {
             _showOnPlay()
           } else {
-            video.addEventListener('play', _showOnPlay)
+            item.video.addEventListener('play', _showOnPlay)
           }
           item.video.volume = item.volume
           item.video.play()
@@ -304,15 +375,15 @@ export default {
         // If we're pre-loading, stop the video playback and restart
         if (item._preloading) {
           // console.warn('Stopping after preload')
-          video.removeEventListener('play', item.preloader)
-          item.stop()
+          item.video.removeEventListener('play', item.preloader)
+          item.reset()
           this.videoHide(item)
-          video.controls = false
-          video.removeAttribute('controls')
+          item.video.controls = false
+          item.video.removeAttribute('controls')
           // video.autoplay = true
-          video.muted = false
+          item.video.muted = false
           item._preloading = false
-          video.addEventListener('ended', item.looper)
+          item.video.addEventListener('ended', item.looper)
           ;[
             'play',
             'ended',
@@ -321,11 +392,13 @@ export default {
             'stalled',
             'timeupdate',
           ].forEach(type => {
-            video.addEventListener(type, e => {
+            if (item.video._removing) return
+            item.video.addEventListener(type, e => {
               if (!item._didFirstStop) return
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
           })
+          // console.warn('Preloaded', file.href)
           if (item._playAfterLoad) {
             item._playAfterLoad = false
             item.play()
@@ -366,11 +439,11 @@ export default {
           if (item._retryCount) {
             console.warn('Error preloading video -- retrying', item)
             this.dispatchEvent({ target: pseudoItem, type: 'retry' }, e)
-            video.src = ''
-            video.load()
+            item.video.src = ''
+            item.video.load()
             this.$nextTick(() => {
               startVideoPreload()
-              video.load()
+              item.video.load()
             })
             return
           }
@@ -390,12 +463,11 @@ export default {
         })
       }
 
-      const video = document.createElement('video')
-      item.video = video
-      item._retryCount = 3
-
       const startVideoPreload = () => {
+        // console.log('Starting preload', file.href)
         item._preloading = true
+        item._playCount = 0
+        const video = item.video
         video.classList.add('oeos-clickable')
         video.setAttribute('controls', 'true')
         video.preload = 'metadata'
@@ -409,11 +481,50 @@ export default {
         video.src = file.href
       }
 
-      startVideoPreload()
+      const loadVideoElement = () => {
+        // console.error('Loading video element:', file.href)
+        if (item.video && !item.video._removing) {
+          item.unloadVideoElement(item.video)
+        }
+        const video = document.createElement('video')
+        item.video = video
+        item._retryCount = 3
+        item._hasVideoELement = true
+        item._unloadVideoOnHide = false
+        this.$refs.videoElements.appendChild(video)
+        startVideoPreload()
+      }
+      item.loadVideoElement = loadVideoElement
+
+      const unloadVideoElement = v => {
+        if (!v || v._removing) return
+        if (v === item.video) {
+          item._hasVideoELement = false
+        }
+        // console.error('Unloading video element:', file.href, v)
+        v.src = ''
+        v._removing = true
+        v.removeEventListener('loadedmetadata', item.loadedmetadata)
+        v.removeEventListener('play', item.preloader)
+        v.removeEventListener('error', item.error)
+        v.removeEventListener('pause', afterStop)
+        v.removeEventListener('ended', item.looper)
+        v.removeEventListener('play', _showOnPlay)
+        v.removeEventListener('pause', playAfterStop)
+        v.load()
+        v.pause()
+        v.src = ''
+        v.load()
+        this.$nextTick(() => {
+          v.remove()
+        })
+      }
+      item.unloadVideoElement = unloadVideoElement
+
+      loadVideoElement()
 
       // console.log('refs', this.$refs)
 
-      this.$refs.videoElements.appendChild(video)
       // video.removeAttribute('controls')
 
       // Use new
@@ -653,14 +764,18 @@ export default {
         // this._item.stop()
         this._item._destroying = true
         this._item._playing = false
-        this._item.video.src = ''
-        this._item.video.load()
-        this._item.video.pause()
-        this._item.video.src = ''
-        this._item.video.load()
+        this._item.unloadVideoElement(this._item.video)
+        // const video = this._item.video
+        // if (video) {
+        //   video.src = ''
+        //   video.load()
+        //   video.pause()
+        //   video.src = ''
+        //   video.load()
+        // }
         vue.$nextTick(() => {
           delete vue.videos[this._item.id]
-          this._item.video.remove()
+          // video && video.remove()
         })
       }
       interpreter.setNativeFunctionPrototype(manager, 'remove', destroyVideo)
