@@ -487,6 +487,10 @@ export default {
     },
   },
   methods: {
+    authNoSleep() {
+      this.noSleep.enable()
+      setTimeout(() => !this.allowNoSleep && this.noSleep.disable(), 250)
+    },
     setCssVar(key, val) {
       if (!key) {
         return
@@ -575,6 +579,7 @@ export default {
     },
     runTease() {
       this.$emit('tease-start')
+      this.authNoSleep()
       if (this.allowNoSleep) this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
         console.log('Starting tease')
