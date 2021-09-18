@@ -1,5 +1,5 @@
 let PROTO
-const videoDestroyDelay = 100 // ms
+const videoDestroyDelay = 200 // ms
 
 export default {
   data: () => ({
@@ -342,16 +342,15 @@ export default {
             })
             .catch(error => {
               // Automatic play not supported.  User will need to interact
-              this.debugWarnIf(
-                2,
-                'Play promise failed:',
+              console.warn(
+                'Play promise failed. Retrying:',
                 item.file.locator,
                 error
               )
               // video.controls = true
               // item.needsInteraction = true
               // item.preloader() // pretend that we preloaded
-              setTimeout(() => item.doVideoPlay(--c), 10)
+              setTimeout(() => item.doVideoPlay(--c), 0)
             })
         } else {
           // Probably an old, unsupported browser.
