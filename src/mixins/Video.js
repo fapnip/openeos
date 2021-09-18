@@ -1,4 +1,5 @@
 let PROTO
+const videoDestroyDelay = 100 // ms
 
 export default {
   data: () => ({
@@ -127,7 +128,7 @@ export default {
       }
 
       const _startItem = () => {
-        item.video.volume = item.volume
+        // item.video.volume = item.volume
         // if (!item.playing()) item.play()
         item.play()
       }
@@ -147,6 +148,8 @@ export default {
         item.lastLoad = Date.now()
         if (!preload) {
           _startItem()
+        } else if (!item.playing()) {
+          item.video.currentTime = 0
         }
 
         return item.pseudoItem()
@@ -165,7 +168,7 @@ export default {
       _setItem(item)
 
       if (preload) {
-        this.incrementPreload(file.href)
+        this.incrementPreload(item.file.href)
       }
 
       item.playing = () => {
@@ -177,9 +180,18 @@ export default {
         )
       }
 
+      // item.canplaythrough = e => {
+      //   console.warn('Can Play Through', item.file.href)
+      //   //canplaythrough
+      // }
+
       item.loadedmetadata = e => {
         item.video.removeEventListener('loadedmetadata', item.loadedmetadata)
-        // console.warn('Got metadata')
+        this.debugIf(2, 'Got metadata:', item.file.href)
+        if (item.playing()) {
+          console.warn('Already playing:', item.file.href)
+          return
+        }
         const playPromise = item.video.play()
 
         // In browsers that don’t yet support this functionality,
@@ -192,8 +204,8 @@ export default {
             })
             .catch(error => {
               // Automatic play not supported.  User will need to interact
-              console.error(
-                'Video not launched from user interaction.  Unable to auto-play or preload:',
+              console.warn(
+                'Video not launched from user interaction.  Unable to auto-play:',
                 file.locator
               )
               // video.controls = true
@@ -227,7 +239,7 @@ export default {
         // console.log('Prepping to unload for stop', file.href)
         if (item._unloadVideoOnHide) {
           const v = item._unloadVideoOnHide
-          setTimeout(() => item.unloadVideoElement(v), 250)
+          setTimeout(() => item.unloadVideoElement(v), videoDestroyDelay)
           if (item._unloadVideoOnHide !== item.video) {
             item._unloadVideoOnHide = item.video
           } else {
@@ -282,7 +294,7 @@ export default {
           item._show = false
           if (item._unloadVideoOnHide) {
             const v = item._unloadVideoOnHide
-            setTimeout(() => item.unloadVideoElement(v), 250)
+            setTimeout(() => item.unloadVideoElement(v), videoDestroyDelay)
             if (item._unloadVideoOnHide !== item.video) {
               item._unloadVideoOnHide = item.video
             } else {
@@ -306,16 +318,60 @@ export default {
         }
       }
 
+      item.doVideoPlay = c => {
+        if (item._stopping) {
+          console.warn('Skipping play.. video is stopping')
+          return
+        }
+        // item.video.muted = true
+        const playPromise = item.video.play()
+        c = c === undefined ? 10 : c
+        if (!c) {
+          console.error('Unable to play:', item.file.locator)
+          this.dispatchEvent({ target: pseudoItem, type: 'error' })
+        }
+
+        // In browsers that don’t yet support this functionality,
+        // playPromise won’t be defined.
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // We should be good. Wait for play event.
+              // console.warn('We can auto play!')
+              this.debugIf(2, 'Play promise worked:', item.file.locator)
+            })
+            .catch(error => {
+              // Automatic play not supported.  User will need to interact
+              this.debugWarnIf(
+                2,
+                'Play promise failed:',
+                item.file.locator,
+                error
+              )
+              // video.controls = true
+              // item.needsInteraction = true
+              // item.preloader() // pretend that we preloaded
+              setTimeout(() => item.doVideoPlay(--c), 10)
+            })
+        } else {
+          // Probably an old, unsupported browser.
+          console.warn('No play promise detected:', item.file.locator)
+        }
+      }
+
       item.play = noShow => {
         // console.error(`Playing video ${file.href}`)
         const lastVideo = this.lastVideoPlay !== item && this.lastVideoPlay
         if (item._preloading) {
           item._playAfterLoad = true
-          // console.warn('Playing before preload', file.href)
+          this.debugWarnIf(2, 'Playing before preload', file.href)
           if (lastVideo) {
             // unload last video as soon as possible
             const lastV = lastVideo.video
-            setTimeout(() => lastVideo.unloadVideoElement(lastV), 250)
+            setTimeout(
+              () => lastVideo.unloadVideoElement(lastV),
+              videoDestroyDelay
+            )
           }
           this.lastVideoPlay = item
           return
@@ -332,7 +388,10 @@ export default {
           if (lastVideo._unloadVideoOnHide) {
             // kill it now
             const lastV = lastVideo._unloadVideoOnHide
-            setTimeout(() => lastVideo.unloadVideoElement(lastV), 250)
+            setTimeout(
+              () => lastVideo.unloadVideoElement(lastV),
+              videoDestroyDelay
+            )
             if (lastVideo._unloadVideoOnHide !== lastVideo.video) {
               lastVideo._unloadVideoOnHide = lastVideo.video
             } else {
@@ -344,10 +403,12 @@ export default {
         }
         this.lastVideoPlay = item
         item._playCount++
-        // console.warn('Playing', file.href)
+        this.debugIf(2, 'Playing', item.file.href)
+        item.video.volume = item.volume
         if (item._stopping) {
           // console.log('Deferring till pause')
           item.video.addEventListener('pause', playAfterStop)
+          item.doVideoPlay()
         } else if (!item.playing()) {
           item._playing = true
           item._didShowOnPlay = false
@@ -357,8 +418,7 @@ export default {
           } else {
             item.video.addEventListener('play', _showOnPlay)
           }
-          item.video.volume = item.volume
-          item.video.play()
+          item.doVideoPlay()
         } else if (item._didShowOnPlay) {
           item._playing = true
           _showOnPlay()
@@ -375,6 +435,7 @@ export default {
       item.preloader = e => {
         // If we're pre-loading, stop the video playback and restart
         if (item._preloading) {
+          item._retryCount = 5
           // console.warn('Stopping after preload')
           item.video.removeEventListener('play', item.preloader)
           item.reset()
@@ -399,7 +460,7 @@ export default {
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
           })
-          // console.warn('Preloaded', file.href)
+          this.debugIf(2, 'Preloaded', item.file.href)
           if (item._playAfterLoad) {
             item._playAfterLoad = false
             item.play()
@@ -440,20 +501,33 @@ export default {
           if (item._retryCount) {
             console.warn('Error preloading video -- retrying', item)
             this.dispatchEvent({ target: pseudoItem, type: 'retry' }, e)
-            item.video.src = ''
-            item.video.load()
+            // item.video.src = ''
+            // item.video.load()
             this.$nextTick(() => {
-              startVideoPreload()
-              item.video.load()
+              item.loadVideoElement()
+              // startVideoPreload()
+              // item.video.load()
             })
             return
+          } else {
+            this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
+            console.warn('Error preloading video', item, e)
+            if (preload) this.doAfterPreload(true)
           }
-          console.warn('Error preloading video', item, e)
-          if (preload) this.doAfterPreload(true)
-        } else if (!item._destroying) {
-          console.warn('Error playing video', item, e)
-        }
-        if (item._playing || item._preloading) {
+        } else if (item._playing && !item._stopping) {
+          if (item._retryCount) {
+            item._retryCount--
+            console.warn('Error playing video -- retrying', item, e)
+            this.$nextTick(() => {
+              item.play()
+            })
+            return
+          } else {
+            this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
+            console.error('Error playing video -- unable to play', item, e)
+          }
+          // console.warn('Error playing video', item, e)
+        } else {
           this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
         }
       }
@@ -465,7 +539,7 @@ export default {
       }
 
       const startVideoPreload = () => {
-        // console.log('Starting preload', file.href)
+        this.debugIf(2, 'Starting preload', item.file.href)
         item._preloading = true
         item._playCount = 0
         const video = item.video
@@ -476,21 +550,30 @@ export default {
         video.muted = true
         video.loop = !!item.loop && !item.loops === 1
         video.addEventListener('loadedmetadata', item.loadedmetadata)
+        // video.addEventListener('canplaythrough', item.canplaythrough)
         video.addEventListener('play', item.preloader)
         video.addEventListener('error', item.error)
         video.addEventListener('pause', afterStop)
-        video.src = file.href
+        item.videoSrc.src = item.file.href
+        video.load()
       }
 
+      item._retryCount = 5
+
       const loadVideoElement = () => {
-        // console.error('Loading video element:', file.href)
+        this.debugWarnIf(2, 'Loading video element:', item.file.href)
         if (item.video && !item.video._removing) {
           const v = item.video
-          setTimeout(() => item.unloadVideoElement(v), 250)
+          setTimeout(() => item.unloadVideoElement(v), videoDestroyDelay)
         }
         const video = document.createElement('video')
+        const videoSrc = document.createElement('source')
+        videoSrc.type = 'video/mp4'
+        // videoSrc.src = ''
+        video.appendChild(videoSrc)
+        video.volume = 0.0001 // Just a little volume to make sure we auth it.
+        item.videoSrc = videoSrc
         item.video = video
-        item._retryCount = 3
         item._hasVideoELement = true
         item._unloadVideoOnHide = false
         this.$refs.videoElements.appendChild(video)
@@ -503,7 +586,7 @@ export default {
         if (v === item.video) {
           item._hasVideoELement = false
         }
-        // console.error('Unloading video element:', file.href, v)
+        this.debugWarnIf(2, 'Unloading video element:', item.file.href, v)
         v.src = ''
         v._removing = true
         v.removeEventListener('loadedmetadata', item.loadedmetadata)
@@ -515,7 +598,7 @@ export default {
         v.removeEventListener('pause', playAfterStop)
         v.load()
         v.pause()
-        v.src = ''
+        v.src = item.file.href
         v.load()
         this.$nextTick(() => {
           v.remove()
@@ -766,21 +849,11 @@ export default {
         this._item.video.volume = volume
       })
       var destroyVideo = function() {
-        // this._item.stop()
         this._item._destroying = true
         this._item._playing = false
-        // const video = this._item.video
-        // if (video) {
-        //   video.src = ''
-        //   video.load()
-        //   video.pause()
-        //   video.src = ''
-        //   video.load()
-        // }
         vue.$nextTick(() => {
           this._item.unloadVideoElement(this._item.video)
           delete vue.videos[this._item.id]
-          // video && video.remove()
         })
       }
       interpreter.setNativeFunctionPrototype(manager, 'remove', destroyVideo)
