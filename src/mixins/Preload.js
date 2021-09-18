@@ -161,8 +161,8 @@ export default {
       }
       // Preload all sounds on tease start
       if (!this.started || this.loading) {
-        startupSounds.push(...pageScript.sounds)
-        startupVideos.push(...pageScript.videos)
+        // startupSounds.push(...pageScript.sounds)
+        // startupVideos.push(...pageScript.videos)
         var i = 1
         for (const jsInclude of pageScript.includes) {
           jsIncludes.push({
