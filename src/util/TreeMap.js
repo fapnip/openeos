@@ -177,7 +177,9 @@ export default function TreeMap() {
     }
 
     if (key < node.key) {
-      node.left = internalSet(key, value, node.left)
+      const nnr = internalSet(key, value, null)
+      nnr.right = node
+      node = nnr
     } else if (key > node.key) {
       node.right = internalSet(key, value, node.right)
     } else {
