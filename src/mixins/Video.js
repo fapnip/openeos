@@ -123,7 +123,7 @@ export default {
         item.loopCount = item.loops
         item.id = options.id
         item.onCon
-        item._show = false
+        this.$set(item, '_show', false)
         item.volume = isNaN(volume) ? 1 : volume
       }
 
@@ -279,7 +279,7 @@ export default {
           // console.error('Showing', video)
           item.video.classList.remove('oeos-show-prep')
           item.video.classList.add('oeos-show')
-          item._show = true
+          this.$set(item, '_show', true)
           item._unloadVideoOnHide = false
         } else {
           // console.error('Hiding', video)
@@ -292,7 +292,7 @@ export default {
           } else {
             // console.warn('Not pausing on next play')
           }
-          item._show = false
+          this.$set(item, '_show', false)
           if (item._unloadVideoOnHide) {
             const v = item._unloadVideoOnHide
             setTimeout(() => item.unloadVideoElement(v), videoDestroyDelay)
@@ -381,7 +381,7 @@ export default {
           item.loadVideoElement()
           return
         }
-        item._show = item._show || !noShow
+        this.$set(item, '_show', item._show || !noShow)
         item._didContinue = false
         if (lastVideo) {
           // console.log('Prepping to unload for play', lastVideo.file.href)

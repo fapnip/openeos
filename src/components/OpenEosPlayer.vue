@@ -426,6 +426,16 @@ export default {
     },
   }),
   computed: {
+    externakLink() {
+      const activeVideo =
+        !this.hideVideo &&
+        this.hasVideo &&
+        Object.values(this.videos).find(v => v._show)
+      if (activeVideo) {
+        return activeVideo.siteLink || null
+      }
+      return null
+    },
     initScript() {
       return this.script.init || ''
     },
@@ -468,6 +478,9 @@ export default {
     this.initInterpreter()
   },
   watch: {
+    externakLink(val) {
+      this.$emit('set-external-link', val)
+    },
     debugPrompt(val, oldVal) {
       if (val !== oldVal) {
         if (this.showDebugPrompt !== val) {

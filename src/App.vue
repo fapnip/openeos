@@ -38,6 +38,19 @@
       <!-- <v-btn v-if="!formUri && script" icon @click.stop="downloadDialog = true">
         <v-icon>mdi-download</v-icon>
       </v-btn> -->
+      <v-tooltip v-if="externalLink && externalLink.link" bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon @click="openExternalLink" v-bind="attrs" v-on="on">
+            <v-icon>mdi-open-in-new</v-icon>
+          </v-btn>
+        </template>
+        <span>{{
+          externalLink && externalLink.name
+            ? 'Show on ' + externalLink.name
+            : 'Open media in new tab'
+        }}</span>
+      </v-tooltip>
+
       <v-btn icon @click="toggleFullscreen">
         <v-icon>mdi-fullscreen</v-icon>
       </v-btn>
@@ -91,6 +104,7 @@
         @load-storage="didStorageLoad"
         @tease-start="didTeaseStart"
         @tease-end="didTeaseEnd"
+        @set-external-link="setExternalLink"
         @debugprompt="
           v => {
             debugPrompt = v
@@ -271,6 +285,7 @@ export default {
     downloadDialog: false,
     downloading: false,
     fileUpload: null,
+    externalLink: null,
     pageId: null,
     downloaded: 0,
     hasStorage: false,
@@ -332,6 +347,13 @@ export default {
     // this.getRemoteScript('id=45184')
   },
   methods: {
+    setExternalLink(link) {
+      this.externalLink = link || null
+    },
+    openExternalLink() {
+      if (!this.externalLink || !this.externalLink.link) return
+      window.open(this.externalLink.link, '_blank').focus()
+    },
     restoreTeaseStorage() {
       const input = this.$refs.teaseStorageLoader
       input.type = 'file'
