@@ -60,6 +60,35 @@ function _validateHref(href) {
   return href && !!href.match(allowedUrlMatcher)
 }
 
+const locatorSiteLinks = [
+  {
+    matcher: u => {
+      const r =
+        u &&
+        u.match(
+          /^https:\/\/(thumbs[0-9]*\.*redgifs\.com)\/([a-zA-Z0-9]+)(-mobile|).mp4/
+        )
+      if (r) {
+        return {
+          name: 'RegGifs',
+          link: 'https://www.redgifs.com/watch/' + r[2].toLowerCase(),
+          thumb: 'https://' + r[1] + '/' + r[2] + '.jpg',
+          hit: o => {},
+          embed:
+            'https://www.redgifs.com/ifr/' + r[2].toLowerCase() + '?autoplay=0',
+        }
+      }
+    },
+  },
+]
+
+function getSiteLink(href) {
+  for (const m of locatorSiteLinks) {
+    const r = m.matcher(href)
+    if (r) return r
+  }
+}
+
 export default {
   data: () => ({}),
   methods: {
@@ -164,6 +193,7 @@ export default {
         },
         locator: locator,
         noReferrer: true,
+        siteLink: getSiteLink(locator),
       }
       // urlCache[locator] = image
       // }

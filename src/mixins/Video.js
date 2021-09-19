@@ -164,6 +164,7 @@ export default {
       item.preloadKey = preloadKey
       item.file = file
       item.id = options.id
+      item.siteLink = file.siteLink || {}
       this.$set(item, '_playing', false)
       _setItem(item)
 
@@ -619,6 +620,8 @@ export default {
       if (!preload) _startItem(item)
 
       this.debug('Created video item', item)
+      if (item.siteLink.link)
+        this.debug('Link to original video:', item.siteLink.link)
       return pseudoItem
     },
     purgePageVideos() {
