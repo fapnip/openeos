@@ -23,6 +23,15 @@
           'oeos-top': true,
         }"
       >
+        <div class="oeos-video-embeds">
+          <template v-for="vid in videos">
+            <hidden-embed
+              v-if="vid.siteLink && vid.siteLink.embed"
+              :src="vid.siteLink.embed"
+              :key="vid.id"
+            ></hidden-embed
+          ></template>
+        </div>
         <div :class="imageContainerClass">
           <!-- <img
             ref="mainImage"
@@ -57,15 +66,6 @@
             :id="overlay.id"
             @ready="overlay.ready"
           ></overlay-item>
-        </div>
-        <div class="oeos-video-embeds">
-          <template v-for="vid in videos">
-            <hidden-embed
-              v-if="vid.siteLink && vid.siteLink.embed"
-              :src="vid.siteLink.embed"
-              :key="vid.id"
-            ></hidden-embed
-          ></template>
         </div>
         <div
           v-show="!hideVideo && hasVideo"
@@ -966,6 +966,15 @@ html {
 
 .oeos-hide-no-click {
   visibility: hidden;
+}
+
+.oeos-video-embeds {
+  position: fixed;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
 }
 
 @keyframes fadeinout {

@@ -1,5 +1,5 @@
 <template>
-  <iframe class="oeos-hidden-embed" v-if="src" :src="src"></iframe>
+  <iframe class="oeos-i-embed" v-if="src" :src="src"></iframe>
 </template>
 <script>
 export default {
@@ -12,12 +12,12 @@ export default {
 }
 </script>
 <style>
-.oeos-hidden-embed {
-  position: fixed;
+.oeos-i-embed {
+  position: absolute;
   left: 0;
   right: 0;
-  width: 0;
-  height: 0;
-  display: hidden;
+  width: 300px;
+  height: 240px;
+  display: block;
 }
 </style>
