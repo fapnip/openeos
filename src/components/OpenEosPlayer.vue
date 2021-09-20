@@ -23,7 +23,7 @@
           'oeos-top': true,
         }"
       >
-        <div class="oeos-video-embeds">
+        <!-- <div class="oeos-video-embeds">
           <template v-for="vid in videos">
             <hidden-embed
               v-if="vid.siteLink && vid.siteLink.embed"
@@ -31,7 +31,7 @@
               :key="vid.id"
             ></hidden-embed
           ></template>
-        </div>
+        </div> -->
         <div :class="imageContainerClass">
           <!-- <img
             ref="mainImage"
@@ -322,7 +322,7 @@ import Storage from '../mixins/Storage'
 import Loading from './common/Loading'
 import VueSwitch from './common/VueSwitch'
 import OverlayItem from './common/OverlayItem'
-import HiddenEmbed from './common/HiddenEmbed'
+// import HiddenEmbed from './common/HiddenEmbed'
 import CountdownTimer from './sidebar/CountdownTimer'
 import NotificationItem from './sidebar/NotificationItem'
 import SayBubble from './bubbles/SayBubble'
@@ -343,7 +343,7 @@ export default {
     SayBubble,
     ChoiceBubble,
     PromptBubble,
-    HiddenEmbed,
+    // HiddenEmbed,
   },
   props: {
     isFullscreen: Boolean,
