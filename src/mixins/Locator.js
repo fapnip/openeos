@@ -55,6 +55,7 @@ const supportedHosts = [
 ]
 // TODO: break this out to multiple lines
 const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
+// const allowedUrlMatcher = /(^(https:\/\/thumbs[0-9]*\.*gfycat\.com\/.+|https:\/\/thumbs[0-9]*\.*redgifs\.com\/.+|https:\/\/w*[0-9]*\.*mboxdrive\.com\/.+|https:\/\/media[0-9]*\.vocaroo\.com\/.+|https:\/\/iili\.io\/.+|https:\/\/i\.ibb\.co\/.+|https:\/\/media\.milovana\.com\/.+|redgifs(-search|-related|-user|)(-latest|-best|-trending|):[a-zA-Z0-9 |,-]+|^data:image\/.+)|^(file:|gallery:).*\+\(\|(oeos|oeos-video):(.+)\)$)/
 
 function _validateHref(href) {
   return href && !!href.match(allowedUrlMatcher)
