@@ -3633,9 +3633,9 @@ Interpreter.prototype['stepCallExpression'] = function(stack, state, node) {
       if (name) {
         this.setProperty(scope.object, name, func);
       }
-      if (!scope.strict) {
-        state.funcThis_ = this.boxThis_(state.funcThis_);
-      }
+      // if (!scope.strict) {
+      //   state.funcThis_ = this.boxThis_(state.funcThis_);
+      // }
       this.setProperty(scope.object, 'this', state.funcThis_,
                        Interpreter.READONLY_DESCRIPTOR);
       state.value = undefined;  // Default value if no explicit return.
