@@ -71,7 +71,7 @@ const locatorSiteLinks = [
         )
       if (r) {
         return {
-          name: 'RegGifs',
+          name: 'RedGifs',
           link: 'https://www.redgifs.com/watch/' + r[2].toLowerCase(),
           thumb: 'https://' + r[1] + '/' + r[2] + '.jpg',
           hit: o => {},
