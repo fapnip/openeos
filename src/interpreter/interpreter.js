@@ -3110,7 +3110,7 @@ Interpreter.prototype.boxThis_ = function(value) {
     // `Undefined` and `null` are changed to the global object.
     return this.globalObject;
   }
-  if (!(value instanceof Interpreter.Object)) {
+  if (!(value instanceof Interpreter.Object) && !value.SCOPE_REFERENCE) {
     // Primitives must be boxed.
     var box = this.createObjectProto(this.getPrototype(value));
     box.data = value;
@@ -3633,9 +3633,9 @@ Interpreter.prototype['stepCallExpression'] = function(stack, state, node) {
       if (name) {
         this.setProperty(scope.object, name, func);
       }
-      // if (!scope.strict) {
-      //   state.funcThis_ = this.boxThis_(state.funcThis_);
-      // }
+      if (!scope.strict) {
+        state.funcThis_ = this.boxThis_(state.funcThis_);
+      }
       this.setProperty(scope.object, 'this', state.funcThis_,
                        Interpreter.READONLY_DESCRIPTOR);
       state.value = undefined;  // Default value if no explicit return.
