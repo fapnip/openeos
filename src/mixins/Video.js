@@ -453,12 +453,17 @@ export default {
             'waiting',
             'stalled',
             'timeupdate',
+            'error',
           ].forEach(type => {
             if (item.video._removing) return
             item.video.addEventListener(type, e => {
               if (!item._didFirstStop) return
               this.dispatchEvent({ target: pseudoItem, type }, e)
             })
+          })
+          item.videoSrc.addEventListener('error', e => {
+            if (!item._didFirstStop) return
+            this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
           })
           this.debugIf(2, 'Preloaded', item.file.href)
           if (item._playAfterLoad) {
@@ -496,35 +501,45 @@ export default {
 
       item.error = e => {
         // item._o_el = e.target
+        console.error('Error loading video:', item.file.href)
         if (item._preloading) {
           item._retryCount--
           if (item._retryCount) {
-            console.warn('Error preloading video -- retrying', item)
+            console.warn(
+              'Error preloading video -- retrying',
+              item._retryCount,
+              item
+            )
             this.dispatchEvent({ target: pseudoItem, type: 'retry' }, e)
             // item.video.src = ''
             // item.video.load()
-            this.$nextTick(() => {
+            setTimeout(() => {
               item.loadVideoElement()
               // startVideoPreload()
               // item.video.load()
-            })
+            }, 250)
             return
           } else {
+            console.warn('Error preloading video -- no retries left', item, e)
             this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
-            console.warn('Error preloading video', item, e)
             if (preload) this.doAfterPreload(true)
           }
         } else if (item._playing && !item._stopping) {
           if (item._retryCount) {
             item._retryCount--
-            console.warn('Error playing video -- retrying', item, e)
+            console.warn(
+              'Error playing video -- retrying',
+              item._retryCount,
+              item,
+              e
+            )
             this.$nextTick(() => {
               item.play()
             })
             return
           } else {
-            this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
             console.error('Error playing video -- unable to play', item, e)
+            this.dispatchEvent({ target: pseudoItem, type: 'error' }, e)
           }
           // console.warn('Error playing video', item, e)
         } else {
@@ -553,6 +568,7 @@ export default {
         // video.addEventListener('canplaythrough', item.canplaythrough)
         video.addEventListener('play', item.preloader)
         video.addEventListener('error', item.error)
+        item.videoSrc.addEventListener('error', item.error)
         video.addEventListener('pause', afterStop)
         item.videoSrc.src = item.file.href
         video.load()
@@ -592,6 +608,7 @@ export default {
         v.removeEventListener('loadedmetadata', item.loadedmetadata)
         v.removeEventListener('play', item.preloader)
         v.removeEventListener('error', item.error)
+        item.videoSrc.removeEventListener('error', item.error)
         v.removeEventListener('pause', afterStop)
         v.removeEventListener('ended', item.looper)
         v.removeEventListener('play', _showOnPlay)
