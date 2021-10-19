@@ -39,9 +39,11 @@ export default {
         interaction.id = id
         this.debug('Iterating:', opt, Object.keys(optProps))
         this.setReactive(interaction, ['label', 'color'])
-        interaction.mode = interaction.insertAt
-          ? 'instant'
-          : interaction.mode || 'auto'
+        interaction.mode =
+          interaction.insertAt &&
+          (!interaction.mode || interaction.mode == 'auto')
+            ? 'instant'
+            : interaction.mode || 'auto'
         interaction.isAuto = interaction.mode === 'auto'
         interaction.mode = interaction.insertAt
           ? interaction.mode
