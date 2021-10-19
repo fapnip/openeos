@@ -163,7 +163,11 @@ export default {
                 return callChain(listeners)
               })
               .catch(error => {
-                console.error(error)
+                if (error && error.properties && error.properties.stack) {
+                  console.error(error.properties.stack)
+                } else {
+                  console.error(error)
+                }
                 if (listenerOpts.once)
                   getTypeListeners(_this, type).delete(listenerFunc)
                 return callChain(listeners)
