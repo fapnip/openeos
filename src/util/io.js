@@ -30,6 +30,24 @@ export const encodeForCorsProxy = (url, query) => {
     return proxy + url + (query ? querySep + query : '')
   }
 }
+export const corsProxyHeaders = () => {
+  const headerJson = process.env.VUE_APP_CORS_PROXY_HEADERS
+  if (headerJson) {
+    try {
+      const headers = JSON.parse(headerJson)
+      if (
+        typeof headers === 'object' &&
+        !Array.isArray(headers) &&
+        Object.keys(headers).length
+      ) {
+        return headers
+      }
+    } catch (e) {
+      console.error('Invalid JSON for VUE_APP_CORS_PROXY_HEADERS', headerJson)
+    }
+  }
+  return {}
+}
 
 export const buildHref = (item, smaller, validator) => {
   if (item.href) {
@@ -109,7 +127,9 @@ function numPad(val, len) {
 
 export async function downloadEosFile(file, smaller) {
   const url = buildHref(file, smaller)
-  const response = await fetch(encodeForCorsProxy(url))
+  const response = await fetch(encodeForCorsProxy(url), {
+    headers: corsProxyHeaders(),
+  })
   const blob = await response.blob()
   const content = await readBlob(blob)
   file.href = content

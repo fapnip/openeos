@@ -234,6 +234,7 @@ import {
   downloadEosFile,
   convertToValidFilename,
   encodeForCorsProxy,
+  corsProxyHeaders,
   FIX_POLLUTION,
   getFormattedDateForFile,
   acronym,
@@ -560,7 +561,8 @@ export default {
             (this.previewMode
               ? '&ncpreview=' + this.previewMode
               : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-        )
+        ),
+        { headers: corsProxyHeaders() }
       )
         .then(response => response.json())
         .then(script => {
@@ -589,7 +591,8 @@ export default {
                 (this.previewMode
                   ? '&preview=' + this.previewMode
                   : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-            )
+            ),
+            { headers: corsProxyHeaders() }
           )
             .then(response => response.text())
             .then(contents => {
@@ -621,7 +624,8 @@ export default {
             (this.previewMode
               ? '&ncpreview=' + this.previewMode
               : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-        )
+        ),
+        { headers: corsProxyHeaders() }
       )
         .then(response => response.text())
         .then(contents => {
