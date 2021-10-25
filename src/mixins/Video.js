@@ -130,7 +130,7 @@ export default {
     videoHideAll() {
       for (const video of Object.values(this.videos)) {
         video.show(false)
-        video.video.pause()
+        video.video && video.video.pause && video.video.pause()
       }
       this.hasVideo = false
       this.$nextTick(() => this.imageResize())
@@ -330,13 +330,19 @@ export default {
         item._playing = false
       }
 
+      item.hasVideoClassList = () => {
+        return item.video && item.video.classList
+      }
+
       item.showPrep = val => {
-        if (val) {
-          item.video.classList.add('oeos-show')
-          item.video.classList.add('oeos-show-prep')
-        } else {
-          if (!item._show) item.video.classList.remove('oeos-show')
-          item.video.classList.remove('oeos-show-prep')
+        if (item.hasVideoClassList()) {
+          if (val) {
+            item.video.classList.add('oeos-show')
+            item.video.classList.add('oeos-show-prep')
+          } else {
+            if (!item._show) item.video.classList.remove('oeos-show')
+            item.video.classList.remove('oeos-show-prep')
+          }
         }
         this.$nextTick(() => this.videoResize())
       }
@@ -344,8 +350,10 @@ export default {
       item.show = val => {
         if (val) {
           // console.error('Showing', video)
-          item.video.classList.remove('oeos-show-prep')
-          item.video.classList.add('oeos-show')
+          if (item.hasVideoClassList()) {
+            item.video.classList.remove('oeos-show-prep')
+            item.video.classList.add('oeos-show')
+          }
           this.$set(item, '_show', true)
           item._unloadVideoOnHide = false
         } else {
@@ -353,9 +361,13 @@ export default {
           // item.video.classList.remove('oeos-show')
           item._didShowOnPlay = true
           if (!item._noPauseOnHide) {
-            this.$nextTick(() => item.video.pause())
-            item.video.classList.remove('oeos-show-prep')
-            item.video.classList.remove('oeos-show')
+            this.$nextTick(
+              () => item.video && item.video.pause && item.video.pause()
+            )
+            if (item.hasVideoClassList()) {
+              item.video.classList.remove('oeos-show-prep')
+              item.video.classList.remove('oeos-show')
+            }
           } else {
             // console.warn('Not pausing on next play')
           }
