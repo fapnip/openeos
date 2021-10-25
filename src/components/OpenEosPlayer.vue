@@ -1,6 +1,11 @@
 <template>
   <div class="oeos-outer">
     <div
+      ref="videoElementPool"
+      class="oeos-video-element-pool"
+      style="position: fixed; left:0; top:0; width: 300: height: 300; overflow: hidden;"
+    ></div>
+    <div
       ref="oeosOuter"
       :style="cssVars"
       :class="mainClass"
@@ -603,6 +608,7 @@ export default {
     },
     runTease() {
       this.$emit('tease-start')
+      this.loadVideoElementPool()
       this.authNoSleep()
       if (this.allowNoSleep) this.noSleep.enable() // Prevent tease from sleeping on mobile devices
       this.addAfterPreload(() => {
@@ -792,6 +798,9 @@ html {
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
+.oeos-video-overlays * {
+  -webkit-transform-style: preserve-3d;
+}
 .oeos-image img {
   display: block;
   position: absolute;
@@ -852,6 +861,11 @@ html {
   display: block;
   visibility: visible !important;
   opacity: 0 !important;
+}
+.oeos-video-element-pool video {
+  position: fixed;
+  left: 0;
+  top: 0;
 }
 .oeos-scroll-button {
   position: absolute;
