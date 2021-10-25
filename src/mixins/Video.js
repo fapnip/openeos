@@ -167,6 +167,7 @@ export default {
       const _setItem = () => {
         // console.log('Setting sound item', item, options)
         // item.controls = options.controls
+        const vol = item.volume || volume
         item.onContinue = options.onContinue
         item.loops = options.loops === undefined ? 1 : options.loops || 0
         item.loop = item.loops > 1 || item.loops === 0
@@ -174,7 +175,7 @@ export default {
         item.id = options.id
         item.onCon
         this.$set(item, '_show', false)
-        item.setVolume(isNaN(volume) ? 1 : volume)
+        item.setVolume(isNaN(vol) ? 1 : vol)
       }
 
       const _startItem = () => {
@@ -222,10 +223,12 @@ export default {
           // if (item.video._didVSet) return
           // item.video._didVSet = true
           if (item.muted || !volume || volume < 0) {
-            volume = 0.0001
+            volume = 0
+            item.video.muted = true
+          } else {
+            item.video.muted = false
           }
           item.video.volume = volume
-          item.video.muted = false
         }
       }
       _setItem(item)
