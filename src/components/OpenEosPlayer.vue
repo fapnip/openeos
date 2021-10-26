@@ -226,7 +226,7 @@
       <global-events @keydown.space="runTease" @keydown.enter="runTease" />
       <div class="oeos-start-title">{{ title }}</div>
       <div v-if="author" class="oeos-start-author">by {{ author }}</div>
-      <div class="oeos-start-button">
+      <div v-show="!startedLoad" class="oeos-start-button">
         <v-btn icon small
           ><v-icon dark>mdi-arrow-right-drop-circle</v-icon></v-btn
         >
@@ -414,6 +414,7 @@ export default {
   data: () => ({
     loading: true,
     started: false,
+    startedLoad: false,
     loadingText: 'Preloading images...',
     noSleep: new NoSleep(),
     showDebugPrompt: false,
@@ -607,6 +608,8 @@ export default {
       this.loading = false
     },
     runTease() {
+      if (this.startedLoad) return
+      this.startedLoad = true
       this.$emit('tease-start')
       this.loadVideoElementPool()
       this.authNoSleep()
@@ -798,9 +801,9 @@ html {
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
-.oeos-video-overlays * {
+/* .oeos-video-overlays * {
   -webkit-transform-style: preserve-3d;
-}
+} */
 .oeos-image img {
   display: block;
   position: absolute;
