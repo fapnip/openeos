@@ -603,7 +603,7 @@ export default {
       const style = extractStyles(this.getInitScript())
       this.addStyles(Object.keys(style.styles))
       console.log('Precompiling all page scripts...')
-      this.preloadPage('start', 'script load', true)
+      this.preloadPage('start', 'script load', true, false, true)
       this.preloadPageScriptsAndSounds()
       this.loading = false
     },
@@ -629,11 +629,11 @@ export default {
         this.preloadSound(soundOption, true)
         break
       }
-      const videos = this.popStartupVideos()
-      for (const videoOption of videos) {
-        this.preloadVideo(videoOption, true)
-        break
-      }
+      // const videos = this.popStartupVideos()
+      // for (const videoOption of videos) {
+      //   this.preloadVideo(videoOption, true)
+      //   break
+      // }
       const jsIncludes = this.getJsIncludes()
       if (jsIncludes.length) console.log('Loading JS Includes')
       for (const jsInclude of jsIncludes) {
