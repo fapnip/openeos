@@ -668,14 +668,24 @@ export default {
         item._preloading = true
         if (!item._parsedHref) {
           const urlp = item.file.href.match(
-            /https:\/\/.*redgifs\.com\/([a-z0-9]+)(-mobile\.mp4|.mp4|)(\?|$)/i
+            /https:\/\/.*redgifs\.com\/(watch\/|)([a-z0-9]+)(-mobile|-sd|)(\.mp4|.mp4|)(\?|$)/i
           )
           if (urlp) {
             item._loadingUrl = true
-            const rgvid = urlp[1].toLowerCase()
+            const rgvid = urlp[2].toLowerCase()
+            // const sd = !!urlp[3]
+            this.debugIf(1, 'Requesting video keys from redgifs for:', rgvid)
             fetch(`https://api.redgifs.com/v2/gifs/${rgvid}`)
               .then(res => res.json())
               .then(out => {
+                this.debugIf(1, 'Got response from redgifs:', out)
+                if (!out || !out.gif || !out.gif.urls || !out.gif.urls.sd) {
+                  console.error('Invalid response from REDGIFs API', out)
+                  item._parsedHref = item.file.href
+                  item._loadingUrl = false
+                  startVideoPreload()
+                  return
+                }
                 item._parsedHref = out.gif.urls.sd
                 item._loadingUrl = false
                 startVideoPreload()
@@ -684,6 +694,7 @@ export default {
                 console.error(err)
                 item._parsedHref = item.file.href
                 item._loadingUrl = false
+                startVideoPreload()
               })
             return
           } else {
