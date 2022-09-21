@@ -661,30 +661,49 @@ export default {
       // }
 
       const startVideoPreload = () => {
+        if (!item._loadingUrl) {
+          this.debugIf(1, 'Waiting for real URL', item.file.href)
+        }
         this.debugIf(1, 'Starting preload', item.file.href)
         item._preloading = true
+        if (!item._parsedHref) {
+          const urlp = item.file.href.match(
+            /https:\/\/.*redgifs\.com\/([a-z0-9]+)(-mobile\.mp4|.mp4|)(\?|$)/i
+          )
+          if (urlp) {
+            item._loadingUrl = true
+            const rgvid = urlp[1].toLowerCase()
+            fetch(`https://api.redgifs.com/v2/gifs/${rgvid}`)
+              .then(res => res.json())
+              .then(out => {
+                item._parsedHref = out.gif.urls.sd
+                item._loadingUrl = false
+                startVideoPreload()
+              })
+              .catch(err => {
+                console.error(err)
+                item._parsedHref = item.file.href
+                item._loadingUrl = false
+              })
+            return
+          } else {
+            item._parsedHref = item.file.href
+          }
+        }
         item._playCount = 0
         const video = item.video
         video.classList.add('oeos-clickable')
         // video.setAttribute('controls', 'true')
         video.preload = 'metadata'
         video.autoplay = false // We'll do this later
-        video.muted = false
-        video.volume = 0.0001
         video.muted = true
         video.loop = !!item.loop && !item.loops === 1
         item.addListener(video, 'loadedmetadata', item.loadedmetadata)
         // video.addEventListener('canplaythrough', item.canplaythrough)
         item.addListener(video, 'error', item.error)
         item.addListener(item.videoSrc, 'error', item.error)
-        // video.addEventListener('play', item.loadedmetadata)
-        // video.addEventListener('pause', afterStop)
-        item.videoSrc.src = item.file.href
+        item.videoSrc.src = item._parsedHref
         video.load()
-        // video.play().then(() => {
-        //   video.pause()
-        //   item.loadedmetadata()
-        // })
       }
 
       item._retryCount = 5
